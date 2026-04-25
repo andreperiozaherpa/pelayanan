@@ -1,0 +1,17 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: svldk_app
+    ports:
+      - "8000:8000"
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - .:/app
+      - db_data:/var/lib/mysql
+    env_file:
+      - .env
+
+volumes:
+  db_data:
