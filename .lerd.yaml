@@ -8,3 +8,12 @@ services:
     - mysql
     - redis
     - mailpit
+    - chromium-service:
+        name: chromium-service
+        image: docker.io/browserless/chrome:latest
+        ports:
+            - 3000:3000
+        description: Chrome Headless Service
+workers:
+    - queue
+    - schedule

@@ -1,5 +1,5 @@
 <!-- Top Row: Logo & Header -->
-<div class="flex h-16 shrink-0 items-center justify-between z-50 mb-2 max-w-[2000px] mx-auto w-full">
+<div class="flex h-6 shrink-0 items-center justify-between z-50 mb-2 max-w-[2000px] mx-auto w-full">
     <!-- Mobile Menu Toggle -->
     <button @click="mobileSidebar = !mobileSidebar"
         class="lg:hidden p-2 text-slate-400 hover:text-primary-acorn transition">
@@ -10,7 +10,7 @@
     <div class="w-auto lg:w-[280px] flex items-center px-2 lg:px-4">
         <div class="flex items-center gap-3">
             <div
-                class="w-10 h-10 bg-primary-acorn rounded-xl flex items-center justify-center shadow-lg shadow-primary-acorn/20 text-white shrink-0">
+                class="w-10 h-10 bg-primary-acorn rounded-lg flex items-center justify-center shadow-lg shadow-primary-acorn/20 text-white shrink-0">
                 <iconify-icon icon="lucide:leaf" class="text-xl"></iconify-icon>
             </div>
             <div class="hidden sm:block">
@@ -71,12 +71,12 @@
                         x-transition:leave="transition ease-in duration-75"
                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                         x-transition:leave-end="opacity-0 translate-y-2 scale-95"
-                        class="absolute right-0 mt-4 w-64 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-black/[0.03] dark:border-white/[0.05] py-3 z-50 origin-top-right">
+                        class="absolute right-0 mt-4 w-64 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-black/[0.03] dark:border-white/[0.05] py-3 z-50 origin-top-right">
 
                         <!-- User Info Header -->
                         <div
                             class="px-6 py-4 border-b border-black/[0.03] dark:border-white/[0.03] mb-2 flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-2xl overflow-hidden shadow-inner shrink-0">
+                            <div class="w-12 h-12 rounded-xl overflow-hidden shadow-inner shrink-0">
                                 <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=33ac1b&color=fff"
                                     class="w-full h-full object-cover">
                             </div>

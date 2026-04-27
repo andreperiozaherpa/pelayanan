@@ -8,7 +8,7 @@ This project runs on **lerd**, a Podman-based Laravel development environment fo
 
 ## Path resolution
 
-Tools that accept a `path` argument (`artisan`, `composer`, `env_setup`, `env_check`, `db_set`, `site_link`, `site_unlink`, `site_domain_add`, `site_domain_remove`, `db_export`, `db_import`, `db_create`, etc.) resolve it in this order:
+Tools that accept a `path` argument (`artisan`, `composer`, `env_setup`, `env_check`, `db_set`, `site_link`, `site_unlink`, `site_domain`, `db_export`, `db_import`, `db_create`, etc.) resolve it in this order:
 1. Explicit `path` argument
 2. `LERD_SITE_PATH` env var (set when using project-scoped `mcp:inject`)
 3. **Current working directory** — the directory Claude was opened in
@@ -39,22 +39,23 @@ List all registered lerd sites with domains, paths, PHP versions, Node versions,
 List all installed PHP and Node.js versions and the configured defaults. Call this to check what runtimes are available before running commands.
 
 ### `php_list`
-List all PHP versions installed by lerd as JSON, with each version's `default` flag. Use this to confirm which versions are available before calling `site_php`, `php_ext_add`, or `xdebug_on`.
+List all PHP versions installed by lerd as JSON, with each version's `default` flag. Use this to confirm which versions are available before calling `site_php`, `php_ext`, or `xdebug`.
 
-### `php_ext_list` / `php_ext_add` / `php_ext_remove`
+### `php_ext`
 Manage custom PHP extensions for a PHP version. Extensions are added on top of the bundled lerd FPM image. Adding or removing an extension rebuilds the image and restarts the FPM container (may take a minute).
 
-Optional `version` argument on all three — defaults to the project or global PHP version.
-
-`php_ext_add` and `php_ext_remove` take `extension` (required).
+Arguments:
+- `action` (required): `"list"`, `"add"`, or `"remove"`
+- `version` (optional): defaults to the project or global PHP version
+- `extension` (required for `add` and `remove`)
 
 Examples:
 ```
-php_ext_list()                              // list extensions for current project's PHP version
-php_ext_list(version: "8.4")               // list extensions for 8.4
-php_ext_add(extension: "imagick")          // add imagick to current project's PHP version
-php_ext_add(extension: "redis", version: "8.3")
-php_ext_remove(extension: "imagick")
+php_ext(action: "list")                                        // list extensions for current project's PHP version
+php_ext(action: "list", version: "8.4")                        // list extensions for 8.4
+php_ext(action: "add", extension: "imagick")                   // add imagick to current project's PHP version
+php_ext(action: "add", extension: "redis", version: "8.3")
+php_ext(action: "remove", extension: "imagick")
 ```
 
 ### `artisan` (Laravel only)
@@ -118,19 +119,32 @@ vendor_run(bin: "rector", args: ["process", "--dry-run"])
 
 Prefer `vendor_run` over `composer(args: ["exec", ...])` — it's faster, doesn't go through composer's plugin pipeline, and the same shortcut is available on the CLI as `lerd <bin>` (e.g. `lerd pest`, `lerd pint`).
 
-### `node_install` / `node_uninstall`
-Install or uninstall a Node.js version via fnm. Accepts a version number or alias:
+### `node`
+Install or uninstall a Node.js version via fnm. Accepts a version number or alias.
+
+Arguments:
+- `action` (required): `"install"` or `"uninstall"`
+- `version` (required)
+
 ```
-node_install(version: "20")
-node_install(version: "20.11.0")
-node_install(version: "lts")
-node_uninstall(version: "18.20.0")
+node(action: "install", version: "20")
+node(action: "install", version: "20.11.0")
+node(action: "install", version: "lts")
+node(action: "uninstall", version: "18.20.0")
 ```
 
 After installing a version you can pin it to a project by writing a `.node-version` file in the project root (or run `lerd isolate:node <version>` from a terminal).
 
-### `service_start` / `service_stop`
-Start or stop any service — built-in or custom. `service_stop` marks the service as **paused** — `lerd start` and autostart on login will skip it until you explicitly start it again.
+### `service_control`
+Start, stop, pin, or unpin any service — built-in or custom.
+
+Arguments:
+- `action` (required): `"start"`, `"stop"`, `"pin"`, or `"unpin"`
+- `name` (required): service name
+
+`service_control(action: "stop", ...)` marks the service as **paused** — `lerd start` and autostart on login will skip it until you explicitly start it again.
+
+`service_control(action: "pin", ...)` marks a service so it is **never auto-stopped**, even when no active sites reference it in their `.env`. Starts the service if it isn't already running. Use this for services you want always available regardless of which site is active (e.g. a shared Redis or MySQL). `service_control(action: "unpin", ...)` removes the pin so the service can be auto-stopped when no sites use it.
 
 **Dependency cascade:** if a custom service has `depends_on` set, starting its dependency also starts it; stopping the dependency stops it first. Starting the custom service directly ensures its dependencies start first.
 
@@ -187,7 +201,7 @@ service_add(
   data_dir: "/data/db",
   env_vars: ["MONGODB_URL=mongodb://lerd-mongodb:27017"]
 )
-service_start(name: "mongodb")
+service_control(action: "start", name: "mongodb")
 ```
 
 Example — add phpMyAdmin depending on MySQL:
@@ -199,7 +213,7 @@ service_add(
   depends_on: ["mysql"],
   dashboard: "http://localhost:8080"
 )
-service_start(name: "phpmyadmin")   // starts mysql first, then phpmyadmin
+service_control(action: "start", name: "phpmyadmin")   // starts mysql first, then phpmyadmin
 ```
 
 `service_remove` stops and deregisters a custom service. Persistent data is NOT deleted.
@@ -220,12 +234,12 @@ service_preset_install(name: "phpmyadmin")           // adds phpmyadmin, mysql i
 service_preset_install(name: "mongo")                // install mongo first…
 service_preset_install(name: "mongo-express")        // …then mongo-express (gated otherwise)
 service_preset_install(name: "mysql", version: "8.4")
-service_start(name: "phpmyadmin")                    // mysql is started automatically
+service_control(action: "start", name: "phpmyadmin") // mysql is started automatically
 ```
 
 **Dependency gating:** installing a preset whose dependency is another *custom* service (e.g. `mongo-express` on `mongo`) is rejected with a clear error until the dependency is installed first. Built-in deps (mysql, postgres) are auto-satisfied.
 
-Once installed, presets are normal custom services — manage them with `service_start`, `service_stop`, `service_remove`, `service_expose`, `service_pin`.
+Once installed, presets are normal custom services — manage them with `service_control`, `service_remove`, and `service_expose`.
 
 ### `service_env`
 Return the recommended Laravel `.env` connection variables for a service — built-in or custom — as a key/value map. Use this when you need to inspect or manually apply connection settings without running `env_setup`.
@@ -300,8 +314,9 @@ Register or unregister a directory as a lerd site. Arguments for `site_link`:
 
 `site_unlink` takes `path` (optional, same resolution as `site_link`). Removes the site and all its domains. Project files are NOT deleted.
 
-### `site_domain_add` / `site_domain_remove`
+### `site_domain`
 Add or remove additional domains for a site. Each site can have multiple domains (all served by the same nginx vhost).
+- `action` (required): `"add"` or `"remove"`
 - `path` (optional): project directory
 - `domain` (required): domain name without TLD (e.g. `"api"` becomes `api.test`)
 
@@ -314,53 +329,76 @@ Cannot remove the last domain. When a site is secured, the TLS certificate is au
 
 Both take `path` (optional, defaults to LERD_SITE_PATH or cwd).
 
-### `secure` / `unsecure`
-Enable or disable HTTPS for a site using a locally-trusted mkcert certificate. Both take `site` (site name). `APP_URL` in `.env` is updated automatically.
-
-### `xdebug_on` / `xdebug_off` / `xdebug_status`
-Toggle Xdebug for a PHP version (restarts the FPM container). Optional `version` argument — defaults to the project or global PHP version. Xdebug listens on port `9003` at `host.containers.internal`.
-
-`xdebug_on` accepts an optional `mode` argument (default `debug`). Valid values: `debug`, `coverage`, `develop`, `profile`, `trace`, `gcstats`, or a comma-separated combo such as `debug,coverage`. Use `coverage` for `phpunit --coverage` / `pest --coverage` when PCOV isn't available or is disabled. Calling `xdebug_on` with a different mode on an already-enabled version swaps modes without needing `xdebug_off` first.
-
-`xdebug_status` returns the enabled/disabled state and the active `mode` for all installed PHP versions.
-
-### `queue_start` / `queue_stop`
-Start or stop a queue worker for a site. Available for any framework that defines a `queue` worker (Laravel has it built-in). Runs the framework-defined command in the FPM container as a systemd service.
-
-> **Redis queues:** if the project's `.env` has `QUEUE_CONNECTION=redis`, lerd will refuse to start the worker unless `lerd-redis` is running. Call `service_start(name: "redis")` first.
-
-Arguments for `queue_start`:
-- `site` (required): site name from `sites` tool
-- `queue` (optional): queue name, default `"default"`
-- `tries` (optional): max job attempts, default `3`
-- `timeout` (optional): job timeout in seconds, default `60`
-
-### `horizon_start` / `horizon_stop`
-Start or stop Laravel Horizon for a site. Horizon is a queue manager that replaces `queue:work` — use `horizon_start` instead of `queue_start` for projects that have `laravel/horizon` in `composer.json`. Takes `site` (required, site name from `sites` tool). Returns an error if `laravel/horizon` is not installed.
-
-> **Horizon vs queue worker:** The `sites` tool returns `has_horizon: true` when a site has Horizon installed. In that case prefer `horizon_start` over `queue_start`.
-
-### `reverb_start` / `reverb_stop`
-Start or stop the Reverb WebSocket server for a site. Available for any framework that defines a `reverb` worker. Takes `site` (required, site name from `sites` tool).
-
-### `schedule_start` / `schedule_stop`
-Start or stop the task scheduler for a site. Available for any framework that defines a `schedule` worker. Takes `site` (required, site name from `sites` tool).
-
-### `worker_start` / `worker_stop`
-Start or stop any named framework worker for a site. Use this for workers that don't have a dedicated shortcut (e.g. `messenger` for Symfony, `horizon` or `pulse` for Laravel). The worker command is taken from the framework definition.
+### `site_tls`
+Enable or disable HTTPS for a site using a locally-trusted mkcert certificate. `APP_URL` in `.env` is updated automatically.
 
 Arguments:
+- `action` (required): `"enable"` or `"disable"`
+- `site` (required): site name
+
+### `xdebug`
+Toggle Xdebug for a PHP version (restarts the FPM container) or report its state. Xdebug listens on port `9003` at `host.containers.internal`.
+
+Arguments:
+- `action` (required): `"on"`, `"off"`, or `"status"`
+- `version` (optional): defaults to the project or global PHP version
+- `mode` (optional, only for `on`): default `debug`. Valid values: `debug`, `coverage`, `develop`, `profile`, `trace`, `gcstats`, or a comma-separated combo such as `debug,coverage`
+
+Use `coverage` for `phpunit --coverage` / `pest --coverage` when PCOV isn't available or is disabled. Calling `xdebug(action: "on", ...)` with a different mode on an already-enabled version swaps modes without needing `action: "off"` first.
+
+`xdebug(action: "status")` returns the enabled/disabled state and the active `mode` for all installed PHP versions.
+
+### `queue`
+Start or stop a queue worker for a site. Available for any framework that defines a `queue` worker (Laravel has it built-in). Runs the framework-defined command in the FPM container as a systemd service.
+
+> **Redis queues:** if the project's `.env` has `QUEUE_CONNECTION=redis`, lerd will refuse to start the worker unless `lerd-redis` is running. Call `service_control(action: "start", name: "redis")` first.
+
+Arguments:
+- `action` (required): `"start"` or `"stop"`
+- `site` (required): site name from `sites` tool
+- `queue` (optional, `start` only): queue name, default `"default"`
+- `tries` (optional, `start` only): max job attempts, default `3`
+- `timeout` (optional, `start` only): job timeout in seconds, default `60`
+
+### `horizon`
+Start or stop Laravel Horizon for a site. Horizon is a queue manager that replaces `queue:work` — use `horizon` instead of `queue` for projects that have `laravel/horizon` in `composer.json`. Returns an error on `action: "start"` if `laravel/horizon` is not installed.
+
+Arguments:
+- `action` (required): `"start"` or `"stop"`
+- `site` (required): site name from `sites` tool
+
+> **Horizon vs queue worker:** The `sites` tool returns `has_horizon: true` when a site has Horizon installed. In that case prefer `horizon` over `queue`.
+
+### `reverb`
+Start or stop the Reverb WebSocket server for a site. Available for any framework that defines a `reverb` worker.
+
+Arguments:
+- `action` (required): `"start"` or `"stop"`
+- `site` (required): site name from `sites` tool
+
+### `schedule`
+Start or stop the task scheduler for a site. Available for any framework that defines a `schedule` worker.
+
+Arguments:
+- `action` (required): `"start"` or `"stop"`
+- `site` (required): site name from `sites` tool
+
+### `worker`
+Start or stop any named framework worker for a site. Use this for workers that don't have a dedicated shortcut (e.g. `messenger` for Symfony, `pulse` for Laravel). The worker command is taken from the framework definition.
+
+Arguments:
+- `action` (required): `"start"` or `"stop"`
 - `site` (required): site name from `sites` tool
 - `worker` (required): worker name as defined in the framework (e.g. `"messenger"`, `"horizon"`)
 
 ### `worker_list`
-List all workers defined for a site's framework, with their running status, command, unit name, and restart policy. Use this to discover available workers before calling `worker_start`.
+List all workers defined for a site's framework, with their running status, command, unit name, and restart policy. Use this to discover available workers before calling `worker`.
 
 Arguments:
 - `site` (required): site name from `sites` tool
 
 ### `worker_add`
-Add or update a custom worker for a project. Saves to `.lerd.yaml` `custom_workers` by default, or to the global framework overlay (`~/.config/lerd/frameworks/`) with `global: true`. Does not auto-start — use `worker_start` afterwards.
+Add or update a custom worker for a project. Saves to `.lerd.yaml` `custom_workers` by default, or to the global framework overlay (`~/.config/lerd/frameworks/`) with `global: true`. Does not auto-start — use `worker(action: "start", ...)` afterwards.
 
 Arguments:
 - `site` (required): site name from `sites` tool
@@ -445,39 +483,40 @@ Delete a user-defined framework YAML. For `laravel`, removes only custom worker 
 ### `site_php` / `site_node`
 Change the PHP or Node.js version for a registered site. Both take `site` (required) and `version` (required).
 
-`site_php` writes a `.php-version` pin file to the project root, updates the site registry, and regenerates the nginx vhost. The FPM container for the target PHP version must be running — start it with `service_start(name: "php<version>")` if needed.
+`site_php` writes a `.php-version` pin file to the project root, updates the site registry, and regenerates the nginx vhost. The FPM container for the target PHP version must be running — start it with `service_control(action: "start", name: "php<version>")` if needed.
 
 `site_node` writes a `.node-version` pin file and installs the version via fnm if it isn't already installed. Run `npm install` inside the project if dependencies need rebuilding against the new version.
 
-### `site_pause` / `site_unpause`
-Pause or resume a site. Both take `site` (required, site name from `sites` tool).
+### `site_control`
+Pause, unpause, restart, or rebuild a site.
 
-`site_pause` stops all running workers for the site, stops the custom container (for custom container sites), and replaces its nginx vhost with a landing page that includes a **Resume** button. Services no longer needed by any active site are auto-stopped. The paused state is persisted.
-
-`site_unpause` starts the custom container (if applicable), restores the nginx vhost, ensures required services are running, and restarts any workers that were running when the site was paused.
-
-Use this to free up resources for sites you're not actively working on without fully unlinking them.
-
-### `site_restart`
-Restart the container for a site without rebuilding the image. Takes `site` (required). For custom container sites this restarts the dedicated container; for PHP sites it restarts the shared FPM container.
-
-### `site_rebuild`
-Rebuild the custom container image from the Containerfile and restart the container. Takes `site` (required). Use after changing the Containerfile. `site_link` reuses the cached image; `site_rebuild` forces a fresh build. Only works for custom container sites.
-
-### `service_pin` / `service_unpin`
-Pin or unpin a service. Both take `name` (required).
-
-`service_pin` marks a service so it is **never auto-stopped**, even when no active sites reference it in their `.env`. Starts the service if it isn't already running. Use this for services you want always available regardless of which site is active (e.g. a shared Redis or MySQL).
-
-`service_unpin` removes the pin so the service can be auto-stopped when no sites use it.
-
-### `stripe_listen` / `stripe_listen_stop`
-Start or stop a Stripe webhook listener for a site using the Stripe CLI container. Reads `STRIPE_SECRET` from the site's `.env` and forwards webhooks to `/stripe/webhook` by default.
-
-Arguments for `stripe_listen`:
+Arguments:
+- `action` (required): `"pause"`, `"unpause"`, `"restart"`, or `"rebuild"`
 - `site` (required): site name from `sites` tool
-- `api_key` (optional): Stripe secret key (defaults to `STRIPE_SECRET` in the site's `.env`)
-- `webhook_path` (optional): webhook route path (default: `"/stripe/webhook"`)
+
+- `pause`: stops all running workers for the site, stops the custom container (for custom container sites), and replaces its nginx vhost with a landing page that includes a **Resume** button. Services no longer needed by any active site are auto-stopped. The paused state is persisted.
+- `unpause`: starts the custom container (if applicable), restores the nginx vhost, ensures required services are running, and restarts any workers that were running when the site was paused.
+- `restart`: restarts the container for a site without rebuilding the image. For custom container sites this restarts the dedicated container; for PHP sites it restarts the shared FPM container.
+- `rebuild`: rebuilds the custom container image from the Containerfile and restarts the container. Use after changing the Containerfile. `site_link` reuses the cached image; `rebuild` forces a fresh build. Only works for custom container sites.
+
+Use `pause` / `unpause` to free up resources for sites you're not actively working on without fully unlinking them.
+
+### `site_runtime`
+Switch the PHP runtime for a site between the shared PHP-FPM container (`fpm`, default) and a per-site FrankenPHP container (`frankenphp`). Arguments:
+- `site` (required): site name from `sites` tool
+- `runtime` (required): `fpm` or `frankenphp`
+- `worker` (optional, default false): when runtime=frankenphp, enable worker mode (keeps PHP resident for ~10-50x faster requests)
+
+FrankenPHP is framework-aware: Laravel uses `octane:start --server=frankenphp --workers=auto` (needs pcntl, installed at container start); Symfony uses `frankenphp php-server --worker=public/index.php --watch` for live reload; unknown frameworks fall back to `frankenphp php-server` rooted at the framework's public dir. Switching to `fpm` removes the runtime fields from `.lerd.yaml` and regenerates the FPM vhost. Not supported on custom-container sites (their runtime comes from their Containerfile). Xdebug is not wired up for FrankenPHP; switch back to `fpm` to debug.
+
+### `stripe`
+Start or stop a Stripe webhook listener for a site using the Stripe CLI container. On `start` it reads `STRIPE_SECRET` from the site's `.env` and forwards webhooks to `/stripe/webhook` by default.
+
+Arguments:
+- `action` (required): `"start"` or `"stop"`
+- `site` (required): site name from `sites` tool
+- `api_key` (optional, `start` only): Stripe secret key (defaults to `STRIPE_SECRET` in the site's `.env`)
+- `webhook_path` (optional, `start` only): webhook route path (default: `"/stripe/webhook"`)
 
 ### `db_export`
 Export a database to a SQL dump file. Works with any project type — service and database are auto-detected. Arguments:
@@ -536,180 +575,74 @@ Returns: `{"version": "...", "checks": [{name, status, detail}], "failures": N, 
 
 ## Common Workflows
 
-**Check installed runtimes before starting:**
+Single-tool tasks are covered by the tool definitions above (e.g. `site_tls` enables HTTPS, `doctor` runs a full diagnostic, `logs` tails FPM/nginx). These flows only cover multi-step compositions where ordering or non-obvious glue matters.
+
+**Bootstrap a new project from scratch, end-to-end** — works for any lerd-known framework (laravel, symfony, etc.). **Run every step, in order. Do not stop until `setup` returns.**
 ```
-runtime_versions()   // see PHP and Node.js versions available
+project_new(path: "/abs/path/myapp", framework: "laravel")
+// project_new scaffolds AND runs composer install — vendor/ is populated on return
+site_link(path: "/abs/path/myapp")
+env_setup(path: "/abs/path/myapp")    // .env, services, DB (sqlite auto-created), APP_KEY
+setup(path: "/abs/path/myapp")        // framework Default:true steps — migrations, storage:link, etc.
+// Optional:
+site_tls(action: "enable", site: "myapp")   // HTTPS via mkcert
 ```
 
-**Create a new Laravel project from scratch (global session, empty directory):**
+**Set up a cloned project, end-to-end** — framework-agnostic. **Run every step, in order.**
 ```
-composer(args: ["create-project", "laravel/laravel", "."])
-site_link()           // registers the cwd as a lerd site
-env_setup()           // configures .env, starts services, creates DB, generates APP_KEY (even before composer install)
-artisan(args: ["migrate"])
+site_link()                           // registers cwd as a lerd site
+composer(args: ["install"])           // BEFORE env_setup — APP_KEY generation needs vendor/
+env_setup()                           // .env, services, DB (sqlite auto-created), APP_KEY
+setup()                               // framework migrations + other Default:true setup steps
+// Optional:
+// vendor_run(bin: "pest")            // run tests to confirm everything works
 ```
 
-**Set up a cloned project (full flow):**
+**Debugging a 500 on a lerd site** (ordered, stop at the first signal):
 ```
-site_link()                          // registers the cwd as a lerd site
-env_setup()                          // auto-configures .env, starts services, creates DB
+logs()                                 // current site's FPM + recent errors
+logs(target: "nginx")                  // if FPM logs are clean
+env_check()                            // missing .env keys vs .env.example
+which()                                // confirm PHP version, docroot, vhost
+// If the error mentions vendor/, autoload, or class-not-found:
 composer(args: ["install"])
-artisan(args: ["migrate", "--seed"])
+// If the error mentions APP_KEY:
+artisan(args: ["key:generate"])        // or framework's equivalent
+// If the error mentions the database file / connection:
+//   sqlite: env_setup() auto-creates database/database.sqlite
+//   mysql/postgres: service_control(action: "start", name: "<service>")
+setup()                                // re-runs pending migrations + setup steps
+status()                               // DNS / nginx / FPM container health at a glance
+doctor()                               // full diagnostic if nothing above explains it
 ```
 
-**Enable HTTPS for a site:**
-```
-secure(site: "myapp")
-```
-
-**Enable Xdebug for a debugging session:**
-```
-xdebug_status()                                 // check current state and mode
-xdebug_on(version: "8.4")                       // default mode=debug, restarts FPM
-// ... debug ...
-xdebug_off(version: "8.4")                      // disable when done (Xdebug adds overhead)
-```
-
-**Enable Xdebug coverage mode for phpunit/pest:**
-```
-xdebug_on(version: "8.4", mode: "coverage")     // swap mode without xdebug_off first
-vendor_run(name: "pest", args: ["--coverage"])
-xdebug_off(version: "8.4")
-```
-
-**Run migrations after schema changes:**
-```
-artisan(args: ["migrate"])
-```
-
-**Install and configure a service:**
-```
-service_start(name: "mysql")
-service_start(name: "redis")   // if needed
-composer(args: ["install"])
-artisan(args: ["key:generate"])
-artisan(args: ["migrate", "--seed"])
-```
-
-**Install a new package:**
+**Install a package that needs publish + migration:**
 ```
 composer(args: ["require", "spatie/laravel-permission"])
 artisan(args: ["vendor:publish", "--provider=Spatie\\Permission\\PermissionServiceProvider"])
 artisan(args: ["migrate"])
 ```
 
-**Install a Node.js version and pin it to the project:**
+**Xdebug coverage for phpunit/pest (mode swap, no action: "off" needed between modes):**
 ```
-node_install(version: "20")
-// Then in a terminal: lerd isolate:node 20
-```
-
-**Add a custom service (e.g. MongoDB):**
-```
-service_add(name: "mongodb", image: "docker.io/library/mongo:7", ports: ["27017:27017"], data_dir: "/data/db")
-service_start(name: "mongodb")
+xdebug(action: "on", version: "8.4", mode: "coverage")
+vendor_run(name: "pest", args: ["--coverage"])
+xdebug(action: "off", version: "8.4")
 ```
 
-**Back up the database before a risky migration:**
+**Back up before a risky migration:**
 ```
 db_export(output: "/tmp/myapp-backup.sql")
 artisan(args: ["migrate"])
+// on failure: db_import(file: "/tmp/myapp-backup.sql")
 ```
 
-**Restore a database from a dump:**
-```
-db_import(file: "/tmp/myapp-backup.sql")
-```
-
-**Create databases for a new project manually:**
-```
-db_create()   // creates myapp + myapp_testing based on .env DB_DATABASE
-```
-
-**Check and manage PHP extensions:**
-```
-php_list()                           // see installed PHP versions
-php_ext_list()                       // see custom extensions for current project's PHP version
-php_ext_add(extension: "imagick")    // install imagick (rebuilds FPM image)
-```
-
-**Park a directory of projects:**
-```
-park(path: "/home/user/code")   // registers all PHP projects under ~/code as sites
-```
-
-**Diagnose PHP errors:**
-```
-logs()                  // current site's PHP-FPM errors (no target needed)
-logs(target: "nginx")   // nginx errors
-```
-
-**Site isn't loading — check service health first:**
-```
-status()    // see which of DNS / nginx / PHP-FPM / watcher is down
-```
-
-**Free up resources — pause sites you're not using:**
-```
-sites()                          // see all sites
-site_pause(site: "old-project")  // stop workers + replace vhost with landing page
-// ... later ...
-site_unpause(site: "old-project")  // restore and restart
-```
-
-**Restart a site's container (e.g. after changing Containerfile):**
-```
-site_restart(site: "nestjs-app")  // restarts container (no rebuild)
-site_rebuild(site: "nestjs-app")  // rebuilds image from Containerfile + restarts
-```
-
-**Keep a service always running regardless of active site:**
-```
-service_pin(name: "mysql")    // never auto-stopped
-service_pin(name: "redis")
-```
-
-**User reports setup issues or something unexpected:**
-```
-doctor()    // full diagnostic: podman, systemd, DNS, ports, images, config
-```
-
-**Start a framework worker (Symfony Messenger, Laravel Horizon, etc.):**
-```
-worker_list(site: "myapp")            // see what workers are available and their status
-worker_start(site: "myapp", worker: "messenger")  // start by name
-worker_stop(site: "myapp", worker: "messenger")
-```
-
-**Add a custom worker to Laravel (e.g. Horizon):**
+**Add a Laravel Horizon worker (custom framework worker):**
 ```
 framework_add(name: "laravel", workers: {
   "horizon": {"label": "Horizon", "command": "php artisan horizon", "restart": "always"}
 })
-worker_start(site: "myapp", worker: "horizon")
-```
-
-**Work with failed queue jobs:**
-```
-artisan(args: ["queue:failed"])
-artisan(args: ["queue:retry", "all"])
-```
-
-**Generate and run a new migration:**
-```
-artisan(args: ["make:migration", "add_status_to_orders"])
-// ... edit the migration file ...
-artisan(args: ["migrate"])
-```
-
-**Check which PHP and Node versions a site will use:**
-```
-which()   // shows resolved PHP, Node, document root, nginx config
-```
-
-**Validate project config before setup:**
-```
-check()   // validates .lerd.yaml syntax, services, PHP version
+worker(action: "start", site: "myapp", worker: "horizon")
 ```
 
 **Set up a custom container site (Node.js, Python, Go, etc.):**
@@ -721,9 +654,9 @@ RUN npm install -g nodemon
 CMD ["npm", "run", "start:dev"]
 ```
 
-   > **Hot-reload on macOS**: inotify events do not fire across Podman Machine's virtiofs mount. Use polling: nodemon needs `--legacy-watch`, Vite needs `server.watch.usePolling: true`, webpack needs `watchOptions: { poll: 1000 }`. Example `package.json`: `"start:dev": "nodemon --legacy-watch src/main.js"`.
+   > **Hot-reload on macOS**: inotify events do not fire across Podman Machine's virtiofs mount. Use polling: nodemon needs `--legacy-watch`, Vite needs `server.watch.usePolling: true`, webpack needs `watchOptions: { poll: 1000 }`.
 
-2. Write `.lerd.yaml` with the container section (there is no MCP tool for this — write the file directly, or ask the user to run `lerd init` which runs an interactive wizard and writes it):
+2. Write `.lerd.yaml` with the container section (no MCP tool for this — write the file directly or run `lerd init`):
 ```yaml
 domains:
   - myapp
@@ -732,35 +665,24 @@ container:
 services:
   - mysql
   - redis
-custom_workers:
-  queue:
-    label: Queue Worker
-    command: node dist/queue.js
-    restart: always
 ```
 
-3. **Configure environment variables BEFORE linking.** The container starts immediately on `site_link`, so the app's `.env` (or equivalent config) must already have the correct service connection strings. Lerd services are reachable by container name on the `lerd` network:
+3. **Configure env BEFORE linking.** The container starts immediately on `site_link`. Lerd services are reachable by container name on the `lerd` network:
 ```
-DB_HOST=lerd-mysql          # or lerd-postgres
-DB_PORT=3306                # 5432 for postgres
-DB_USERNAME=root            # postgres for postgres
+DB_HOST=lerd-mysql     # or lerd-postgres (port 5432)
+DB_PORT=3306
+DB_USERNAME=root       # postgres for postgres
 DB_PASSWORD=lerd
 REDIS_HOST=lerd-redis
 REDIS_PORT=6379
 ```
-   Start the services first if they're not running:
-```
-service_start(name: "mysql")
-service_start(name: "redis")
-```
 
-4. Link and verify:
+4. Link:
 ```
 site_link()            // builds image, creates container, generates nginx vhost
-sites()                // verify the site is listed with custom_container: true
 ```
 
-The `container.port` field is required — it's the port the app listens on inside the container. `container.containerfile` defaults to `Containerfile.lerd`. Workers defined in `custom_workers` exec into the custom container.
+The `container.port` field is required. `container.containerfile` defaults to `Containerfile.lerd`. Workers defined in `custom_workers` exec into the custom container.
 
 ## .lerd.yaml Reference
 

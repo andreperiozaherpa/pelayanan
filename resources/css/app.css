@@ -64,7 +64,7 @@
 
 @layer utilities {
     .premium-card {
-        @apply bg-[var(--color-bg-card)] backdrop-blur-3xl rounded-[3rem] border border-white/40 dark:border-white/10;
+        @apply bg-[var(--color-bg-card)] backdrop-blur-3xl rounded-2xl border border-white/40 dark:border-white/10;
         box-shadow: var(--shadow-premium);
     }
 
@@ -73,6 +73,6 @@
     }
 
     .glass-floating {
-        @apply bg-white/50 dark:bg-slate-900/50 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-xl rounded-[2rem];
+        @apply bg-white/50 dark:bg-slate-900/50 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-xl rounded-2xl;
     }
 }

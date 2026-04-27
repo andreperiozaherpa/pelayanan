@@ -91,7 +91,7 @@
             <!-- Main Content Area -->
             <div class="flex-1 flex flex-col min-w-0">
                 <main
-                    class="flex-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl rounded-3xl lg:rounded-[2.5rem] p-6 lg:p-14 overflow-y-auto custom-scrollbar border border-white/50 dark:border-white/10">
+                    class="flex-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl rounded-2xl p-6 lg:p-14 overflow-y-auto custom-scrollbar border border-white/50 dark:border-white/10">
                     @yield('content')
                 </main>
             </div>

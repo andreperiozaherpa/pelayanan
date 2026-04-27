@@ -68,8 +68,8 @@ class DashboardController extends Controller
         $stats = [
             'total_verifications' => VerificationLog::where(function ($q) use ($desaId) {
                 // Actions by village operators OR regarding village citizens
-                $q->whereHas('user', fn ($u) => $u->where('desa_id', $desaId))
-                    ->orWhereHas('citizen', fn ($c) => $c->where('desa_id', $desaId));
+                $q->whereHas('user', fn($u) => $u->where('desa_id', $desaId))
+                    ->orWhereHas('citizen', fn($c) => $c->where('desa_id', $desaId));
             })->count(),
             'recent_requests' => ServiceRequest::whereHas('citizen', function ($q) use ($desaId) {
                 $q->where('desa_id', $desaId);
@@ -108,8 +108,8 @@ class DashboardController extends Controller
             ->when($isOperatorDesa, function ($q) use ($desaId) {
                 $q->where(function ($query) use ($desaId) {
                     // Show logs performed BY village users OR involving village citizens
-                    $query->whereHas('user', fn ($u) => $u->where('desa_id', $desaId))
-                        ->orWhereHas('citizen', fn ($c) => $c->where('desa_id', $desaId));
+                    $query->whereHas('user', fn($u) => $u->where('desa_id', $desaId))
+                        ->orWhereHas('citizen', fn($c) => $c->where('desa_id', $desaId));
                 });
             })
             ->when($search, function ($q) use ($search) {
@@ -137,7 +137,7 @@ class DashboardController extends Controller
             ->when($isOperatorDesa, function ($q) use ($desaId) {
                 $q->where(function ($query) use ($desaId) {
                     // Logs performed by village users
-                    $query->whereHas('user', fn ($u) => $u->where('desa_id', $desaId))
+                    $query->whereHas('user', fn($u) => $u->where('desa_id', $desaId))
                         // OR Logs regarding village citizens (Print Proof, etc)
                         ->orWhere(function ($sub) use ($desaId) {
                             $sub->where('target_table', 'citizens')
@@ -247,11 +247,12 @@ class DashboardController extends Controller
         $html = view('documents.doc_poverty', compact('citizen', 'record', 'validationUrl'))->render();
 
         $pdf = Browsershot::html($html)
-            ->setNodeBinary('/usr/bin/node')
-            ->setNpmBinary('/usr/bin/npm')
-            ->setChromePath('/usr/bin/chromium')
+            ->setNodeBinary(config('services.browsershot.node_binary'))
+            ->setNpmBinary(config('services.browsershot.npm_binary'))
+            ->setChromePath(config('services.browsershot.chrome_path'))
             ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox'])
-            ->format('A5')
+            ->provideHtmlViaOpenPage()
+            ->format('A4')
             ->margins(0, 0, 0, 0)
             ->pdf();
 
