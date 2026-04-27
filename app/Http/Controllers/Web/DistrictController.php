@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\DistrictRequest;
+use App\Http\Requests\Web\DistrictRequest;
 use App\Models\District;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,7 +25,7 @@ class DistrictController extends Controller
 
         $districts = $query->latest()->paginate(10);
 
-        return view('districts.index', compact('districts'));
+        return view('master-data.districts.index', compact('districts'));
     }
 
     /**
@@ -33,7 +33,7 @@ class DistrictController extends Controller
      */
     public function create()
     {
-        return view('districts.create');
+        return view('master-data.districts.create');
     }
 
     /**
@@ -58,7 +58,7 @@ class DistrictController extends Controller
      */
     public function edit(District $district)
     {
-        return view('districts.edit', compact('district'));
+        return view('master-data.districts.edit', compact('district'));
     }
 
     /**

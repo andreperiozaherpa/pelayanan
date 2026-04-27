@@ -1,13 +1,19 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" 
-      x-data="{ 
-        darkMode: localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
-      }" 
-      x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))"
-      :class="{ 'dark': darkMode, 'light': !darkMode }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{
+    darkMode: localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+}" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))"
+    :class="{ 'dark': darkMode }">
 
 <head>
     <meta charset="utf-8">
+    <script>
+        if (localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia(
+                '(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -36,7 +42,7 @@
             border-radius: 2rem !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
         }
-        
+
         .light .swal2-popup {
             background: #ffffff !important;
             color: #0f172a !important;
@@ -48,7 +54,7 @@
         .dark .swal2-title {
             color: #f1f5f9 !important;
         }
-        
+
         .light .swal2-title {
             color: #0f172a !important;
         }
@@ -83,8 +89,8 @@
     </style>
 </head>
 
-<body class="font-sans antialiased bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 overflow-hidden" 
-      x-data="{ sidebarOpen: false, userMenu: false }">
+<body class="font-sans antialiased bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 overflow-hidden"
+    x-data="{ sidebarOpen: false, userMenu: false }">
 
     <div class="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
 
@@ -102,29 +108,35 @@
                         </svg>
                     </div>
                     <div>
-                        <span class="text-xl font-black tracking-tighter text-slate-900 dark:text-white block leading-none">SVLDK</span>
-                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-none">Intelligence</span>
+                        <span
+                            class="text-xl font-black tracking-tighter text-slate-900 dark:text-white block leading-none">SVLDK</span>
+                        <span
+                            class="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-none">Intelligence</span>
                     </div>
                 </div>
 
                 <!-- Nav Menu -->
                 <nav class="flex-grow py-8 px-6 space-y-1.5 overflow-y-auto">
-                    <p class="text-[10px] font-black text-slate-500 dark:text-slate-600 uppercase tracking-[0.2em] px-4 mb-6">Core Operations</p>
+                    <p
+                        class="text-[10px] font-black text-slate-500 dark:text-slate-600 uppercase tracking-[0.2em] px-4 mb-6">
+                        Core Operations</p>
 
                     <x-nav-link href="{{ route('dashboard.index') }}" :active="request()->routeIs('dashboard.index')"
                         icon="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
                         Dashboard
                     </x-nav-link>
 
-                    @if(Auth::user()->hasPermission('citizens.manage'))
-                    <x-nav-link href="{{ route('citizens.index') }}" :active="request()->routeIs('citizens.*')"
-                        icon="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                        Master Warga
-                    </x-nav-link>
+                    @if (Auth::user()->hasPermission('citizens.manage'))
+                        <x-nav-link href="{{ route('citizens.index') }}" :active="request()->routeIs('citizens.*')"
+                            icon="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                            Master Warga
+                        </x-nav-link>
                     @endif
 
                     <div class="pt-8">
-                        <p class="text-[10px] font-black text-slate-500 dark:text-slate-600 uppercase tracking-[0.2em] px-4 mb-6">Data Governance</p>
+                        <p
+                            class="text-[10px] font-black text-slate-500 dark:text-slate-600 uppercase tracking-[0.2em] px-4 mb-6">
+                            Data Governance</p>
                         <x-nav-link href="{{ route('dashboard.verify') }}" :active="request()->routeIs('dashboard.verify')"
                             icon="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.041M12 21.355r 0 0 0 0">
                             Verifikasi NIK
@@ -135,45 +147,51 @@
                         </x-nav-link>
                     </div>
 
-                    @if(Auth::user()->hasPermission('users.manage'))
-                    <div class="pt-8">
-                        <p class="text-[10px] font-black text-slate-500 dark:text-slate-600 uppercase tracking-[0.2em] px-4 mb-6">Administrative Control</p>
-                        <x-nav-link href="{{ route('users.index') }}" :active="request()->routeIs('users.*')"
-                            icon="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
-                            Manajemen User
-                        </x-nav-link>
-                        @if(Auth::user()->hasPermission('roles.manage'))
-                        <x-nav-link href="{{ route('roles.index') }}" :active="request()->routeIs('roles.*')"
-                            icon="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.041M12 21.355r 0 0 0 0">
-                            Manajemen Role
-                        </x-nav-link>
-                        @endif
-                        @if(Auth::user()->hasPermission('districts.manage'))
-                        <x-nav-link href="{{ route('districts.index') }}" :active="request()->routeIs('districts.*')"
-                            icon="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
-                            Manajemen Kecamatan
-                        </x-nav-link>
-                        @endif
-                        @if(Auth::user()->hasPermission('villages.manage'))
-                        <x-nav-link href="{{ route('villages.index') }}" :active="request()->routeIs('villages.*')"
-                            icon="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z">
-                            Manajemen Desa
-                        </x-nav-link>
-                        @endif
-                    </div>
+                    @if (Auth::user()->hasPermission('users.manage'))
+                        <div class="pt-8">
+                            <p
+                                class="text-[10px] font-black text-slate-500 dark:text-slate-600 uppercase tracking-[0.2em] px-4 mb-6">
+                                Administrative Control</p>
+                            <x-nav-link href="{{ route('users.index') }}" :active="request()->routeIs('users.*')"
+                                icon="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                                Manajemen User
+                            </x-nav-link>
+                            @if (Auth::user()->hasPermission('roles.manage'))
+                                <x-nav-link href="{{ route('roles.index') }}" :active="request()->routeIs('roles.*')"
+                                    icon="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.041M12 21.355r 0 0 0 0">
+                                    Manajemen Role
+                                </x-nav-link>
+                            @endif
+                            @if (Auth::user()->hasPermission('districts.manage'))
+                                <x-nav-link href="{{ route('districts.index') }}" :active="request()->routeIs('districts.*')"
+                                    icon="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                                    Manajemen Kecamatan
+                                </x-nav-link>
+                            @endif
+                            @if (Auth::user()->hasPermission('villages.manage'))
+                                <x-nav-link href="{{ route('villages.index') }}" :active="request()->routeIs('villages.*')"
+                                    icon="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z">
+                                    Manajemen Desa
+                                </x-nav-link>
+                            @endif
+                        </div>
                     @endif
                 </nav>
 
                 <!-- Status Panel -->
                 <div class="p-6 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/50">
-                    <div class="bg-white dark:bg-slate-800/40 rounded-2xl p-4 border border-slate-200 dark:border-white/5 backdrop-blur-sm">
+                    <div
+                        class="bg-white dark:bg-slate-800/40 rounded-2xl p-4 border border-slate-200 dark:border-white/5 backdrop-blur-sm">
                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Environment</span>
+                            <span
+                                class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Environment</span>
                             <span
                                 class="flex h-2 w-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50"></span>
                         </div>
-                        <p class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">PRODUCTION</p>
-                        <p class="text-[9px] text-slate-500 mt-1">v{{ config('app.version', '2.1.0') }} &bull; SVLDK Core</p>
+                        <p class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Development
+                        </p>
+                        <p class="text-[9px] text-slate-500 mt-1">v{{ config('app.version', '2.1.0') }} &bull; SVLDK
+                            Core</p>
                     </div>
                 </div>
             </div>
@@ -200,9 +218,11 @@
                                     d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04 M12 21.355r 0 0 0 0-1.618-3.041z" />
                             </svg>
                         </div>
-                        <span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white italic">SVLDK</span>
+                        <span
+                            class="text-xl font-bold tracking-tight text-slate-900 dark:text-white italic">SVLDK</span>
                     </div>
-                    <button @click="sidebarOpen = false" class="p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white">
+                    <button @click="sidebarOpen = false"
+                        class="p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white">
                         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M6 18L18 6M6 6l12 12" />
@@ -212,38 +232,39 @@
                 <nav class="p-6 space-y-1.5">
                     <x-nav-link href="{{ route('dashboard.index') }}" :active="request()->routeIs('dashboard.index')"
                         icon="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">Dashboard</x-nav-link>
-                    @if(Auth::user()->hasPermission('citizens.manage'))
-                    <x-nav-link href="{{ route('citizens.index') }}" :active="request()->routeIs('citizens.*')"
-                        icon="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">Master Warga</x-nav-link>
+                    @if (Auth::user()->hasPermission('citizens.manage'))
+                        <x-nav-link href="{{ route('citizens.index') }}" :active="request()->routeIs('citizens.*')"
+                            icon="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">Master
+                            Warga</x-nav-link>
                     @endif
                     <x-nav-link href="{{ route('dashboard.verify') }}" :active="request()->routeIs('dashboard.verify')"
                         icon="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.041M12 21.355r 0 0 0 0">Verifikasi
                         NIK</x-nav-link>
                     <x-nav-link href="{{ route('dashboard.history') }}" :active="request()->routeIs('dashboard.history')"
                         icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">History Log</x-nav-link>
-                    @if(Auth::user()->hasPermission('users.manage'))
-                    <x-nav-link href="{{ route('users.index') }}" :active="request()->routeIs('users.*')"
-                        icon="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
-                        Manajemen User
-                    </x-nav-link>
+                    @if (Auth::user()->hasPermission('users.manage'))
+                        <x-nav-link href="{{ route('users.index') }}" :active="request()->routeIs('users.*')"
+                            icon="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                            Manajemen User
+                        </x-nav-link>
                     @endif
-                    @if(Auth::user()->hasPermission('roles.manage'))
-                    <x-nav-link href="{{ route('roles.index') }}" :active="request()->routeIs('roles.*')"
-                        icon="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.041M12 21.355r 0 0 0 0">
-                        Manajemen Role
-                    </x-nav-link>
+                    @if (Auth::user()->hasPermission('roles.manage'))
+                        <x-nav-link href="{{ route('roles.index') }}" :active="request()->routeIs('roles.*')"
+                            icon="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.041M12 21.355r 0 0 0 0">
+                            Manajemen Role
+                        </x-nav-link>
                     @endif
-                    @if(Auth::user()->hasPermission('districts.manage'))
-                    <x-nav-link href="{{ route('districts.index') }}" :active="request()->routeIs('districts.*')"
-                        icon="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
-                        Manajemen Kecamatan
-                    </x-nav-link>
+                    @if (Auth::user()->hasPermission('districts.manage'))
+                        <x-nav-link href="{{ route('districts.index') }}" :active="request()->routeIs('districts.*')"
+                            icon="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                            Manajemen Kecamatan
+                        </x-nav-link>
                     @endif
-                    @if(Auth::user()->hasPermission('villages.manage'))
-                    <x-nav-link href="{{ route('villages.index') }}" :active="request()->routeIs('villages.*')"
-                        icon="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z">
-                        Manajemen Desa
-                    </x-nav-link>
+                    @if (Auth::user()->hasPermission('villages.manage'))
+                        <x-nav-link href="{{ route('villages.index') }}" :active="request()->routeIs('villages.*')"
+                            icon="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z">
+                            Manajemen Desa
+                        </x-nav-link>
                     @endif
                 </nav>
             </div>
@@ -264,26 +285,34 @@
                         </svg>
                     </button>
                     <div>
-                        <h2 class="text-xl font-black text-slate-900 dark:text-white tracking-tight">@yield('title', 'Front Office')</h2>
-                        <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5 whitespace-nowrap">Sistem Verifikasi & Layanan Data Kemiskinan</p>
+                        <h2 class="text-xl font-black text-slate-900 dark:text-white tracking-tight">@yield('title', 'Front Office')
+                        </h2>
+                        <p
+                            class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5 whitespace-nowrap">
+                            Sistem Verifikasi & Layanan Data Kemiskinan</p>
                     </div>
                 </div>
 
                 <!-- Global Actions & User -->
                 <div class="flex items-center gap-4 lg:gap-8">
                     <!-- Theme Toggle -->
-                    <button @click="darkMode = !darkMode" 
-                            class="p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-400 hover:text-indigo-500 transition border border-slate-200 dark:border-white/5">
-                        <svg x-show="!darkMode" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    <button @click="darkMode = !darkMode"
+                        class="p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-400 hover:text-indigo-500 transition border border-slate-200 dark:border-white/5">
+                        <svg x-show="!darkMode" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                         </svg>
-                        <svg x-show="darkMode" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        <svg x-show="darkMode" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
                     </button>
 
                     <div class="hidden lg:flex flex-col text-right">
-                        <span class="text-sm font-black text-slate-900 dark:text-white leading-tight">{{ Auth::user()->name }}</span>
+                        <span
+                            class="text-sm font-black text-slate-900 dark:text-white leading-tight">{{ Auth::user()->name }}</span>
                         <div class="flex items-center justify-end gap-2 mt-0.5">
                             @if (Auth::user()->desa_id)
                                 <span
@@ -318,10 +347,14 @@
                             x-transition:leave-start="transform opacity-100 scale-100 translate-y-0"
                             x-transition:leave-end="transform opacity-0 scale-95 -translate-y-2"
                             class="absolute right-0 mt-4 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl overflow-hidden z-[100] backdrop-blur-xl">
-                            <div class="px-6 py-6 bg-slate-50 dark:bg-slate-800/40 border-b border-slate-100 dark:border-white/5">
-                                <p class="text-[10px] text-slate-500 uppercase tracking-[0.2em] mb-2 font-black">Account Information</p>
-                                <p class="text-sm font-black text-slate-900 dark:text-white truncate">{{ Auth::user()->name }}</p>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">{{ Auth::user()->email }}</p>
+                            <div
+                                class="px-6 py-6 bg-slate-50 dark:bg-slate-800/40 border-b border-slate-100 dark:border-white/5">
+                                <p class="text-[10px] text-slate-500 uppercase tracking-[0.2em] mb-2 font-black">
+                                    Account Information</p>
+                                <p class="text-sm font-black text-slate-900 dark:text-white truncate">
+                                    {{ Auth::user()->name }}</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                                    {{ Auth::user()->email }}</p>
                             </div>
                             <div class="p-2">
                                 <form method="POST" action="{{ route('logout') }}">
@@ -335,7 +368,8 @@
                                                     d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                                             </svg>
                                         </div>
-                                        <span class="font-black uppercase tracking-widest text-[10px]">Terminate Session</span>
+                                        <span class="font-black uppercase tracking-widest text-[10px]">Terminate
+                                            Session</span>
                                     </button>
                                 </form>
                             </div>
@@ -356,10 +390,10 @@
     </div>
 
     @stack('scripts')
-    
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            @if(session('success'))
+            @if (session('success'))
                 Swal.fire({
                     icon: 'success',
                     title: 'Berhasil!',
@@ -375,7 +409,7 @@
                 });
             @endif
 
-            @if(session('error'))
+            @if (session('error'))
                 Swal.fire({
                     icon: 'error',
                     title: 'Akses Ditolak!',
@@ -389,7 +423,7 @@
                 });
             @endif
 
-            @if($errors->any())
+            @if ($errors->any())
                 Swal.fire({
                     icon: 'warning',
                     title: 'Validasi Data Gagal',

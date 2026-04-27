@@ -20,6 +20,7 @@ Tiga poros otorisasi utama telah tertanam menggunakan *Custom Middleware Level R
 Pusat ekosistem data demografi meliputi manajemen CRUD komprehensif:
 - Enkripsi dan *Masking* penguasaan NIK warga (Misal: `320102********01`) demi mematuhi regulasi Pelindungan Data Pribadi (PDP).
 - Form antarmuka interaktif yang merekam struktur lengkap warga dari NIK, Nama, Tanggal Lahir, hingga Kontak & Wilayah asal yang dinamis.
+- **Data Master Wilayah Terstruktur**: Normalisasi data wilayah dari tingkat Kabupaten, Kecamatan, hingga Desa untuk akurasi pendataan dan kemudahan integrasi API di masa depan.
 
 ### 3. 📜 Mesin Penetapan Status Kemiskinan (SKTM Engine)
 SVLDK memiliki subsistem khusus terintegrasi dengan Data Warga:
@@ -54,7 +55,7 @@ Penulisan kode dikendalikan dengan implementasi *"Do Things the Laravel 13 Way"*
 - ✅ **Fase 2**: Kontrak Otorisasi Otentikasi dan *Multi-Role Logic* tersemat melalui Seeder.
 - ✅ **Fase 3**: Konfigurasi estetik *Super Dashboard* dengan Layout Universal.
 - ✅ **Fase 4**: Penempatan Modul *Controller*, *Validation Rules* yang berlapis (menangani *bug valid_from.date*), *Middleware CheckPermission* di *app.php*.
-- ✅ **Fase 5**: Modul Manajemen Pengguna & Role (*User & Role Management*), implementasi *Form Requests* untuk validasi ketat, dan *Eloquent Resources* untuk standarisasi output data Admin.
+- ✅ **Fase 5**: Modul Manajemen Administratif (User, Role, Desa, & Kecamatan), normalisasi database wilayah (Kecamatan > Desa), implementasi *Form Requests* terstruktur dalam folder `Web/`, dan restrukturisasi arsitektur folder untuk skalabilitas.
 - ⏳ **Fase 6 (Sekarang)**: Sistem Integrasi Layanan Eksternal (API *Front Office*) & Notifikasi otomatis/Pekerja Layar Belakang (*Queue Worker SMS/WhatsApp Reminder*).
 
 ***Berkarya untuk Birokrasi yang Mulus. 🚀***

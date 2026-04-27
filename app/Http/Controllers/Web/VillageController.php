@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\VillageRequest;
+use App\Http\Requests\Web\VillageRequest;
 use App\Models\District;
 use App\Models\Village;
 use Illuminate\Http\Request;
@@ -28,7 +28,7 @@ class VillageController extends Controller
 
         $villages = $query->latest()->paginate(10);
 
-        return view('villages.index', compact('villages'));
+        return view('master-data.villages.index', compact('villages'));
     }
 
     /**
@@ -38,7 +38,7 @@ class VillageController extends Controller
     {
         $districts = District::orderBy('name')->get();
 
-        return view('villages.create', compact('districts'));
+        return view('master-data.villages.create', compact('districts'));
     }
 
     /**
@@ -65,7 +65,7 @@ class VillageController extends Controller
     {
         $districts = District::orderBy('name')->get();
 
-        return view('villages.edit', compact('village', 'districts'));
+        return view('master-data.villages.edit', compact('village', 'districts'));
     }
 
     /**

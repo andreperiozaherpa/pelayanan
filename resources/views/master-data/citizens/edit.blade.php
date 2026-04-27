@@ -23,7 +23,7 @@
 
         <form action="{{ route('citizens.update', $citizen->nik) }}" method="POST">
             @method('PUT')
-            @include('dashboard.citizens.form')
+            @include('master-data.citizens.form')
             
             <div class="mt-10 pt-6 border-t border-slate-200 dark:border-slate-700/50 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <p class="text-xs text-slate-500 font-bold tracking-wide uppercase">Terakhir Diperbarui: {{ $citizen->updated_at->diffForHumans() }}</p>

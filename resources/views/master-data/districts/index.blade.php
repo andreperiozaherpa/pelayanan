@@ -20,17 +20,26 @@
         </div>
     </div>
 
-    <!-- Search -->
-    <div class="mb-6">
-        <form action="{{ route('districts.index') }}" method="GET" class="relative group">
-            <input type="text" name="search" value="{{ request('search') }}"
-                class="w-full pl-12 pr-4 py-4 bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-2xl focus:ring-2 focus:ring-emerald-500 transition-all font-bold dark:text-white"
-                placeholder="Cari berdasarkan nama kecamatan, kode, atau kabupaten..." />
-            <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors">
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
+    <!-- Filters & Search -->
+    <div class="bg-white/40 dark:bg-slate-800/40 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 rounded-3xl p-4 shadow-xl mb-8">
+        <form method="GET" action="{{ route('districts.index') }}" class="flex flex-col sm:flex-row gap-4">
+            <div class="flex-1 relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari berdasarkan nama kecamatan, kode, atau kabupaten..." 
+                    class="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-2xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm font-medium transition-shadow dark:text-white placeholder-slate-400" />
             </div>
+            <button type="submit" class="bg-slate-900 dark:bg-white dark:text-slate-900 text-white px-6 py-3 rounded-2xl font-bold shadow-lg transition-all hover:scale-105 active:scale-95">
+                Saring Data
+            </button>
+            @if(request('search'))
+            <a href="{{ route('districts.index') }}" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 px-6 py-3 rounded-2xl font-bold transition-all text-center">
+                Reset
+            </a>
+            @endif
         </form>
     </div>
 

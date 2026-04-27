@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreRoleRequest;
-use App\Http\Requests\UpdateRoleRequest;
+use App\Http\Requests\Web\StoreRoleRequest;
+use App\Http\Requests\Web\UpdateRoleRequest;
 use App\Models\Permission;
 use App\Models\Role;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +19,7 @@ class RoleController extends Controller
     {
         $roles = Role::withCount('permissions')->get();
 
-        return view('roles.index', compact('roles'));
+        return view('master-data.roles.index', compact('roles'));
     }
 
     /**
@@ -29,7 +29,7 @@ class RoleController extends Controller
     {
         $permissions = Permission::orderBy('name')->get();
 
-        return view('roles.create', compact('permissions'));
+        return view('master-data.roles.create', compact('permissions'));
     }
 
     /**
@@ -69,7 +69,7 @@ class RoleController extends Controller
         $permissions = Permission::orderBy('name')->get();
         $rolePermissions = $role->permissions()->pluck('id')->toArray();
 
-        return view('roles.edit', compact('role', 'permissions', 'rolePermissions'));
+        return view('master-data.roles.edit', compact('role', 'permissions', 'rolePermissions'));
     }
 
     /**

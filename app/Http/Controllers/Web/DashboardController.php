@@ -56,7 +56,7 @@ class DashboardController extends Controller
             'status_distribution' => $statusDistribution
         ];
 
-        return view('dashboard.index', compact('stats'));
+        return view('services.dashboard.index', compact('stats'));
     }
 
     public function desa(): View
@@ -79,7 +79,7 @@ class DashboardController extends Controller
             })->whereDate('created_at', today())->count(),
         ];
 
-        return view('dashboard.desa', compact('stats'));
+        return view('services.dashboard.desa', compact('stats'));
     }
 
     /**
@@ -87,7 +87,7 @@ class DashboardController extends Controller
      */
     public function verify(): View
     {
-        return view('dashboard.verify');
+        return view('services.verification.index');
     }
 
     /**
@@ -209,7 +209,7 @@ class DashboardController extends Controller
         // 5. Group the current page's logs by date for rendering
         $groupedLogs = $paginatedItems->groupBy('date');
 
-        return view('dashboard.history', [
+        return view('services.histories.index', [
             'logs' => $groupedLogs,
             'paginator' => $logs,
             'search' => $search,
@@ -244,7 +244,7 @@ class DashboardController extends Controller
             'timestamp' => now()
         ]);
 
-        $html = view('dashboard.proof', compact('citizen', 'record', 'validationUrl'))->render();
+        $html = view('documents.doc_poverty', compact('citizen', 'record', 'validationUrl'))->render();
 
         $pdf = Browsershot::html($html)
             ->setNodeBinary('/usr/bin/node')

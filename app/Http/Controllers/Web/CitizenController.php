@@ -38,7 +38,7 @@ class CitizenController extends Controller
 
         $citizens = $query->latest()->paginate(15)->withQueryString();
 
-        return view('dashboard.citizens.index', compact('citizens', 'search'));
+        return view('master-data.citizens.index', compact('citizens', 'search'));
     }
 
     /**
@@ -54,7 +54,7 @@ class CitizenController extends Controller
             $villages = Village::orderBy('name')->get();
         }
 
-        return view('dashboard.citizens.create', compact('villages'));
+        return view('master-data.citizens.create', compact('villages'));
     }
 
     /**
@@ -106,7 +106,7 @@ class CitizenController extends Controller
         // Preload Poverty status if exists
         $povertyRecord = $citizen->povertyRecords()->latest()->first();
 
-        return view('dashboard.citizens.edit', compact('citizen', 'villages', 'povertyRecord'));
+        return view('master-data.citizens.edit', compact('citizen', 'villages', 'povertyRecord'));
     }
 
     /**

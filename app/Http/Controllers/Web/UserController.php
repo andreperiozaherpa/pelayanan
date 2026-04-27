@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreUserRequest;
-use App\Http\Requests\UpdateUserRequest;
-use App\Http\Resources\UserResource;
+use App\Http\Requests\Web\StoreUserRequest;
+use App\Http\Requests\Web\UpdateUserRequest;
+use App\Http\Resources\Web\UserResource;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Village;
@@ -29,7 +29,7 @@ class UserController extends Controller
 
         $users = $query->latest()->paginate(10);
 
-        return view('users.index', [
+        return view('master-data.users.index', [
             'users' => $users,
             'roles' => Role::all(),
             'villages' => Village::all(),
@@ -41,7 +41,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        return view('users.create', [
+        return view('master-data.users.create', [
             'roles' => Role::all(),
             'villages' => Village::all(),
         ]);
@@ -81,7 +81,7 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        return view('users.edit', [
+        return view('master-data.users.edit', [
             'user' => $user,
             'roles' => Role::all(),
             'villages' => Village::all(),

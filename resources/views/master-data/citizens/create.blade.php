@@ -22,7 +22,7 @@
         <div class="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-emerald-500/10 blur-3xl rounded-full pointer-events-none"></div>
 
         <form action="{{ route('citizens.store') }}" method="POST">
-            @include('dashboard.citizens.form')
+            @include('master-data.citizens.form')
             
             <div class="mt-10 pt-6 border-t border-slate-200 dark:border-slate-700/50 flex items-center justify-end gap-4">
                 <a href="{{ route('citizens.index') }}" class="px-6 py-3 rounded-xl font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
