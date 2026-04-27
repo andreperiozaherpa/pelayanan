@@ -134,6 +134,34 @@
                             Activity Logs
                         </x-nav-link>
                     </div>
+
+                    @if(Auth::user()->hasPermission('users.manage'))
+                    <div class="pt-8">
+                        <p class="text-[10px] font-black text-slate-500 dark:text-slate-600 uppercase tracking-[0.2em] px-4 mb-6">Administrative Control</p>
+                        <x-nav-link href="{{ route('users.index') }}" :active="request()->routeIs('users.*')"
+                            icon="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                            Manajemen User
+                        </x-nav-link>
+                        @if(Auth::user()->hasPermission('roles.manage'))
+                        <x-nav-link href="{{ route('roles.index') }}" :active="request()->routeIs('roles.*')"
+                            icon="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.041M12 21.355r 0 0 0 0">
+                            Manajemen Role
+                        </x-nav-link>
+                        @endif
+                        @if(Auth::user()->hasPermission('districts.manage'))
+                        <x-nav-link href="{{ route('districts.index') }}" :active="request()->routeIs('districts.*')"
+                            icon="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                            Manajemen Kecamatan
+                        </x-nav-link>
+                        @endif
+                        @if(Auth::user()->hasPermission('villages.manage'))
+                        <x-nav-link href="{{ route('villages.index') }}" :active="request()->routeIs('villages.*')"
+                            icon="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z">
+                            Manajemen Desa
+                        </x-nav-link>
+                        @endif
+                    </div>
+                    @endif
                 </nav>
 
                 <!-- Status Panel -->
@@ -193,6 +221,30 @@
                         NIK</x-nav-link>
                     <x-nav-link href="{{ route('dashboard.history') }}" :active="request()->routeIs('dashboard.history')"
                         icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">History Log</x-nav-link>
+                    @if(Auth::user()->hasPermission('users.manage'))
+                    <x-nav-link href="{{ route('users.index') }}" :active="request()->routeIs('users.*')"
+                        icon="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                        Manajemen User
+                    </x-nav-link>
+                    @endif
+                    @if(Auth::user()->hasPermission('roles.manage'))
+                    <x-nav-link href="{{ route('roles.index') }}" :active="request()->routeIs('roles.*')"
+                        icon="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.041M12 21.355r 0 0 0 0">
+                        Manajemen Role
+                    </x-nav-link>
+                    @endif
+                    @if(Auth::user()->hasPermission('districts.manage'))
+                    <x-nav-link href="{{ route('districts.index') }}" :active="request()->routeIs('districts.*')"
+                        icon="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                        Manajemen Kecamatan
+                    </x-nav-link>
+                    @endif
+                    @if(Auth::user()->hasPermission('villages.manage'))
+                    <x-nav-link href="{{ route('villages.index') }}" :active="request()->routeIs('villages.*')"
+                        icon="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z">
+                        Manajemen Desa
+                    </x-nav-link>
+                    @endif
                 </nav>
             </div>
         </div>

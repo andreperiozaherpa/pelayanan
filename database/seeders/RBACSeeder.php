@@ -18,6 +18,10 @@ class RBACSeeder extends Seeder
             ['name' => 'Management Citizens', 'slug' => 'citizens.manage'],
             ['name' => 'View Audit Logs', 'slug' => 'audit.view'],
             ['name' => 'System Management', 'slug' => 'system.manage'],
+            ['name' => 'Manage Users', 'slug' => 'users.manage'],
+            ['name' => 'Manage Roles', 'slug' => 'roles.manage'],
+            ['name' => 'Manage Villages', 'slug' => 'villages.manage'],
+            ['name' => 'Manage Districts', 'slug' => 'districts.manage'],
         ];
 
         foreach ($permissions as $p) {
@@ -26,7 +30,7 @@ class RBACSeeder extends Seeder
 
         // Define Roles & Assign Permissions
         $roles = [
-            'SuperAdmin' => ['poverty.verify', 'poverty.print_proof', 'service.report', 'citizens.manage', 'audit.view', 'system.manage'],
+            'SuperAdmin' => ['poverty.verify', 'poverty.print_proof', 'service.report', 'citizens.manage', 'audit.view', 'system.manage', 'users.manage', 'roles.manage', 'villages.manage', 'districts.manage'],
             'OperatorDesa' => ['poverty.verify', 'service.report'],
             'PetugasFrontOffice' => ['poverty.verify', 'poverty.print_proof'],
             'Auditor' => ['audit.view'],

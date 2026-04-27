@@ -2,10 +2,14 @@
 
 use App\Http\Controllers\Web\CitizenController;
 use App\Http\Controllers\Web\DashboardController;
-use App\Http\Controllers\Web\VerificationController;
-use App\Http\Controllers\Web\ServiceController;
+use App\Http\Controllers\Web\DistrictController;
 use App\Http\Controllers\Web\LoginController;
 use App\Http\Controllers\Web\ReportController;
+use App\Http\Controllers\Web\RoleController;
+use App\Http\Controllers\Web\ServiceController;
+use App\Http\Controllers\Web\UserController;
+use App\Http\Controllers\Web\VerificationController;
+use App\Http\Controllers\Web\VillageController;
 use Illuminate\Support\Facades\Route;
 
 // Auth Routes
@@ -21,6 +25,18 @@ Route::middleware('auth')->group(function () {
     // Web UI: Citizen & Poverty Management for Operator Desa & Super Admin
     Route::resource('citizens', CitizenController::class)
         ->middleware('permission:citizens.manage');
+
+    Route::resource('users', UserController::class)
+        ->middleware('permission:users.manage');
+
+    Route::resource('roles', RoleController::class)
+        ->middleware('permission:roles.manage');
+
+    Route::resource('villages', VillageController::class)
+        ->middleware('permission:villages.manage');
+
+    Route::resource('districts', DistrictController::class)
+        ->middleware('permission:districts.manage');
 
     Route::get('/verify', [DashboardController::class, 'verify'])->name('dashboard.verify');
     Route::get('/history', [DashboardController::class, 'history'])->name('dashboard.history');

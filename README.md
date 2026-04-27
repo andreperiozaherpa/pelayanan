@@ -39,9 +39,9 @@ Sistem dibangun tidak hanya dengan mengedepankan fungsional namun juga desain *"
 ## 🛠️ Stack Teknologi (Tech Stack)
 
 Sistem ini dididik dengan pilar utama Framework PHP terdepan:
-- **Mesin Inti**: PHP 8.4 + Laravel Framework 11.
+- **Mesin Inti**: PHP 8.4 + Laravel Framework 13.
 - **Lapisan Penyajian (Frontend)**: Laravel Blade + Tailwind CSS v4 (Sistem Desain Utilitas Responsif).
-- **Interaktivitas Visual**: Alpine.js (Untuk manuver antarmuka minimalis seperti modal & sakelar *Light/Dark Mode*).
+- **Interaktivitas Visual**: Alpine.js (Untuk manuver antarmuka minimalis seperti modal, *Permission Syncing*, & sakelar *Light/Dark Mode*).
 - **Basis Data**: MySQL 8.
 - **Keamanan Input**: Form Requests terisolasi + Eksekusi `Nullable` dinamis pada parameter komponen SKTM tersembunyi.
 
@@ -49,11 +49,12 @@ Sistem ini dididik dengan pilar utama Framework PHP terdepan:
 
 ## 📋 Status Pengembangan (Developer Log)
 
-Penulisan kode dikendalikan dengan implementasi *"Do Things the Laravel 11 Way"*:
+Penulisan kode dikendalikan dengan implementasi *"Do Things the Laravel 13 Way"*:
 - ✅ **Fase 1**: Arsitektur Basis Data, Skema Tabel (Villages, Users, Permisson_Role, Citizens, PovertyRecords).
 - ✅ **Fase 2**: Kontrak Otorisasi Otentikasi dan *Multi-Role Logic* tersemat melalui Seeder.
 - ✅ **Fase 3**: Konfigurasi estetik *Super Dashboard* dengan Layout Universal.
 - ✅ **Fase 4**: Penempatan Modul *Controller*, *Validation Rules* yang berlapis (menangani *bug valid_from.date*), *Middleware CheckPermission* di *app.php*.
-- ⏳ **Fase 5 (Selanjutnya)**: Sistem Integrasi Layanan Eksternal (API *Front Office*) & Notifikasi otomatis/Pekerja Layar Belakang (*Queue Worker SMS/WhatsApp Reminder*).
+- ✅ **Fase 5**: Modul Manajemen Pengguna & Role (*User & Role Management*), implementasi *Form Requests* untuk validasi ketat, dan *Eloquent Resources* untuk standarisasi output data Admin.
+- ⏳ **Fase 6 (Sekarang)**: Sistem Integrasi Layanan Eksternal (API *Front Office*) & Notifikasi otomatis/Pekerja Layar Belakang (*Queue Worker SMS/WhatsApp Reminder*).
 
 ***Berkarya untuk Birokrasi yang Mulus. 🚀***
