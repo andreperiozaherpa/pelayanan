@@ -28,6 +28,13 @@ SVLDK memiliki subsistem khusus terintegrasi dengan Data Warga:
 - **Masa Kedaluwarsa Dinamis**: Otomatis mengeksekusi perhitungan teknis sehingga status SKTM warga hanya berlaku tepat **3 bulan** dari waktu awal penetapan (Valid From).
 - Status terstruktur berlapis: `ACTIVE` (Aktif Bantuan), `PENDING_REVIEW` (Perlu Tinjauan), dan `EXPIRED` (Telah Kedaluwarsa).
 
+### 4. 🎨 Estetika & Keamanan Ekstra
+Sistem dibangun tidak hanya dengan mengedepankan fungsional namun juga desain *"WOW Factor"*:
+- **Aesthetic UI**: Arsitektur tampilan panel depan dengan struktur **Glassmorphism**, panel akrilik kabur (*Blur Backdrops*), efek partikel gradien bayangan eksklusif.
+- **Dual-Theme Engine (Light/Dark Mode)**: Dikendalikan responsif melalui *localStorage* + `Alpine.js` agar mata Operator nyaman saat pendataan larut malam.
+- **Custom Error Interfaces**: Modifikasi antarmuka *Error Page* bawaan menjadi halaman responsif *(404 Not Found, 403 Forbidden, 401 Unauthorized)* secara tematik agar memandu pengguna dengan aman saat tersesat.
+- **Global SweetAlert2 Interception**: Semua sukses, error otorisasi, maupun validasi peringatan disadap dan diterjemahkan oleh antarmuka *SweetAlert* terapung lengkap dengan rekonsiliasi format pesan yang bersahabat (*User-Centric*).
+
 ### 5. 🏗️ Arsitektur Views Modular (Master-Data & Services)
 SVLDK menerapkan standar pengorganisasian views yang ketat untuk memudahkan kolaborasi tim:
 - **`master-data/`**: Folder khusus untuk seluruh modul pengelolaan data induk (CRUD) seperti Warga, Pengguna, Role, Kecamatan, dan Desa.
