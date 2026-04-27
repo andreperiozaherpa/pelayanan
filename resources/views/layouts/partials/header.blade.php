@@ -36,7 +36,8 @@
             <div
                 class="flex items-center gap-2 lg:gap-4 2xl:gap-6 pr-3 lg:pr-6 border-r border-slate-200/50 dark:border-slate-800/50">
                 <button @click="darkMode = !darkMode" class="text-slate-400 hover:text-primary-acorn transition">
-                    <iconify-icon :icon="darkMode ? 'lucide:sun' : 'lucide:moon'" class="text-xl 2xl:text-2xl"></iconify-icon>
+                    <iconify-icon :icon="darkMode ? 'lucide:sun' : 'lucide:moon'"
+                        class="text-xl 2xl:text-2xl"></iconify-icon>
                 </button>
                 <button class="hidden xs:block text-slate-400 hover:text-primary-acorn transition">
                     <iconify-icon icon="lucide:search" class="text-xl 2xl:text-2xl"></iconify-icon>
@@ -71,31 +72,40 @@
                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                         x-transition:leave-end="opacity-0 translate-y-2 scale-95"
                         class="absolute right-0 mt-4 w-64 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-black/[0.03] dark:border-white/[0.05] py-3 z-50 origin-top-right">
-                        
+
                         <!-- User Info Header -->
-                        <div class="px-6 py-4 border-b border-black/[0.03] dark:border-white/[0.03] mb-2 flex items-center gap-4">
+                        <div
+                            class="px-6 py-4 border-b border-black/[0.03] dark:border-white/[0.03] mb-2 flex items-center gap-4">
                             <div class="w-12 h-12 rounded-2xl overflow-hidden shadow-inner shrink-0">
-                                <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=33ac1b&color=fff" class="w-full h-full object-cover">
+                                <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=33ac1b&color=fff"
+                                    class="w-full h-full object-cover">
                             </div>
                             <div class="min-w-0">
                                 <p class="text-[10px] font-black text-slate-900 dark:text-white uppercase truncate">
                                     {{ Auth::user()->name }}</p>
-                                <p class="text-[9px] text-slate-400 uppercase mt-0.5 truncate">{{ Auth::user()->email }}</p>
+                                <p class="text-[9px] text-slate-400 uppercase mt-0.5 truncate">{{ Auth::user()->email }}
+                                </p>
                             </div>
                         </div>
 
                         <!-- Menu Items -->
                         <div class="px-2 space-y-1">
-                            <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/[0.02] hover:text-primary-acorn transition group">
-                                <iconify-icon icon="lucide:user" class="text-base group-hover:scale-110 transition"></iconify-icon>
+                            <a href="#"
+                                class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/[0.02] hover:text-primary-acorn transition group">
+                                <iconify-icon icon="lucide:user"
+                                    class="text-base group-hover:scale-110 transition"></iconify-icon>
                                 Profil Saya
                             </a>
-                            <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/[0.02] hover:text-primary-acorn transition group">
-                                <iconify-icon icon="lucide:settings" class="text-base group-hover:scale-110 transition"></iconify-icon>
+                            <a href="#"
+                                class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/[0.02] hover:text-primary-acorn transition group">
+                                <iconify-icon icon="lucide:settings"
+                                    class="text-base group-hover:scale-110 transition"></iconify-icon>
                                 Pengaturan
                             </a>
-                            <a href="#" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/[0.02] hover:text-primary-acorn transition group">
-                                <iconify-icon icon="lucide:shield-check" class="text-base group-hover:scale-110 transition"></iconify-icon>
+                            <a href="#"
+                                class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-white/[0.02] hover:text-primary-acorn transition group">
+                                <iconify-icon icon="lucide:shield-check"
+                                    class="text-base group-hover:scale-110 transition"></iconify-icon>
                                 Keamanan
                             </a>
                         </div>
@@ -109,7 +119,8 @@
                                 @csrf
                                 <button type="submit"
                                     class="w-full text-left px-4 py-2.5 rounded-xl text-[9px] text-rose-500 font-black uppercase tracking-widest hover:bg-rose-50 dark:hover:bg-rose-500/10 transition flex items-center gap-3 group">
-                                    <iconify-icon icon="lucide:log-out" class="text-base group-hover:translate-x-1 transition"></iconify-icon>
+                                    <iconify-icon icon="lucide:log-out"
+                                        class="text-base group-hover:translate-x-1 transition"></iconify-icon>
                                     Keluar Sesi
                                 </button>
                             </form>
