@@ -1,174 +1,157 @@
 @extends('layouts.app')
 
-@section('title', 'Verifikasi NIK')
+@section('title', 'Verifikasi Nomor Induk')
 
 @section('content')
-    <div class="max-w-4xl mx-auto space-y-8" x-data="verificationApp()">
+    <div class="space-y-8" x-data="verificationApp()">
         <!-- Header -->
-        <div class="text-center">
-            <h1 class="text-3xl font-bold text-white tracking-tight">Verifikasi Data Warga</h1>
-            <p class="text-slate-400 mt-2">Gunakan NIK atau Scan QR untuk validasi status kemiskinan secara real-time.</p>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div>
+                <h1 class="text-xl font-black text-slate-800 dark:text-white tracking-tight uppercase">
+                    Verifikasi Data Penduduk
+                </h1>
+                <p class="text-xs text-slate-500 font-medium tracking-tight mt-1">
+                    Gunakan Nomor Induk Kependudukan atau Pindai Kode QR untuk validasi status kemiskinan secara real-time.
+                </p>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button @click="toggleScanner()"
+                    class="p-2.5 bg-white dark:bg-slate-900 border border-black/[0.03] dark:border-white/[0.03] rounded-xl text-slate-400 hover:text-primary-acorn transition shadow-sm flex items-center justify-center"
+                    title="Pindai Kode QR">
+                    <iconify-icon icon="lucide:qr-code" class="text-xl"></iconify-icon>
+                </button>
+            </div>
         </div>
 
-        <!-- Interface -->
-        <div class="bg-slate-800/50 rounded-3xl border border-slate-700/50 p-8 shadow-2xl backdrop-blur-sm">
+        <!-- Search Interface -->
+        <div class="premium-card p-6 sm:p-8">
             <div class="flex flex-col md:flex-row gap-4">
                 <div class="flex-grow relative">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
+                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                        <iconify-icon icon="lucide:search" class="text-lg"></iconify-icon>
                     </div>
                     <input type="text" x-model="nik" @keyup.enter="verifyNik('NIK')"
-                        class="block w-full pl-11 pr-4 py-4 bg-slate-900/50 border border-slate-700 rounded-2xl text-white placeholder-slate-500 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition"
-                        placeholder="Masukkan 16 digit NIK..." maxlength="16">
+                        class="block w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900/50 border border-black/[0.03] dark:border-white/[0.03] rounded-2xl text-sm font-bold placeholder-slate-300 focus:ring-4 focus:ring-primary-acorn/10 focus:border-primary-acorn outline-none transition uppercase tracking-wider"
+                        placeholder="MASUKKAN 16 DIGIT NOMOR INDUK KEPENDUDUKAN..." maxlength="16">
                 </div>
                 <button @click="verifyNik('NIK')" :disabled="loading || nik.length < 16"
-                    class="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition shadow-lg shadow-emerald-600/20">
-                    <span x-show="!loading">Verifikasi</span>
+                    class="bg-primary-acorn hover:bg-primary-acorn/90 disabled:opacity-50 disabled:cursor-not-allowed text-white px-10 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary-acorn/20 transition-all hover:-translate-y-0.5 active:scale-95">
+                    <span x-show="!loading">Verifikasi Data</span>
                     <span x-show="loading" class="flex items-center gap-2">
-                        <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                        <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
                                 stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor"
                                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
                             </path>
                         </svg>
-                        Proses...
+                        Memproses...
                     </span>
-                </button>
-                <button @click="toggleScanner()"
-                    class="p-4 bg-slate-700 hover:bg-slate-600 text-white rounded-2xl transition border border-slate-600"
-                    title="Scan QR Code">
-                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h3m-3 0h-3m3 10h3m11-3v3m0 0h-3m3 0v-3m-12-9h2m8 0h2m-12 9h2m8 0h2m-11 5V5a2 2 0 012-2h4a2 2 0 012 2v14a2 2 0 01-2 2h-4a2 2 0 01-2-2z" />
-                    </svg>
                 </button>
             </div>
 
             <!-- Scanner Container -->
             <div x-show="showScanner" x-transition
-                class="mt-6 border-2 border-dashed border-slate-700 rounded-3xl overflow-hidden bg-black/20">
+                class="mt-6 border-2 border-dashed border-black/[0.03] dark:border-white/[0.03] rounded-3xl overflow-hidden bg-slate-50 dark:bg-black/20">
                 <div id="qr-reader" class="w-full"></div>
-                <div class="p-4 bg-slate-900/80 text-center">
+                <div class="p-4 bg-white/80 dark:bg-slate-900/80 text-center border-t border-black/[0.03]">
                     <button @click="stopScanner()"
-                        class="text-xs font-bold text-rose-400 uppercase tracking-widest hover:text-rose-300">Tutup
-                        Kamera</button>
+                        class="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:opacity-80 transition">Tutup
+                        Kamera Pemindai</button>
                 </div>
             </div>
         </div>
 
-        <!-- Loading State -->
-        <div x-show="loading" class="flex justify-center py-12">
-            <div class="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
-        </div>
-
         <!-- Error State -->
         <div x-show="error" x-transition
-            class="bg-rose-500/10 border border-rose-500/20 p-6 rounded-3xl flex items-center gap-4">
-            <div class="p-2 bg-rose-500/20 rounded-full">
-                <svg class="w-6 h-6 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            class="premium-card p-6 bg-rose-50/50 dark:bg-rose-500/10 border-rose-100 dark:border-rose-500/20 flex items-center gap-4">
+            <div class="p-2.5 bg-rose-500 text-white rounded-xl shadow-lg shadow-rose-500/20">
+                <iconify-icon icon="lucide:alert-circle" class="text-xl"></iconify-icon>
             </div>
             <div>
-                <p class="font-bold text-rose-500" x-text="error"></p>
-                <p class="text-sm text-rose-400/80">Silakan periksa kembali nomor NIK atau kualitas gambar QR.</p>
+                <p class="text-[11px] font-black text-rose-600 uppercase tracking-tight" x-text="error"></p>
+                <p class="text-[10px] text-rose-500/70 font-medium uppercase tracking-tight">Silakan periksa kembali Nomor
+                    Induk atau kualitas gambar Kode QR.</p>
             </div>
         </div>
 
         <!-- Result State -->
         <template x-if="result">
             <div class="space-y-6" x-transition>
-                <!-- Smart Card -->
-                <div class="relative overflow-hidden rounded-[2.5rem] border-2 shadow-2xl p-1 w-full"
-                    :class="{
-                        'border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-slate-900': result
-                            .status === 'ACTIVE',
-                        'border-rose-500/30 bg-gradient-to-br from-rose-500/10 to-slate-900': result
-                            .status === 'EXPIRED',
-                        'border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-slate-900': result
-                            .status === 'PENDING_REVIEW' || result.status === 'NOT_FOUND'
-                    }">
-                    <div class="bg-slate-900/90 rounded-[2.3rem] p-8 md:p-12 relative overflow-hidden">
-                        <div class="flex flex-col md:flex-row gap-12 items-start">
+                <!-- Premium Result Card -->
+                <div class="premium-card overflow-hidden">
+                    <div class="p-8 sm:p-12">
+                        <div class="flex flex-col md:flex-row gap-10 items-start">
                             <!-- Profile/Avatar -->
                             <div class="flex-shrink-0">
                                 <div
-                                    class="h-32 w-32 rounded-3xl bg-slate-800 border-4 border-slate-700 flex items-center justify-center text-5xl shadow-inner shadow-black/20">
+                                    class="h-28 w-28 rounded-3xl bg-slate-50 dark:bg-slate-900 border border-black/[0.03] dark:border-white/[0.03] flex items-center justify-center text-4xl shadow-sm">
                                     👤
                                 </div>
                             </div>
 
                             <!-- Data Body -->
-                            <div class="flex-grow">
-                                <div class="flex items-center justify-between">
-                                    <p class="text-2xl font-black text-emerald-400 tracking-tighter"
-                                        x-text="result.citizen ? result.citizen.nama_lengkap : nik"></p>
+                            <div class="flex-grow min-w-0">
+                                <div class="flex items-center justify-between gap-4">
+                                    <h2 class="text-2xl font-black text-slate-800 dark:text-white tracking-tight uppercase truncate"
+                                        x-text="result.citizen ? result.citizen.nama_lengkap : nik"></h2>
                                     <span x-show="result.status"
                                         :class="{
-                                            'bg-emerald-500 shadow-emerald-500/50': result.status === 'ACTIVE',
-                                            'bg-rose-500 shadow-rose-500/50': result.status === 'EXPIRED',
-                                            'bg-amber-500 shadow-amber-500/50': result.status === 'PENDING_REVIEW'
+                                            'bg-emerald-500 shadow-emerald-500/20': result.status === 'ACTIVE',
+                                            'bg-rose-500 shadow-rose-500/20': result.status === 'EXPIRED',
+                                            'bg-amber-500 shadow-amber-500/20': result.status === 'PENDING_REVIEW'
                                         }"
-                                        class="px-6 py-2 rounded-full text-[10px] font-black text-white shadow-2xl tracking-[0.2em] uppercase"
+                                        class="px-5 py-2 rounded-xl text-[9px] font-black text-white shadow-lg tracking-widest uppercase shrink-0"
                                         x-text="result.status">
                                     </span>
                                 </div>
 
-                                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div>
-                                        <p class="text-slate-500 uppercase font-black tracking-widest text-[10px] mb-1">
+                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
                                             Status Kesejahteraan</p>
-                                        <p class="text-2xl font-bold text-white leading-tight" x-text="result.message"></p>
+                                        <p class="text-lg font-black text-slate-700 dark:text-white leading-tight uppercase tracking-tight"
+                                            x-text="result.message"></p>
                                     </div>
 
                                     <div x-show="result.record">
-                                        <p class="text-slate-500 uppercase font-black tracking-widest text-[10px] mb-1">Masa
-                                            Berlaku</p>
-                                        <p class="text-xl font-medium text-slate-200"
-                                            x-text="result.record && result.record.valid_until_formatted ? 'Hingga ' + result.record.valid_until_formatted : 'Tidak Terbatas'">
+                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+                                            Masa Berlaku</p>
+                                        <p class="text-base font-black text-slate-600 dark:text-slate-300 uppercase tracking-tight"
+                                            x-text="result.record && result.record.valid_until_formatted ? 'HINGGA ' + result.record.valid_until_formatted : 'TIDAK TERBATAS'">
                                         </p>
                                     </div>
                                 </div>
 
-                                <!-- Secondary Identity Info -->
-                                <div class="mt-8 pt-8 border-t border-slate-700/50 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Identity Details -->
+                                <div
+                                    class="mt-8 pt-8 border-t border-black/[0.03] dark:border-white/[0.03] grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div x-show="result.citizen">
-                                        <p class="text-slate-500 uppercase font-black tracking-widest text-[10px] mb-1">
+                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
                                             Wilayah Desa</p>
-                                        <p class="text-lg text-slate-200"
-                                            x-text="result.citizen.village ? (typeof result.citizen.village === 'object' ? result.citizen.village.name : result.citizen.village) : 'Desa ID: ' + result.citizen.desa_id">
+                                        <p class="text-sm font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight"
+                                            x-text="result.citizen.village ? (typeof result.citizen.village === 'object' ? result.citizen.village.name : result.citizen.village) : 'IDENTITAS DESA: ' + result.citizen.desa_id">
                                         </p>
                                     </div>
                                     <div x-show="result.citizen">
-                                        <p class="text-slate-500 uppercase font-black tracking-widest text-[10px] mb-1">
+                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
                                             Alamat Domisili</p>
-                                        <p class="text-lg text-slate-200" x-text="result.citizen.alamat_desa"></p>
+                                        <p class="text-sm font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight"
+                                            x-text="result.citizen.alamat_desa"></p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Background Decoration -->
-                        <div class="absolute -bottom-12 -right-12 w-64 h-64 opacity-5 pointer-events-none">
-                            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                                <path fill="#FFFFFF"
-                                    d="M44.7,-76.4C58.8,-69.2,71.8,-59.1,79.6,-45.8C87.4,-32.6,90,-16.3,88.5,-0.9C87,14.6,81.4,29.2,73.1,42.4C64.8,55.6,53.8,67.3,40.4,74.1C27,80.9,13.5,82.8,-0.5,83.6C-14.4,84.4,-28.8,84.1,-41.8,77.7C-54.8,71.3,-66.4,58.7,-74.6,44.7C-82.8,30.7,-87.6,15.4,-88.4,-0.5C-89.2,-16.3,-86.1,-32.7,-77.8,-46.7C-69.5,-60.7,-56.1,-72.3,-41.4,-79.1C-26.7,-85.9,-13.4,-87.9,0.4,-88.6C14.2,-89.3,28.4,-88.7,44.7,-76.4Z"
-                                    transform="translate(100 100)" />
-                            </svg>
-                        </div>
                     </div>
                 </div>
 
-                <!-- Contextual Actions -->
-                <div class="flex flex-wrap justify-center gap-4" x-show="(result.status === 'ACTIVE' || result.status === 'PENDING_REVIEW' || result.status === 'EXPIRED') && !reported">
+                <!-- Actions Bar -->
+                <div class="flex flex-wrap justify-center gap-4"
+                    x-show="(result.status === 'ACTIVE' || result.status === 'PENDING_REVIEW' || result.status === 'EXPIRED') && !reported">
                     @can('service.report')
                         <button @click="showReportModal = true"
-                            class="px-12 py-5 bg-white text-slate-900 font-bold rounded-[2rem] hover:bg-slate-200 transition transform hover:-translate-y-1 shadow-2xl h-16 flex items-center">
+                            class="bg-slate-900 hover:bg-slate-800 text-white px-10 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl transition-all hover:-translate-y-1 active:scale-95">
                             Lapor Pelayanan Diberikan
                         </button>
                     @endcan
@@ -176,62 +159,66 @@
                     @can('poverty.print_proof')
                         <template x-if="result.status === 'ACTIVE'">
                             <a :href="'/proof/' + nik" target="_blank"
-                                class="px-12 py-5 bg-slate-700 text-white font-bold rounded-[2rem] hover:bg-slate-600 transition transform hover:-translate-y-1 shadow-2xl h-16 flex items-center border border-slate-600">
-                                <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 00-2 2h2m32 4h10a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                                </svg>
+                                class="bg-white hover:bg-slate-50 text-slate-800 px-10 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl border border-black/[0.03] transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3">
+                                <iconify-icon icon="lucide:printer" class="text-xl text-primary-acorn"></iconify-icon>
                                 Cetak Bukti Verifikasi
                             </a>
                         </template>
                     @endcan
                 </div>
 
+                <!-- Success Notification -->
                 <div class="flex justify-center" x-show="reported">
                     <div
-                        class="px-8 py-4 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span class="text-sm font-bold uppercase tracking-widest">Pelayanan Berhasil Dicatat</span>
+                        class="premium-card px-8 py-4 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20 flex items-center gap-3 shadow-lg shadow-emerald-500/5">
+                        <div class="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center">
+                            <iconify-icon icon="lucide:check-circle" class="text-lg"></iconify-icon>
+                        </div>
+                        <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Laporan Pelayanan
+                            Berhasil Dicatat</span>
                     </div>
                 </div>
 
                 <!-- Report Modal -->
                 <div x-show="showReportModal"
-                    class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-sm"
-                    x-transition>
-                    <div class="bg-slate-800 border border-slate-700 w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl"
-                        @click.away="showReportModal = false">
-                        <h3 class="text-2xl font-bold text-white mb-6">Lapor Pelayanan</h3>
-                        <div class="space-y-4">
-                            <div>
+                    class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
+                    x-transition x-cloak>
+                    <div class="premium-card w-full max-w-lg p-10 relative" @click.away="showReportModal = false">
+                        <button @click="showReportModal = false"
+                            class="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
+                            <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
+                        </button>
+
+                        <h3 class="text-xl font-black text-slate-800 dark:text-white mb-8 uppercase tracking-tight">Lapor
+                            Pelayanan</h3>
+                        <div class="space-y-6">
+                            <div class="space-y-2">
                                 <label
-                                    class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Jenis
+                                    class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Jenis
                                     Layanan</label>
                                 <select x-model="report.service_type"
-                                    class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-emerald-500/50">
-                                    <option value="">Pilih Layanan...</option>
-                                    <option value="Bantuan Pangan">Bantuan Pangan</option>
-                                    <option value="Bantuan Pendidikan (KIP)">Bantuan Pendidikan (KIP)</option>
-                                    <option value="Jaminan Kesehatan (PBI)">Jaminan Kesehatan (PBI)</option>
-                                    <option value="Sembako/BPNT">Sembako/BPNT</option>
-                                    <option value="Lainnya">Lainnya</option>
+                                    class="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-900 border border-black/[0.03] dark:border-white/[0.03] rounded-2xl text-[11px] font-bold outline-none focus:ring-4 focus:ring-primary-acorn/10 focus:border-primary-acorn transition uppercase tracking-wider">
+                                    <option value="">PILIH LAYANAN...</option>
+                                    <option value="BANTUAN PANGAN">BANTUAN PANGAN</option>
+                                    <option value="BANTUAN PENDIDIKAN (KIP)">BANTUAN PENDIDIKAN (KIP)</option>
+                                    <option value="JAMINAN KESEHATAN (PBI)">JAMINAN KESEHATAN (PBI)</option>
+                                    <option value="SEMBAKO/BPNT">SEMBAKO/BPNT</option>
+                                    <option value="LAINNYA">LAINNYA</option>
                                 </select>
                             </div>
-                            <div>
+                            <div class="space-y-2">
                                 <label
-                                    class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Catatan
+                                    class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Catatan
                                     Tambahan</label>
                                 <textarea x-model="report.notes"
-                                    class="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white outline-none focus:ring-2 focus:ring-emerald-500/50"
-                                    rows="3" placeholder="Opsional..."></textarea>
+                                    class="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-900 border border-black/[0.03] dark:border-white/[0.03] rounded-2xl text-[11px] font-bold outline-none focus:ring-4 focus:ring-primary-acorn/10 focus:border-primary-acorn transition uppercase tracking-wider"
+                                    rows="3" placeholder="OPSIONAL..."></textarea>
                             </div>
-                            <div class="flex gap-4 pt-4">
+                            <div class="flex gap-3 pt-4">
                                 <button @click="showReportModal = false"
-                                    class="flex-grow py-4 bg-slate-700 text-white font-bold rounded-2xl hover:bg-slate-600 transition">Batal</button>
+                                    class="flex-grow py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-2xl transition">Batal</button>
                                 <button @click="submitReport()" :disabled="!report.service_type"
-                                    class="flex-grow py-4 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-500 transition disabled:opacity-50">Kirim
+                                    class="flex-grow py-3.5 bg-primary-acorn hover:bg-primary-acorn/90 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-lg shadow-primary-acorn/20 transition disabled:opacity-50">Kirim
                                     Laporan</button>
                             </div>
                         </div>
@@ -300,7 +287,7 @@
                 async submitReport() {
                     if (!this.report.service_type) return;
 
-                    this.isSubmitting = true;
+                    this.loading = true;
 
                     try {
                         const response = await fetch('{{ route('service.store') }}', {
@@ -321,7 +308,7 @@
                         if (response.ok) {
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Berhasil!',
+                                title: 'BERHASIL!',
                                 text: data.message,
                                 timer: 2000,
                                 showConfirmButton: false,
@@ -331,13 +318,12 @@
                             this.reported = true;
                             this.showReportModal = false;
                         } else if (response.status === 422) {
-                            // Security Notification (Duplicate Check)
                             Swal.fire({
                                 icon: 'warning',
-                                title: 'Celah Duplikasi!',
+                                title: 'CELAH DUPLIKASI!',
                                 text: data.message,
                                 confirmButtonText: 'Tutup',
-                                confirmButtonColor: '#10b981'
+                                confirmButtonColor: '#3498db'
                             });
                         } else {
                             throw new Error(data.message || 'Gagal menyimpan laporan.');
@@ -345,19 +331,56 @@
                     } catch (error) {
                         Swal.fire({
                             icon: 'error',
-                            title: 'Sistem Sibuk',
+                            title: 'SISTEM SIBUK',
                             text: 'Gagal mengirim laporan. Silakan coba beberapa saat lagi.',
-                            confirmButtonColor: '#ef4444'
+                            confirmButtonColor: '#e74c3c'
                         });
                     } finally {
-                        this.isSubmitting = false;
+                        this.loading = false;
                     }
                 },
 
                 toggleScanner() {
-                    // ... scanner logic ...
+                    this.showScanner = !this.showScanner;
+                    if (this.showScanner) {
+                        this.$nextTick(() => {
+                            this.startScanner();
+                        });
+                    } else {
+                        this.stopScanner();
+                    }
                 },
-                // ... other methods ...
+
+                startScanner() {
+                    this.html5QrCode = new Html5Qrcode("qr-reader");
+                    const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+                        this.nik = decodedText;
+                        this.stopScanner();
+                        this.verifyNik('QR_SCAN');
+                    };
+                    const config = {
+                        fps: 10,
+                        qrbox: {
+                            width: 250,
+                            height: 250
+                        }
+                    };
+                    this.html5QrCode.start({
+                        facingMode: "environment"
+                    }, config, qrCodeSuccessCallback);
+                },
+
+                stopScanner() {
+                    if (this.html5QrCode) {
+                        this.html5QrCode.stop().then((ignore) => {
+                            this.showScanner = false;
+                        }).catch((err) => {
+                            console.warn("QR Scanner Stop Error: ", err);
+                        });
+                    } else {
+                        this.showScanner = false;
+                    }
+                }
             }
         }
     </script>

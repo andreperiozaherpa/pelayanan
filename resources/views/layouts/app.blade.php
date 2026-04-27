@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{
-    darkMode: localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    darkMode: localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
+    sidebarOpen: true,
+    mobileSidebar: false,
+    userMenu: false
 }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))"
     :class="{ 'dark': darkMode }">
 
@@ -17,16 +20,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Sistem Verifikasi Pelayanan Dokumen') }} - @yield('title', 'Front Office')</title>
+    <title>{{ config('app.name', 'Sistem Verifikasi Pelayanan Dokumen') }} - @yield('title', 'Layanan Utama')</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300..900;1,300..900&family=Urbanist:ital,wght@0,300..900;1,300..900&display=swap"
+        rel="stylesheet">
 
     <!-- Vite & Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://unpkg.com/alpinejs" defer></script>
+    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
 
     @stack('styles')
     <!-- SweetAlert2 -->
@@ -39,35 +45,20 @@
         .dark .swal2-popup {
             background: #1e293b !important;
             color: #f1f5f9 !important;
-            border-radius: 2rem !important;
+            border-radius: 1.5rem !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
         }
 
         .light .swal2-popup {
             background: #ffffff !important;
-            color: #0f172a !important;
-            border-radius: 2rem !important;
+            color: #2c3e50 !important;
+            border-radius: 1.5rem !important;
             border: 1px solid rgba(0, 0, 0, 0.05) !important;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1) !important;
         }
 
-        .dark .swal2-title {
-            color: #f1f5f9 !important;
-        }
-
-        .light .swal2-title {
-            color: #0f172a !important;
-        }
-
-        .swal2-confirm {
-            background: #10b981 !important;
-            border-radius: 0.75rem !important;
-            padding: 10px 24px !important;
-            font-weight: bold !important;
-        }
-
         ::-webkit-scrollbar {
-            width: 5px;
+            width: 4px;
         }
 
         ::-webkit-scrollbar-track {
@@ -75,298 +66,97 @@
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #1e293b;
+            background: #cbd5e1;
             border-radius: 10px;
         }
 
-        .light ::-webkit-scrollbar-thumb {
-            background: #e2e8f0;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
+        .dark ::-webkit-scrollbar-thumb {
             background: #334155;
         }
     </style>
 </head>
 
-<body class="font-sans antialiased bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 overflow-hidden"
-    x-data="{ sidebarOpen: false, userMenu: false }">
+<body class="font-sans antialiased bg-[var(--color-bg-page)] text-[var(--color-surface-text)] overflow-hidden">
 
-    <div class="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div class="flex flex-col h-screen overflow-hidden p-4 lg:p-6">
 
-        <!-- Sidebar Navigation (Desktop Persistent) -->
-        <aside
-            class="hidden md:flex md:flex-col w-64 lg:w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800/50 flex-shrink-0 shadow-2xl z-20">
-            <div class="flex flex-col h-full">
-                <!-- Branding -->
-                <div class="flex items-center gap-4 px-8 h-24 border-b border-slate-100 dark:border-white/5">
+        <!-- Top Row: Logo & Header -->
+        <div class="flex h-16 shrink-0 items-center justify-between z-50 mb-2">
+            <!-- Logo Area (Width matches Sidebar) -->
+            <div class="w-[280px] flex items-center px-4">
+                <div class="flex items-center gap-3">
                     <div
-                        class="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-xl shadow-emerald-500/20 text-white transform hover:rotate-12 transition">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04 M12 21.355r 0 0 0 0-1.618-3.041z" />
-                        </svg>
+                        class="w-10 h-10 bg-primary-acorn rounded-xl flex items-center justify-center shadow-lg shadow-primary-acorn/20 text-white">
+                        <iconify-icon icon="lucide:leaf" class="text-xl"></iconify-icon>
                     </div>
-                    <div>
-                        <span
-                            class="text-xs font-black tracking-tight text-slate-900 dark:text-white block leading-tight">Sistem Verifikasi<br>Pelayanan Dokumen</span>
-                    </div>
-                </div>
-
-                <!-- Nav Menu -->
-                <nav class="flex-grow py-8 px-6 space-y-1.5 overflow-y-auto">
-                    <p
-                        class="text-[10px] font-black text-slate-500 dark:text-slate-600 uppercase tracking-[0.2em] px-4 mb-6">
-                        Core Operations</p>
-
-                    <x-nav-link href="{{ route('dashboard.index') }}" :active="request()->routeIs('dashboard.index')"
-                        icon="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
-                        Dashboard
-                    </x-nav-link>
-
-                    @if (Auth::user()->hasPermission('citizens.manage'))
-                        <x-nav-link href="{{ route('citizens.index') }}" :active="request()->routeIs('citizens.*')"
-                            icon="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                            Master Warga
-                        </x-nav-link>
-                    @endif
-
-                    <div class="pt-8">
-                        <p
-                            class="text-[10px] font-black text-slate-500 dark:text-slate-600 uppercase tracking-[0.2em] px-4 mb-6">
-                            Data Governance</p>
-                        <x-nav-link href="{{ route('dashboard.verify') }}" :active="request()->routeIs('dashboard.verify')"
-                            icon="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.041M12 21.355r 0 0 0 0">
-                            Verifikasi NIK
-                        </x-nav-link>
-                        <x-nav-link href="{{ route('dashboard.history') }}" :active="request()->routeIs('dashboard.history')"
-                            icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
-                            Activity Logs
-                        </x-nav-link>
-                    </div>
-
-                    @if (Auth::user()->hasPermission('users.manage'))
-                        <div class="pt-8">
-                            <p
-                                class="text-[10px] font-black text-slate-500 dark:text-slate-600 uppercase tracking-[0.2em] px-4 mb-6">
-                                Administrative Control</p>
-                            <x-nav-link href="{{ route('users.index') }}" :active="request()->routeIs('users.*')"
-                                icon="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
-                                Manajemen User
-                            </x-nav-link>
-                            @if (Auth::user()->hasPermission('roles.manage'))
-                                <x-nav-link href="{{ route('roles.index') }}" :active="request()->routeIs('roles.*')"
-                                    icon="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.041M12 21.355r 0 0 0 0">
-                                    Manajemen Role
-                                </x-nav-link>
-                            @endif
-                            @if (Auth::user()->hasPermission('districts.manage'))
-                                <x-nav-link href="{{ route('districts.index') }}" :active="request()->routeIs('districts.*')"
-                                    icon="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
-                                    Manajemen Kecamatan
-                                </x-nav-link>
-                            @endif
-                            @if (Auth::user()->hasPermission('villages.manage'))
-                                <x-nav-link href="{{ route('villages.index') }}" :active="request()->routeIs('villages.*')"
-                                    icon="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z">
-                                    Manajemen Desa
-                                </x-nav-link>
-                            @endif
-                        </div>
-                    @endif
-                </nav>
-
-                <!-- Status Panel -->
-                <div class="p-6 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/50">
-                    <div
-                        class="bg-white dark:bg-slate-800/40 rounded-2xl p-4 border border-slate-200 dark:border-white/5 backdrop-blur-sm">
-                        <div class="flex items-center justify-between mb-2">
-                            <span
-                                class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Environment</span>
-                            <span
-                                class="flex h-2 w-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50"></span>
-                        </div>
-                        <p class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Development
-                        </p>
-                        <p class="text-[9px] text-slate-500 mt-1">v{{ config('app.version', '2.1.0') }} &bull; Sistem Verifikasi Pelayanan Dokumen</p>
+                    <div class="hidden sm:block">
+                        <h1
+                            class="text-[11px] font-black text-slate-800 dark:text-white uppercase leading-snug tracking-widest">
+                            Sistem Verifikasi<br><span class="text-primary-acorn">Pelayanan Dokumen</span></h1>
                     </div>
                 </div>
             </div>
-        </aside>
 
-        <!-- Sidebar Navigation (Mobile Off-canvas) -->
-        <div x-show="sidebarOpen" class="fixed inset-0 z-[100] md:hidden" role="dialog" aria-modal="true">
-            <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
-                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100"
-                x-transition:leave-end="opacity-0" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md"
-                @click="sidebarOpen = false"></div>
-            <div x-show="sidebarOpen" x-transition:enter="transition ease-in-out duration-300 transform"
-                x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
-                x-transition:leave="transition ease-in-out duration-300 transform"
-                x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full"
-                class="relative flex-col w-full max-w-xs bg-white dark:bg-slate-900 h-full flex shadow-2xl border-r border-slate-200 dark:border-white/5">
-                <!-- Mobile Header -->
-                <div class="flex items-center justify-between px-8 h-24 border-b border-slate-100 dark:border-white/5">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center text-white">
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04 M12 21.355r 0 0 0 0-1.618-3.041z" />
-                            </svg>
-                        </div>
-                        <span
-                            class="text-sm font-bold tracking-tight text-slate-900 dark:text-white italic leading-tight">Sistem Verifikasi<br>Pelayanan Dokumen</span>
-                    </div>
-                    <button @click="sidebarOpen = false"
-                        class="p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+            <!-- Main Header -->
+            <header class="flex-1 flex justify-between items-center px-8">
+                <!-- Breadcrumbs -->
+                <div class="hidden md:flex items-center gap-3 text-slate-400">
+                    <iconify-icon icon="lucide:home" class="text-xs"></iconify-icon>
+                    <span class="text-[9px] font-black uppercase tracking-[0.2em] opacity-50">Home</span>
+                    <iconify-icon icon="lucide:chevron-right" class="text-[10px] opacity-30"></iconify-icon>
+                    <span
+                        class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">@yield('title', 'DASHBOARD')</span>
                 </div>
-                <nav class="p-6 space-y-1.5">
-                    <x-nav-link href="{{ route('dashboard.index') }}" :active="request()->routeIs('dashboard.index')"
-                        icon="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">Dashboard</x-nav-link>
-                    @if (Auth::user()->hasPermission('citizens.manage'))
-                        <x-nav-link href="{{ route('citizens.index') }}" :active="request()->routeIs('citizens.*')"
-                            icon="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">Master
-                            Warga</x-nav-link>
-                    @endif
-                    <x-nav-link href="{{ route('dashboard.verify') }}" :active="request()->routeIs('dashboard.verify')"
-                        icon="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.041M12 21.355r 0 0 0 0">Verifikasi
-                        NIK</x-nav-link>
-                    <x-nav-link href="{{ route('dashboard.history') }}" :active="request()->routeIs('dashboard.history')"
-                        icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">History Log</x-nav-link>
-                    @if (Auth::user()->hasPermission('users.manage'))
-                        <x-nav-link href="{{ route('users.index') }}" :active="request()->routeIs('users.*')"
-                            icon="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
-                            Manajemen User
-                        </x-nav-link>
-                    @endif
-                    @if (Auth::user()->hasPermission('roles.manage'))
-                        <x-nav-link href="{{ route('roles.index') }}" :active="request()->routeIs('roles.*')"
-                            icon="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.041M12 21.355r 0 0 0 0">
-                            Manajemen Role
-                        </x-nav-link>
-                    @endif
-                    @if (Auth::user()->hasPermission('districts.manage'))
-                        <x-nav-link href="{{ route('districts.index') }}" :active="request()->routeIs('districts.*')"
-                            icon="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
-                            Manajemen Kecamatan
-                        </x-nav-link>
-                    @endif
-                    @if (Auth::user()->hasPermission('villages.manage'))
-                        <x-nav-link href="{{ route('villages.index') }}" :active="request()->routeIs('villages.*')"
-                            icon="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z">
-                            Manajemen Desa
-                        </x-nav-link>
-                    @endif
-                </nav>
-            </div>
-        </div>
 
-        <!-- Main Viewport -->
-        <div class="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-slate-950 relative">
-
-            <!-- Global Top Bar -->
-            <header
-                class="flex items-center justify-between h-24 px-8 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-white/5 flex-shrink-0 z-10 sticky top-0 shadow-sm">
+                <!-- Quick Actions & Profile -->
                 <div class="flex items-center gap-6">
-                    <button @click="sidebarOpen = true"
-                        class="p-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-white md:hidden transition border border-slate-200 dark:border-white/5">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
-                    <div>
-                        <h2 class="text-xl font-black text-slate-900 dark:text-white tracking-tight">@yield('title', 'Front Office')
-                        </h2>
-                        <p
-                            class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5 whitespace-nowrap">
-                            Sistem Verifikasi Pelayanan Dokumen</p>
-                    </div>
-                </div>
-
-                <!-- Global Actions & User -->
-                <div class="flex items-center gap-4 lg:gap-8">
-                    <!-- Theme Toggle -->
-                    <button @click="darkMode = !darkMode"
-                        class="p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl text-slate-400 hover:text-indigo-500 transition border border-slate-200 dark:border-white/5">
-                        <svg x-show="!darkMode" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                        </svg>
-                        <svg x-show="darkMode" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                    </button>
-
-                    <div class="hidden lg:flex flex-col text-right">
-                        <span
-                            class="text-sm font-black text-slate-900 dark:text-white leading-tight">{{ Auth::user()->name }}</span>
-                        <div class="flex items-center justify-end gap-2 mt-0.5">
-                            @if (Auth::user()->desa_id)
-                                <span
-                                    class="bg-emerald-500/10 text-emerald-500 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border border-emerald-500/20">
-                                    {{ Auth::user()->village->name ?? 'Wilayah' }}
-                                </span>
-                            @endif
-                            <span
-                                class="text-[10px] text-slate-500 font-bold uppercase tracking-widest italic">{{ Auth::user()->role->name ?? 'Staff' }}</span>
-                        </div>
-                    </div>
-
-                    <div class="relative">
-                        <button type="button" @click.stop="userMenu = !userMenu" @click.away="userMenu = false"
-                            class="group flex items-center p-1 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-800/50 transition duration-300">
-                            <div
-                                class="h-12 w-12 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-white/5 flex items-center justify-center text-emerald-400 font-black shadow-inner transform group-hover:scale-95 transition">
-                                {{ substr(Auth::user()->name ?? 'P', 0, 1) }}
-                            </div>
-                            <svg class="w-4 h-4 text-slate-500 ml-3 transition transform"
-                                :class="userMenu ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 9l-7 7-7-7" />
-                            </svg>
+                    <div class="flex items-center gap-4 pr-6 border-r border-slate-200/50 dark:border-slate-800/50">
+                        <button @click="darkMode = !darkMode"
+                            class="text-slate-400 hover:text-primary-acorn transition">
+                            <iconify-icon :icon="darkMode ? 'lucide:sun' : 'lucide:moon'"
+                                class="text-xl"></iconify-icon>
                         </button>
+                        <button class="text-slate-400 hover:text-primary-acorn transition">
+                            <iconify-icon icon="lucide:search" class="text-xl"></iconify-icon>
+                        </button>
+                        <button class="relative text-slate-400 hover:text-primary-acorn transition">
+                            <iconify-icon icon="lucide:bell" class="text-xl"></iconify-icon>
+                            <span
+                                class="absolute -top-1 -right-1 w-4 h-4 bg-primary-acorn text-[8px] text-white font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900">2</span>
+                        </button>
+                    </div>
 
-                        <div x-show="userMenu" x-cloak x-transition:enter="transition ease-out duration-200"
-                            x-transition:enter-start="transform opacity-0 scale-95 -translate-y-2"
-                            x-transition:enter-end="transform opacity-100 scale-100 translate-y-0"
-                            x-transition:leave="transition ease-in duration-75"
-                            x-transition:leave-start="transform opacity-100 scale-100 translate-y-0"
-                            x-transition:leave-end="transform opacity-0 scale-95 -translate-y-2"
-                            class="absolute right-0 mt-4 w-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl overflow-hidden z-[100] backdrop-blur-xl">
-                            <div
-                                class="px-6 py-6 bg-slate-50 dark:bg-slate-800/40 border-b border-slate-100 dark:border-white/5">
-                                <p class="text-[10px] text-slate-500 uppercase tracking-[0.2em] mb-2 font-black">
-                                    Account Information</p>
-                                <p class="text-sm font-black text-slate-900 dark:text-white truncate">
-                                    {{ Auth::user()->name }}</p>
-                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-                                    {{ Auth::user()->email }}</p>
-                            </div>
-                            <div class="p-2">
+                    <div class="flex items-center gap-3" x-data="{ open: false }">
+                        <div class="text-right hidden sm:block">
+                            <p
+                                class="text-[10px] font-black text-slate-900 dark:text-white leading-none uppercase tracking-wide">
+                                {{ Auth::user()->name }}</p>
+                            <p class="text-[9px] text-primary-acorn font-bold mt-1 uppercase tracking-tighter">
+                                {{ Auth::user()->role->name ?? 'SUPER ADMIN' }}</p>
+                        </div>
+                        <div class="relative">
+                            <button @click="open = !open"
+                                class="h-10 w-10 rounded-full overflow-hidden border-2 border-white dark:border-slate-800 shadow-sm transition hover:border-primary-acorn">
+                                <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=33ac1b&color=fff"
+                                    class="w-full h-full object-cover">
+                            </button>
+
+                            <div x-show="open" @click.away="open = false" x-cloak
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 translate-y-2"
+                                x-transition:enter-end="opacity-100 translate-y-0"
+                                class="absolute right-0 mt-3 w-56 premium-card py-2 z-50">
+                                <div class="px-4 py-3 border-b border-black/[0.03] dark:border-white/[0.03] mb-2">
+                                    <p class="text-[10px] font-black text-slate-900 dark:text-white uppercase">
+                                        {{ Auth::user()->name }}</p>
+                                    <p class="text-[9px] text-slate-400 uppercase mt-0.5">{{ Auth::user()->email }}</p>
+                                </div>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <button type="submit"
-                                        class="w-full text-left px-4 py-4 text-xs text-rose-400 hover:bg-rose-500/10 rounded-2xl transition flex items-center gap-3 group">
-                                        <div class="p-2 bg-rose-500/10 rounded-lg group-hover:scale-110 transition">
-                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                                                stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                            </svg>
-                                        </div>
-                                        <span class="font-black uppercase tracking-widest text-[10px]">Terminate
-                                            Session</span>
+                                        class="w-full text-left px-4 py-2.5 text-[9px] text-rose-500 font-black uppercase tracking-widest hover:bg-rose-50 transition flex items-center gap-3">
+                                        <iconify-icon icon="lucide:log-out"></iconify-icon>
+                                        Keluar Sesi
                                     </button>
                                 </form>
                             </div>
@@ -374,16 +164,106 @@
                     </div>
                 </div>
             </header>
+        </div>
 
-            <!-- Scrollable Page Content -->
-            <main class="flex-grow overflow-y-auto overflow-x-hidden">
-                <div class="min-h-full flex flex-col p-6 sm:p-10 lg:p-12">
-                    <div class="flex-grow w-full pb-12">
-                        @yield('content')
+        <!-- Main Row: Sidebars & Content -->
+        <div class="flex flex-1 overflow-hidden gap-6">
+
+            <!-- Sidebar Area -->
+            <aside class="w-[280px] flex flex-col h-full shrink-0">
+                <div class="flex flex-1 min-h-0">
+
+                    <!-- Primary Sidebar (Icons) -->
+                    <div class="w-[60px] flex flex-col items-center py-4 gap-4">
+                        <a href="{{ route('dashboard.index') }}"
+                            class="flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 {{ request()->routeIs('dashboard.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                            <iconify-icon icon="lucide:layout-grid" class="text-xl"></iconify-icon>
+                        </a>
+                        <a href="{{ route('citizens.index') }}"
+                            class="flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 {{ request()->routeIs('citizens.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                            <iconify-icon icon="lucide:users-2" class="text-xl"></iconify-icon>
+                        </a>
+                        @if (Auth::user()->hasPermission('users.manage'))
+                            <a href="{{ route('users.index') }}"
+                                class="flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-300 {{ request()->routeIs('users.*') || request()->routeIs('roles.*') || request()->routeIs('districts.*') || request()->routeIs('villages.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                                <iconify-icon icon="lucide:settings-2" class="text-xl"></iconify-icon>
+                            </a>
+                        @endif
+                        <button
+                            class="mt-auto flex items-center justify-center w-12 h-12 rounded-2xl text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800 transition-all duration-300">
+                            <iconify-icon icon="lucide:code-2" class="text-xl"></iconify-icon>
+                        </button>
+                    </div>
+
+                    <!-- Secondary Sidebar (Menu Card) -->
+                    <div class="flex-1 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl shadow-sm p-4 flex flex-col custom-scrollbar overflow-y-auto"
+                        x-show="sidebarOpen">
+                        <nav class="flex-grow space-y-0.5">
+                            @if (request()->routeIs('dashboard.*'))
+                                <div class="px-4 py-4">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                        Dashboards</p>
+                                </div>
+                                <x-nav-link href="{{ route('dashboard.index') }}" :active="request()->routeIs('dashboard.index')"
+                                    icon="lucide:layout-dashboard">Default</x-nav-link>
+                                <x-nav-link href="{{ route('dashboard.verify') }}" :active="request()->routeIs('dashboard.verify')"
+                                    icon="lucide:scan-line">Analytics</x-nav-link>
+                                <x-nav-link href="{{ route('dashboard.history') }}" :active="request()->routeIs('dashboard.history')"
+                                    icon="lucide:history">History</x-nav-link>
+                            @elseif(request()->routeIs('citizens.*'))
+                                <div class="px-4 py-4">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Citizens
+                                    </p>
+                                </div>
+                                <x-nav-link href="{{ route('citizens.index') }}" :active="request()->routeIs('citizens.index')"
+                                    icon="lucide:users">Directory</x-nav-link>
+                                <x-nav-link href="{{ route('citizens.create') }}" :active="request()->routeIs('citizens.create')"
+                                    icon="lucide:user-plus">Registration</x-nav-link>
+                            @elseif(request()->routeIs('users.*') ||
+                                    request()->routeIs('roles.*') ||
+                                    request()->routeIs('districts.*') ||
+                                    request()->routeIs('villages.*'))
+                                <div class="px-4 py-4">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Settings
+                                    </p>
+                                </div>
+                                <x-nav-link href="{{ route('users.index') }}" :active="request()->routeIs('users.*')"
+                                    icon="lucide:user-cog">Users</x-nav-link>
+                                <x-nav-link href="{{ route('roles.index') }}" :active="request()->routeIs('roles.*')"
+                                    icon="lucide:shield-check">Roles</x-nav-link>
+                                <x-nav-link href="{{ route('districts.index') }}" :active="request()->routeIs('districts.*')"
+                                    icon="lucide:map">Districts</x-nav-link>
+                                <x-nav-link href="{{ route('villages.index') }}" :active="request()->routeIs('villages.*')"
+                                    icon="lucide:home">Villages</x-nav-link>
+                            @endif
+                        </nav>
                     </div>
                 </div>
-            </main>
+
+
+            </aside>
+
+            <!-- Main Content Area -->
+            <div class="flex-1 flex flex-col min-w-0">
+                <main
+                    class="flex-1 bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl rounded-[2.5rem] p-10 lg:p-14 overflow-y-auto custom-scrollbar border border-white/50 dark:border-white/10">
+                    @yield('content')
+                </main>
+            </div>
         </div>
+
+        <!-- Global Footer -->
+        <footer
+            class="h-12 shrink-0 w-full flex items-center justify-between px-8 text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 z-50">
+            <div>
+                <span>&copy; {{ date('Y') }} Sistem Verifikasi Pelayanan Dokumen</span>
+            </div>
+            <div class="flex items-center gap-6">
+                <a href="#" class="hover:text-primary-acorn transition">About</a>
+                <a href="#" class="hover:text-primary-acorn transition">Docs</a>
+                <a href="#" class="hover:text-primary-acorn transition">Purchase</a>
+            </div>
+        </footer>
     </div>
 
     @stack('scripts')
@@ -393,51 +273,14 @@
             @if (session('success'))
                 Swal.fire({
                     icon: 'success',
-                    title: 'Berhasil!',
+                    title: 'BERHASIL!',
                     text: '{!! session('success') !!}',
-                    confirmButtonText: 'Oke',
+                    confirmButtonText: 'OKE',
                     timer: 3000,
                     timerProgressBar: true,
                     customClass: {
-                        popup: 'rounded-3xl border border-white/10 shadow-2xl',
-                        confirmButton: 'bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl px-8 py-3 font-black tracking-widest shadow-lg shadow-emerald-500/30 transition'
-                    },
-                    buttonsStyling: false
-                });
-            @endif
-
-            @if (session('error'))
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Akses Ditolak!',
-                    text: '{!! session('error') !!}',
-                    confirmButtonText: 'Tutup',
-                    customClass: {
-                        popup: 'rounded-3xl border border-white/10 shadow-2xl',
-                        confirmButton: 'bg-rose-500 hover:bg-rose-600 text-white rounded-xl px-8 py-3 font-black tracking-widest shadow-lg shadow-rose-500/30 transition'
-                    },
-                    buttonsStyling: false
-                });
-            @endif
-
-            @if ($errors->any())
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Validasi Data Gagal',
-                    html: `
-                        <div class="text-sm text-slate-500 font-medium text-left bg-slate-100/50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-200 dark:border-white/5 mt-4">
-                            <p class="font-bold mb-2 text-slate-700 dark:text-slate-300">Mohon perbaiki formulir berikut:</p>
-                            <ul class="list-disc pl-5 space-y-1">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    `,
-                    confirmButtonText: 'Perbaiki',
-                    customClass: {
-                        popup: 'rounded-3xl border border-white/10 shadow-2xl',
-                        confirmButton: 'bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl px-8 py-3 font-black tracking-widest shadow-lg shadow-indigo-500/30 transition mt-4'
+                        popup: 'rounded-[1.5rem] border-none shadow-2xl',
+                        confirmButton: 'bg-primary-acorn text-white rounded-xl px-8 py-3 font-bold transition'
                     },
                     buttonsStyling: false
                 });
