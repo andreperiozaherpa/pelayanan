@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: svpd_app
+    container_name: pelayanan_dokumen_app
     restart: always # Auto-start jika server mati
     ports:
       - "80:80" # Trafik web langsung masuk

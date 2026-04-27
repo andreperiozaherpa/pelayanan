@@ -17,7 +17,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'SVPD') }} - @yield('title', 'Front Office')</title>
+    <title>{{ config('app.name', 'Sistem Verifikasi Pelayanan Dokumen') }} - @yield('title', 'Front Office')</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -109,9 +109,7 @@
                     </div>
                     <div>
                         <span
-                            class="text-xl font-black tracking-tighter text-slate-900 dark:text-white block leading-none">SVPD</span>
-                        <span
-                            class="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-none">Intelligence</span>
+                            class="text-xs font-black tracking-tight text-slate-900 dark:text-white block leading-tight">Sistem Verifikasi<br>Pelayanan Dokumen</span>
                     </div>
                 </div>
 
@@ -190,8 +188,7 @@
                         </div>
                         <p class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Development
                         </p>
-                        <p class="text-[9px] text-slate-500 mt-1">v{{ config('app.version', '2.1.0') }} &bull; SVPD
-                            Core</p>
+                        <p class="text-[9px] text-slate-500 mt-1">v{{ config('app.version', '2.1.0') }} &bull; Sistem Verifikasi Pelayanan Dokumen</p>
                     </div>
                 </div>
             </div>
@@ -219,7 +216,7 @@
                             </svg>
                         </div>
                         <span
-                            class="text-xl font-bold tracking-tight text-slate-900 dark:text-white italic">SVPD</span>
+                            class="text-sm font-bold tracking-tight text-slate-900 dark:text-white italic leading-tight">Sistem Verifikasi<br>Pelayanan Dokumen</span>
                     </div>
                     <button @click="sidebarOpen = false"
                         class="p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white">

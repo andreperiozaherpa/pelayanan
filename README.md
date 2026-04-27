@@ -1,8 +1,8 @@
-# 🏛️ Sistem Verifikasi Pelayanan Dokumen (SVPD)
+# 🏛️ Sistem Verifikasi Pelayanan Dokumen
 
-Sistem Verifikasi Pelayanan Dokumen (SVPD) adalah sistem cerdas *Single Source of Truth* berbasis **Lingkungan Web Modern**, dikembangkan secara eksklusif untuk mengatasi kendala operasional pencatatan layanan kesejahteraan dan memvalidasi keabsahan status kemiskinan (SKTM) warga masyarakat secara dinamis dan *real-time*.
+Sistem Verifikasi Pelayanan Dokumen adalah sistem cerdas *Single Source of Truth* berbasis **Lingkungan Web Modern**, dikembangkan secara eksklusif untuk mengatasi kendala operasional pencatatan layanan kesejahteraan dan memvalidasi keabsahan status kemiskinan (SKTM) warga masyarakat secara dinamis dan *real-time*.
 
-Dengan SVPD, masyarakat tidak perlu lagi khawatir penolakan layanan akibat kelupaan membawa dokumen fisik, sementara instansi pemerintah mendapatkan kemudahan pelacakan serta tata kelola data (Data Governance) yang aman dan akuntabel.
+Dengan Sistem Verifikasi Pelayanan Dokumen, masyarakat tidak perlu lagi khawatir penolakan layanan akibat kelupaan membawa dokumen fisik, sementara instansi pemerintah mendapatkan kemudahan pelacakan serta tata kelola data (Data Governance) yang aman dan akuntabel.
 
 ---
 
@@ -23,7 +23,7 @@ Pusat ekosistem data demografi meliputi manajemen CRUD komprehensif:
 - **Data Master Wilayah Terstruktur**: Normalisasi data wilayah dari tingkat Kabupaten, Kecamatan, hingga Desa untuk akurasi pendataan dan kemudahan integrasi API di masa depan.
 
 ### 3. 📜 Mesin Penetapan Status Kemiskinan (SKTM Engine)
-SVPD memiliki subsistem khusus terintegrasi dengan Data Warga:
+Sistem Verifikasi Pelayanan Dokumen memiliki subsistem khusus terintegrasi dengan Data Warga:
 - **Pencatatan Kemiskinan Interaktif (Toggle)**: Menggabungkan pengisian data *Parent* dan *Child* dengan mengalokasikan parameter (Rentang Pendapatan, Sumber Dokumen).
 - **Masa Kedaluwarsa Dinamis**: Otomatis mengeksekusi perhitungan teknis sehingga status SKTM warga hanya berlaku tepat **3 bulan** dari waktu awal penetapan (Valid From).
 - Status terstruktur berlapis: `ACTIVE` (Aktif Bantuan), `PENDING_REVIEW` (Perlu Tinjauan), dan `EXPIRED` (Telah Kedaluwarsa).
@@ -36,7 +36,7 @@ Sistem dibangun tidak hanya dengan mengedepankan fungsional namun juga desain *"
 - **Global SweetAlert2 Interception**: Semua sukses, error otorisasi, maupun validasi peringatan disadap dan diterjemahkan oleh antarmuka *SweetAlert* terapung lengkap dengan rekonsiliasi format pesan yang bersahabat (*User-Centric*).
 
 ### 5. 🏗️ Arsitektur Views Modular (Master-Data & Services)
-SVPD menerapkan standar pengorganisasian views yang ketat untuk memudahkan kolaborasi tim:
+Sistem Verifikasi Pelayanan Dokumen menerapkan standar pengorganisasian views yang ketat untuk memudahkan kolaborasi tim:
 - **`master-data/`**: Folder khusus untuk seluruh modul pengelolaan data induk (CRUD) seperti Warga, Pengguna, Role, Kecamatan, dan Desa.
 - **`services/`**: Folder khusus untuk fitur layanan aktif dan transaksional seperti Dashboard Statistik, Fitur Verifikasi NIK, dan Riwayat Audit Log.
 - **`documents/`**: Penyimpanan template output dokumen legal (PDF) yang terpisah dari antarmuka interaktif.

@@ -18,9 +18,9 @@ USE mysql;
 FLUSH PRIVILEGES;
 DELETE FROM mysql.user WHERE User='';
 DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
-ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_PASSWORD:-svpd_pass}';
-CREATE DATABASE IF NOT EXISTS \`${DB_DATABASE:-svpd_db}\`;
-GRANT ALL PRIVILEGES ON \`${DB_DATABASE:-svpd_db}\`.* TO '${DB_USERNAME:-svpd_user}'@'%' IDENTIFIED BY '${DB_PASSWORD:-svpd_pass}';
+ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_PASSWORD:-pelayanan_dokumen_pass}';
+CREATE DATABASE IF NOT EXISTS \`${DB_DATABASE:-pelayanan_dokumen_db}\`;
+GRANT ALL PRIVILEGES ON \`${DB_DATABASE:-pelayanan_dokumen_db}\`.* TO '${DB_USERNAME:-pelayanan_dokumen_user}'@'%' IDENTIFIED BY '${DB_PASSWORD:-pelayanan_dokumen_pass}';
 FLUSH PRIVILEGES;
 EOF
 
