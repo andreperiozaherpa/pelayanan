@@ -4,12 +4,15 @@ use App\Models\User;
 use App\Models\Role;
 use App\Models\AuditLog;
 use Database\Seeders\RBACSeeder;
+use Database\Seeders\VillageSeeder;
+use App\Models\Village;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->seed(RBACSeeder::class);
+    $this->seed(VillageSeeder::class);
 });
 
 test('user can login and audit log is recorded', function () {

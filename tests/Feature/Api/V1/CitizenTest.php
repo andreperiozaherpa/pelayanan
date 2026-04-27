@@ -4,22 +4,25 @@ use App\Models\User;
 use App\Models\Role;
 use App\Models\Citizen;
 use Database\Seeders\RBACSeeder;
+use Database\Seeders\VillageSeeder;
+use App\Models\Village;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->seed(RBACSeeder::class);
+    $this->seed(VillageSeeder::class);
 });
 
 test('operator desa can only see citizens in their village', function () {
     $operatorA = User::factory()->create([
         'role_id' => Role::where('slug', 'operatordesa')->first()->id,
-        'desa_id' => 1
+        'desa_id' => Village::first()->id
     ]);
 
-    $citizenA = Citizen::factory()->create(['desa_id' => 1]);
-    $citizenB = Citizen::factory()->create(['desa_id' => 2]);
+    $citizenA = Citizen::factory()->create(['desa_id' => Village::first()->id]);
+    $citizenB = Citizen::factory()->create(['desa_id' => Village::skip(1)->first()->id]);
 
     $response = $this->actingAs($operatorA, 'sanctum')
         ->getJson('/api/v1/citizens');
@@ -40,7 +43,7 @@ test('data masking works for unauthorized users', function () {
     $kontakAsli = '08123456789';
 
     $citizen = Citizen::factory()->create([
-        'desa_id' => 1,
+        'desa_id' => Village::first()->id,
         'alamat_desa' => $alamatAsli,
         'kontak' => $kontakAsli
     ]);
@@ -71,11 +74,11 @@ test('data masking works for unauthorized users', function () {
 test('operator desa sees unmasked data in their own village', function () {
     $operator = User::factory()->create([
         'role_id' => Role::where('slug', 'operatordesa')->first()->id,
-        'desa_id' => 1
+        'desa_id' => Village::first()->id
     ]);
 
     $citizen = Citizen::factory()->create([
-        'desa_id' => 1,
+        'desa_id' => Village::first()->id,
         'alamat_desa' => 'Jl. Merdeka No. 123',
         'kontak' => '08123456789'
     ]);
@@ -104,7 +107,7 @@ test('masking preserves data length consistency', function () {
 
     foreach ($testCases as $case) {
         $citizen = Citizen::factory()->create([
-            'desa_id' => 1,
+            'desa_id' => Village::first()->id,
             'alamat_desa' => $case['alamat'],
             'kontak' => $case['kontak']
         ]);
