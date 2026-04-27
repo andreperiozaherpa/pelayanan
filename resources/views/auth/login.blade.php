@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'SVLDK') }} - Login</title>
+    <title>{{ config('app.name', 'SVPD') }} - Login</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,8 +23,8 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04 inter M12 21.355r 0 0 0 0-1.618-3.041z" />
                 </svg>
             </div>
-            <h1 class="text-4xl font-bold text-white tracking-tight">SVLDK</h1>
-            <p class="text-slate-400 mt-2 font-medium">Sistem Verifikasi & Layanan Data Kemiskinan</p>
+            <h1 class="text-4xl font-bold text-white tracking-tight">SVPD</h1>
+            <p class="text-slate-400 mt-2 font-medium">Sistem Verifikasi Pelayanan Dokumen</p>
         </div>
 
         <div class="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-[2.5rem] p-10 shadow-2xl">
@@ -41,7 +41,7 @@
                         </div>
                         <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus
                             class="block w-full pl-12 pr-4 py-4 bg-slate-900/50 border border-slate-700 rounded-2xl text-white placeholder-slate-600 focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 outline-none transition"
-                            placeholder="admin@svldk.test">
+                            placeholder="admin@svpd.test">
                     </div>
                     @error('email')
                         <p class="text-rose-500 text-[10px] font-bold uppercase tracking-widest mt-1 ml-1">{{ $message }}</p>

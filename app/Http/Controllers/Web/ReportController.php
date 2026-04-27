@@ -64,7 +64,7 @@ class ReportController extends Controller
     {
         Gate::authorize('reports.export');
 
-        $fileName = 'audit-logs-svldk-' . now()->format('Y-m-d') . '.csv';
+        $fileName = 'audit-logs-svpd-' . now()->format('Y-m-d') . '.csv';
 
         $headers = [
             "Content-type"        => "text/csv",

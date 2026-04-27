@@ -7,7 +7,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title') - {{ config('app.name', 'SVLDK') }}</title>
+    <title>@yield('title') - {{ config('app.name', 'SVPD') }}</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -76,7 +76,7 @@
 
             <div
                 class="mt-12 pt-8 border-t border-slate-200 dark:border-slate-700/50 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                <span>SVLDK Intelligence</span>
+                <span>SVPD Intelligence</span>
                 <span>Error Code: @yield('code')</span>
             </div>
         </div>

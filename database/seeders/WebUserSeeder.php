@@ -20,7 +20,7 @@ class WebUserSeeder extends Seeder
 
         // Create Super Admin
         User::updateOrCreate(
-            ['email' => 'admin@svldk.test'],
+            ['email' => 'admin@svpd.test'],
             [
                 'name' => 'System Administrator',
                 'password' => Hash::make('password'),
@@ -32,7 +32,7 @@ class WebUserSeeder extends Seeder
 
         // Create Front Office
         User::updateOrCreate(
-            ['email' => 'fo@svldk.test'],
+            ['email' => 'fo@svpd.test'],
             [
                 'name' => 'Front Office Staff',
                 'password' => Hash::make('password'),

@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: svldk_app
+    container_name: svpd_app
     ports:
       - "8000:8000"
       - "127.0.0.1:3306:3306"

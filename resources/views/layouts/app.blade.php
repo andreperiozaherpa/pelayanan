@@ -17,7 +17,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'SVLDK') }} - @yield('title', 'Front Office')</title>
+    <title>{{ config('app.name', 'SVPD') }} - @yield('title', 'Front Office')</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -109,7 +109,7 @@
                     </div>
                     <div>
                         <span
-                            class="text-xl font-black tracking-tighter text-slate-900 dark:text-white block leading-none">SVLDK</span>
+                            class="text-xl font-black tracking-tighter text-slate-900 dark:text-white block leading-none">SVPD</span>
                         <span
                             class="text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-none">Intelligence</span>
                     </div>
@@ -190,7 +190,7 @@
                         </div>
                         <p class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Development
                         </p>
-                        <p class="text-[9px] text-slate-500 mt-1">v{{ config('app.version', '2.1.0') }} &bull; SVLDK
+                        <p class="text-[9px] text-slate-500 mt-1">v{{ config('app.version', '2.1.0') }} &bull; SVPD
                             Core</p>
                     </div>
                 </div>
@@ -219,7 +219,7 @@
                             </svg>
                         </div>
                         <span
-                            class="text-xl font-bold tracking-tight text-slate-900 dark:text-white italic">SVLDK</span>
+                            class="text-xl font-bold tracking-tight text-slate-900 dark:text-white italic">SVPD</span>
                     </div>
                     <button @click="sidebarOpen = false"
                         class="p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white">
@@ -289,7 +289,7 @@
                         </h2>
                         <p
                             class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5 whitespace-nowrap">
-                            Sistem Verifikasi & Layanan Data Kemiskinan</p>
+                            Sistem Verifikasi Pelayanan Dokumen</p>
                     </div>
                 </div>
 

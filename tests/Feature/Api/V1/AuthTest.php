@@ -18,13 +18,13 @@ beforeEach(function () {
 test('user can login and audit log is recorded', function () {
     $role = Role::where('slug', 'superadmin')->first();
     $user = User::factory()->create([
-        'email' => 'admin@svldk.test',
+        'email' => 'admin@svpd.test',
         'password' => 'password',
         'role_id' => $role->id,
     ]);
 
     $response = $this->postJson('/api/v1/auth/login', [
-        'email' => 'admin@svldk.test',
+        'email' => 'admin@svpd.test',
         'password' => 'password',
     ]);
 
@@ -46,13 +46,13 @@ test('user can login and audit log is recorded', function () {
 test('failed login attempt is audited', function () {
     $role = Role::where('slug', 'superadmin')->first();
     $user = User::factory()->create([
-        'email' => 'admin@svldk.test',
+        'email' => 'admin@svpd.test',
         'password' => 'password',
         'role_id' => $role->id,
     ]);
 
     $response = $this->postJson('/api/v1/auth/login', [
-        'email' => 'admin@svldk.test',
+        'email' => 'admin@svpd.test',
         'password' => 'wrongpassword',
     ]);
 
