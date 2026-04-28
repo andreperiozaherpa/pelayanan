@@ -30,13 +30,20 @@ Sistem Verifikasi Pelayanan Dokumen memiliki subsistem khusus terintegrasi denga
 
 ### 4. 🎨 Estetika & Keamanan Ekstra
 Sistem dibangun tidak hanya dengan mengedepankan fungsional namun juga desain *"WOW Factor"*:
-- **Aesthetic UI**: Arsitektur tampilan panel depan dengan struktur **Glassmorphism**, panel akrilik kabur (*Blur Backdrops*), efek partikel gradien bayangan eksklusif.
+- **Aesthetic UI**: Arsitektur tampilan panel depan dengan struktur **Glassmorphism**, panel akrilik kabur (*Blur Backdrops*), efek partikel gradien bayangan eksklusif, serta kelengkungan sudut yang elegan (*Restrained Roundedness*).
 - **Dual-Theme Engine (Light/Dark Mode)**: Dikendalikan responsif melalui *localStorage* + `Alpine.js` agar mata Operator nyaman saat pendataan larut malam.
 - **Custom Error Interfaces**: Modifikasi antarmuka *Error Page* bawaan menjadi halaman responsif *(404 Not Found, 403 Forbidden, 401 Unauthorized)* secara tematik agar memandu pengguna dengan aman saat tersesat.
 - **Global SweetAlert2 Interception**: Semua sukses, error otorisasi, maupun validasi peringatan disadap dan diterjemahkan oleh antarmuka *SweetAlert* terapung lengkap dengan rekonsiliasi format pesan yang bersahabat (*User-Centric*).
 
-### 5. 🏗️ Arsitektur Views Modular (Master-Data & Services)
+### 5. 📄 Mesin Cetak Bukti Verifikasi (High-Fidelity PDF)
+Integrasi dengan **Spatie Browsershot** untuk menghasilkan dokumen bukti verifikasi yang presisi:
+- **Server-Side Rendering**: Menggunakan Headless Chrome untuk merender template Blade menjadi PDF berkualitas tinggi.
+- **Dynamic QR Validation**: Setiap dokumen dilengkapi dengan URL validasi unik untuk memverifikasi keaslian dokumen secara *real-time*.
+- **Environment-Aware Configuration**: Sistem secara otomatis mendeteksi jalur binari Chrome/Node baik di lingkungan lokal maupun kontainer Docker melalui konfigurasi `.env`.
+
+### 6. 🏗️ Arsitektur Views Modular (Master-Data & Services)
 Sistem Verifikasi Pelayanan Dokumen menerapkan standar pengorganisasian views yang ketat untuk memudahkan kolaborasi tim:
+- **Modular Partials**: Komponen layout seperti *Header*, *Sidebar*, dan *Footer* dipisahkan ke dalam folder `layouts/partials/` untuk kemudahan pemeliharaan.
 - **`master-data/`**: Folder khusus untuk seluruh modul pengelolaan data induk (CRUD) seperti Warga, Pengguna, Role, Kecamatan, dan Desa.
 - **`services/`**: Folder khusus untuk fitur layanan aktif dan transaksional seperti Dashboard Statistik, Fitur Verifikasi NIK, dan Riwayat Audit Log.
 - **`documents/`**: Penyimpanan template output dokumen legal (PDF) yang terpisah dari antarmuka interaktif.
@@ -66,6 +73,7 @@ Penulisan kode dikendalikan dengan prinsip *"Do Things the Laravel Way"*:
 - ✅ **Fase 3**: Konfigurasi Aesthetic UI (Glassmorphism & Dual-Theme).
 - ✅ **Fase 4**: Manajemen Master Warga & Engine SKTM (Business Logic).
 - ✅ **Fase 5**: Modul Manajemen Administratif, Normalisasi Regional (Kecamatan > Desa), Restrukturisasi folder `Web/` (Requests/Resources), dan Reorganisasi Views Modular (`master-data` & `services`).
-- ⏳ **Fase 6 (Next)**: Sistem Integrasi Layanan Eksternal & Notifikasi Otomatis.
+- ✅ **Fase 6**: Implementasi Mesin Cetak Bukti Verifikasi (Browsershot Integration), Restrukturisasi Layout Modular (Partials), dan Finalisasi Estetika Desain (Elegant Roundedness).
+- ⏳ **Fase 7 (Next)**: Sistem Integrasi Layanan Eksternal & Notifikasi Otomatis.
 
 ***Berkarya untuk Birokrasi yang Cerdas. 🚀***

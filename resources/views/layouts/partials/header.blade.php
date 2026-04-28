@@ -7,13 +7,14 @@
     </button>
 
     <!-- Logo Area (Width matches Sidebar on Desktop) -->
-    <div class="w-auto lg:w-[280px] flex items-center px-2 lg:px-4">
+    <div class="w-auto flex items-center px-2 transition-all duration-300 overflow-hidden shrink-0"
+         :class="{ 'lg:w-[280px] lg:px-4': sidebarOpen, 'lg:w-[60px] lg:px-0 lg:justify-center': !sidebarOpen }">
         <div class="flex items-center gap-3">
             <div
                 class="w-10 h-10 bg-primary-acorn rounded-lg flex items-center justify-center shadow-lg shadow-primary-acorn/20 text-white shrink-0">
                 <iconify-icon icon="lucide:leaf" class="text-xl"></iconify-icon>
             </div>
-            <div class="hidden sm:block">
+            <div class="hidden sm:block whitespace-nowrap" x-show="sidebarOpen" x-transition.opacity.duration.300ms>
                 <h1
                     class="text-[11px] font-black text-slate-800 dark:text-white uppercase leading-snug tracking-widest">
                     Sistem Verifikasi<br><span class="text-primary-acorn">Pelayanan Dokumen</span></h1>

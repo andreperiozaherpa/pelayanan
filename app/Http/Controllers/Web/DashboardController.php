@@ -252,7 +252,7 @@ class DashboardController extends Controller
             ->setChromePath(config('services.browsershot.chrome_path'))
             ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox'])
             ->provideHtmlViaOpenPage()
-            ->format('A4')
+            ->format('A5')
             ->margins(0, 0, 0, 0)
             ->pdf();
 
