@@ -7,10 +7,10 @@ use App\Http\Requests\Web\CitizenFormRequest;
 use App\Models\Citizen;
 use App\Models\Village;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
 class CitizenController extends Controller
 {
@@ -54,7 +54,7 @@ class CitizenController extends Controller
             $villages = Village::orderBy('name')->get();
         }
 
-        return view('master-data.citizens.create', compact('villages'));
+        return view('master-data.citizens.form', compact('villages'));
     }
 
     /**
@@ -78,7 +78,7 @@ class CitizenController extends Controller
         $citizen = Citizen::create($validated);
 
         // Handle nested Poverty Record if required
-        if (!empty($validated['has_poverty_record'])) {
+        if (! empty($validated['has_poverty_record'])) {
             $this->syncPovertyRecord($citizen, $validated, $user->id);
         }
 
@@ -106,7 +106,7 @@ class CitizenController extends Controller
         // Preload Poverty status if exists
         $povertyRecord = $citizen->povertyRecords()->latest()->first();
 
-        return view('master-data.citizens.edit', compact('citizen', 'villages', 'povertyRecord'));
+        return view('master-data.citizens.form', compact('citizen', 'villages', 'povertyRecord'));
     }
 
     /**
@@ -133,13 +133,8 @@ class CitizenController extends Controller
 
         $citizen->update($validated);
 
-        if (!empty($validated['has_poverty_record'])) {
+        if (! empty($validated['has_poverty_record'])) {
             $this->syncPovertyRecord($citizen, $validated, $user->id);
-        } else {
-            // If the checkbox is unchecked during update, we may want to leave the existing record as EXPIRED,
-            // or perhaps do nothing depending on business rules. Let's do nothing if unchecked, meaning they just
-            // didn't want to update the poverty record with this master data edit.
-            // Wait, if it's unchecked, maybe they want to clear it? No, keeping audit trail means we don't delete.
         }
 
         return redirect()->route('citizens.index')
@@ -156,6 +151,9 @@ class CitizenController extends Controller
         if ($user->role->slug === 'operatordesa') {
             abort_if($citizen->desa_id !== $user->desa_id, 403, 'Akses ditolak.');
         }
+
+        $nik = $citizen->nik;
+        $nama = $citizen->nama_lengkap;
 
         $citizen->delete();
 

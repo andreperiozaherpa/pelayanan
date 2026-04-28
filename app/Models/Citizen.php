@@ -2,13 +2,12 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
-
 /**
  * @property string $nik
  * @property string $nama_lengkap
@@ -41,9 +40,11 @@ use Illuminate\Support\Carbon;
  *
  * @mixin \Eloquent
  */
+use Illuminate\Support\Carbon;
+
 class Citizen extends Model
 {
-    use HasFactory;
+    use Auditable, HasFactory;
 
     protected $primaryKey = 'nik';
 

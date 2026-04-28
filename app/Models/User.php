@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,8 +12,6 @@ use Illuminate\Notifications\DatabaseNotificationCollection;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
-use Laravel\Sanctum\PersonalAccessToken;
-
 /**
  * @property int $id
  * @property string $name
@@ -50,9 +49,11 @@ use Laravel\Sanctum\PersonalAccessToken;
  *
  * @mixin \Eloquent
  */
+use Laravel\Sanctum\PersonalAccessToken;
+
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use Auditable, HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
         'name',
@@ -89,21 +90,5 @@ class User extends Authenticatable
     public function hasPermission(string $permissionSlug): bool
     {
         return $this->role && $this->role->permissions()->where('slug', $permissionSlug)->exists();
-    }
-
-    /**
-     * Record an audit log for this user.
-     */
-    public function recordAuditLog(string $action, ?string $table = null, ?int $targetId = null, ?array $oldValue = null, ?array $newValue = null): void
-    {
-        AuditLog::create([
-            'user_id' => $this->id,
-            'action' => $action,
-            'target_table' => $table,
-            'target_id' => $targetId,
-            'old_value' => $oldValue,
-            'new_value' => $newValue,
-            'timestamp' => now(),
-        ]);
     }
 }

@@ -3,16 +3,19 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\Citizen;
-use App\Models\VerificationLog;
+use App\Models\PovertyRecord;
 use App\Models\ServiceRequest;
-use Illuminate\Support\Facades\Auth;
+use App\Models\VerificationLog;
+use App\Models\Village;
 use Illuminate\Http\Request;
-use Illuminate\View\View;
-use Illuminate\Support\Facades\Gate;
-use Spatie\Browsershot\Browsershot;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\View\View;
+use Spatie\Browsershot\Browsershot;
 
 class DashboardController extends Controller
 {
@@ -33,7 +36,7 @@ class DashboardController extends Controller
         $todayCount = VerificationLog::whereDate('timestamp', today())->count();
 
         // Verification breakdown by village
-        $villageBreakdown = \App\Models\Village::withCount(['citizens as verifications_count' => function ($q) {
+        $villageBreakdown = Village::withCount(['citizens as verifications_count' => function ($q) {
             $q->whereHas('verificationLogs');
         }])
             ->orderByDesc('verifications_count')
@@ -42,9 +45,9 @@ class DashboardController extends Controller
 
         // Poverty status distribution
         $statusDistribution = [
-            'active' => \App\Models\PovertyRecord::where('status', 'ACTIVE')->count(),
-            'expired' => \App\Models\PovertyRecord::where('status', 'EXPIRED')->count()
-                + \App\Models\PovertyRecord::where('status', 'ACTIVE')->where('valid_until', '<', now())->count(),
+            'active' => PovertyRecord::where('status', 'ACTIVE')->count(),
+            'expired' => PovertyRecord::where('status', 'EXPIRED')->count()
+                + PovertyRecord::where('status', 'ACTIVE')->where('valid_until', '<', now())->count(),
             'pending' => Citizen::whereDoesntHave('povertyRecords')->count(),
         ];
 
@@ -53,7 +56,7 @@ class DashboardController extends Controller
             'recent_requests' => ServiceRequest::with('citizen.village')->latest()->take(6)->get(),
             'today_count' => $todayCount,
             'village_breakdown' => $villageBreakdown,
-            'status_distribution' => $statusDistribution
+            'status_distribution' => $statusDistribution,
         ];
 
         return view('services.dashboard.index', compact('stats'));
@@ -68,8 +71,8 @@ class DashboardController extends Controller
         $stats = [
             'total_verifications' => VerificationLog::where(function ($q) use ($desaId) {
                 // Actions by village operators OR regarding village citizens
-                $q->whereHas('user', fn($u) => $u->where('desa_id', $desaId))
-                    ->orWhereHas('citizen', fn($c) => $c->where('desa_id', $desaId));
+                $q->whereHas('user', fn ($u) => $u->where('desa_id', $desaId))
+                    ->orWhereHas('citizen', fn ($c) => $c->where('desa_id', $desaId));
             })->count(),
             'recent_requests' => ServiceRequest::whereHas('citizen', function ($q) use ($desaId) {
                 $q->where('desa_id', $desaId);
@@ -108,8 +111,8 @@ class DashboardController extends Controller
             ->when($isOperatorDesa, function ($q) use ($desaId) {
                 $q->where(function ($query) use ($desaId) {
                     // Show logs performed BY village users OR involving village citizens
-                    $query->whereHas('user', fn($u) => $u->where('desa_id', $desaId))
-                        ->orWhereHas('citizen', fn($c) => $c->where('desa_id', $desaId));
+                    $query->whereHas('user', fn ($u) => $u->where('desa_id', $desaId))
+                        ->orWhereHas('citizen', fn ($c) => $c->where('desa_id', $desaId));
                 });
             })
             ->when($search, function ($q) use ($search) {
@@ -129,16 +132,16 @@ class DashboardController extends Controller
                     'target_name' => $log->citizen->nama_lengkap ?? null,
                     'result' => $log->result,
                     'details' => "Metode: {$log->method}, IP: {$log->ip_address}",
-                    'icon' => '🔍'
+                    'icon' => '🔍',
                 ];
             });
 
         // 2. Get Audit Logs
-        $audits = \App\Models\AuditLog::with('user')
+        $audits = AuditLog::with('user')
             ->when($isOperatorDesa, function ($q) use ($desaId) {
                 $q->where(function ($query) use ($desaId) {
                     // Logs performed by village users
-                    $query->whereHas('user', fn($u) => $u->where('desa_id', $desaId))
+                    $query->whereHas('user', fn ($u) => $u->where('desa_id', $desaId))
                         // OR Logs regarding village citizens (Print Proof, etc)
                         ->orWhere(function ($sub) use ($desaId) {
                             $sub->where('target_table', 'citizens')
@@ -171,10 +174,27 @@ class DashboardController extends Controller
                     'LOGOUT' => 'Keluar dari Sistem',
                     'PRINT_PROOF' => 'Mencetak Bukti Verifikasi',
                     'REPORT_SERVICE' => 'Melaporkan Layanan',
+                    'CREATE_CITIZEN' => 'Menambah Data Warga',
+                    'UPDATE_CITIZEN' => 'Memperbarui Data Warga',
+                    'DELETE_CITIZEN' => 'Menghapus Data Warga',
+                    'CREATE_USER' => 'Menambah User Baru',
+                    'UPDATE_USER' => 'Memperbarui Data User',
                 ];
 
-                $target = '-';
-                if (is_array($log->new_value)) {
+                $target = $log->target_id ?? '-';
+                $targetName = null;
+
+                // Attempt to resolve target name
+                if (is_array($log->new_value) && isset($log->new_value['__display_name'])) {
+                    $targetName = $log->new_value['__display_name'];
+                } elseif ($log->target_table === 'citizens' && $log->target_id) {
+                    $targetName = Cache::remember("citizen_name_{$log->target_id}", 3600, function () use ($log) {
+                        return Citizen::where('nik', $log->target_id)->value('nama_lengkap');
+                    });
+                }
+
+                // Fallback for targets from new_value if target_id is empty (for legacy logs)
+                if ($target === '-' && is_array($log->new_value)) {
                     $target = $log->new_value['nik'] ?? ($log->new_value['citizen_nik'] ?? '-');
                 }
 
@@ -185,9 +205,17 @@ class DashboardController extends Controller
                     'user' => $log->user->name ?? 'Sistem',
                     'action' => $verbs[$log->action] ?? $log->action,
                     'target' => $target,
+                    'target_name' => $targetName,
                     'result' => null,
                     'details' => $log->action === 'REPORT_SERVICE' && is_array($log->new_value) ? ($log->new_value['service_type'] ?? '') : '',
-                    'icon' => $log->action === 'PRINT_PROOF' ? '📄' : ($log->action === 'REPORT_SERVICE' ? '✅' : '🔒')
+                    'icon' => match (true) {
+                        $log->action === 'PRINT_PROOF' => '📄',
+                        $log->action === 'REPORT_SERVICE' => '✅',
+                        str_contains($log->action, 'CITIZEN') => '👤',
+                        str_contains($log->action, 'USER') => '🔑',
+                        str_contains($log->action, 'LOGIN') => '🔓',
+                        default => '🔒'
+                    },
                 ];
             });
 
@@ -214,7 +242,7 @@ class DashboardController extends Controller
             'logs' => $groupedLogs,
             'paginator' => $logs,
             'search' => $search,
-            'perPage' => $perPage
+            'perPage' => $perPage,
         ]);
     }
 
@@ -236,13 +264,13 @@ class DashboardController extends Controller
         $validationUrl = route('dashboard.verify', ['nik' => $nik]);
 
         // Audit Log
-        \App\Models\AuditLog::create([
+        AuditLog::create([
             'user_id' => Auth::user()->id,
             'action' => 'PRINT_PROOF',
             'target_table' => 'citizens',
             'target_id' => null,
             'new_value' => ['nik' => $nik],
-            'timestamp' => now()
+            'timestamp' => now(),
         ]);
 
         $html = view('documents.doc_poverty', compact('citizen', 'record', 'validationUrl'))->render();
@@ -259,6 +287,6 @@ class DashboardController extends Controller
 
         return response($pdf)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="bukti-verifikasi-' . $nik . '.pdf"');
+            ->header('Content-Disposition', 'inline; filename="bukti-verifikasi-'.$nik.'.pdf"');
     }
 }
