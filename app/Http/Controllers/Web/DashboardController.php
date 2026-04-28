@@ -126,6 +126,7 @@ class DashboardController extends Controller
                     'user' => $log->user->name ?? 'Sistem',
                     'action' => 'Melakukan Verifikasi',
                     'target' => $log->nik,
+                    'target_name' => $log->citizen->nama_lengkap ?? null,
                     'result' => $log->result,
                     'details' => "Metode: {$log->method}, IP: {$log->ip_address}",
                     'icon' => '🔍'

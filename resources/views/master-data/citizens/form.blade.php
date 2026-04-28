@@ -16,59 +16,58 @@
         </div>
 
         <div class="space-y-4">
-            <div>
-                <label for="nik" class="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">NIK (16 Digit) <span class="text-rose-500">*</span></label>
-                <input type="text" name="nik" id="nik" value="{{ old('nik', $citizen->nik ?? '') }}" required maxlength="16" pattern="\d{16}"
-                    class="w-full bg-slate-50 dark:bg-slate-900/50 border border-black/[0.03] dark:border-white/[0.03] rounded-xl px-4 py-3 text-[11px] font-bold focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn transition dark:text-white placeholder-slate-400 uppercase tracking-widest"
-                    placeholder="Contoh: 3201020304050001">
-                @error('nik') <p class="text-rose-500 text-[10px] font-bold mt-1 uppercase">{{ $message }}</p> @enderror
-            </div>
+            <x-input 
+                label="NIK (16 Digit)" 
+                name="nik" 
+                :value="old('nik', $citizen->nik ?? '')" 
+                required 
+                maxlength="16" 
+                pattern="\d{16}"
+                placeholder="Contoh: 3201020304050001" 
+            />
 
-            <div>
-                <label for="nama_lengkap" class="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Nama Lengkap <span class="text-rose-500">*</span></label>
-                <input type="text" name="nama_lengkap" id="nama_lengkap" value="{{ old('nama_lengkap', $citizen->nama_lengkap ?? '') }}" required
-                    class="w-full bg-slate-50 dark:bg-slate-900/50 border border-black/[0.03] dark:border-white/[0.03] rounded-xl px-4 py-3 text-[11px] font-bold focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn transition dark:text-white placeholder-slate-400 uppercase tracking-widest"
-                    placeholder="NAMA SESUAI KTP">
-                @error('nama_lengkap') <p class="text-rose-500 text-[10px] font-bold mt-1 uppercase">{{ $message }}</p> @enderror
-            </div>
+            <x-input 
+                label="Nama Lengkap" 
+                name="nama_lengkap" 
+                :value="old('nama_lengkap', $citizen->nama_lengkap ?? '')" 
+                required 
+                placeholder="NAMA SESUAI KTP" 
+            />
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label for="tgl_lahir" class="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Tanggal Lahir <span class="text-rose-500">*</span></label>
-                    <input type="date" name="tgl_lahir" id="tgl_lahir" value="{{ old('tgl_lahir', isset($citizen) ? $citizen->tgl_lahir->format('Y-m-d') : '') }}" required
-                        class="w-full bg-slate-50 dark:bg-slate-900/50 border border-black/[0.03] dark:border-white/[0.03] rounded-xl px-4 py-3 text-[11px] font-bold focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn transition dark:text-white uppercase tracking-widest">
-                    @error('tgl_lahir') <p class="text-rose-500 text-[10px] font-bold mt-1 uppercase">{{ $message }}</p> @enderror
-                </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <x-input 
+                    label="Tanggal Lahir" 
+                    name="tgl_lahir" 
+                    type="date" 
+                    :value="old('tgl_lahir', isset($citizen) ? $citizen->tgl_lahir->format('Y-m-d') : '')" 
+                    required 
+                />
                 
-                <div>
-                    <label for="kontak" class="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">No. Telepon / WA</label>
-                    <input type="text" name="kontak" id="kontak" value="{{ old('kontak', $citizen->kontak ?? '') }}"
-                        class="w-full bg-slate-50 dark:bg-slate-900/50 border border-black/[0.03] dark:border-white/[0.03] rounded-xl px-4 py-3 text-[11px] font-bold focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn transition dark:text-white placeholder-slate-400 uppercase tracking-widest"
-                        placeholder="08XXXXXXXXX">
-                    @error('kontak') <p class="text-rose-500 text-[10px] font-bold mt-1 uppercase">{{ $message }}</p> @enderror
-                </div>
+                <x-input 
+                    label="No. Telepon / WA" 
+                    name="kontak" 
+                    :value="old('kontak', $citizen->kontak ?? '')" 
+                    placeholder="08XXXXXXXXX" 
+                />
+            </div>
             </div>
 
-            <div>
-                <label for="alamat_desa" class="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Alamat Lengkap <span class="text-rose-500">*</span></label>
-                <textarea name="alamat_desa" id="alamat_desa" rows="3" required
-                    class="w-full bg-slate-50 dark:bg-slate-900/50 border border-black/[0.03] dark:border-white/[0.03] rounded-xl px-4 py-3 text-[11px] font-bold focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn transition dark:text-white placeholder-slate-400 uppercase tracking-widest"
-                    placeholder="JL. CONTOH RT/RW, DUSUN">{{ old('alamat_desa', $citizen->alamat_desa ?? '') }}</textarea>
-                @error('alamat_desa') <p class="text-rose-500 text-[10px] font-bold mt-1 uppercase">{{ $message }}</p> @enderror
-            </div>
+            <x-textarea 
+                label="Alamat Lengkap" 
+                name="alamat_desa" 
+                :value="old('alamat_desa', $citizen->alamat_desa ?? '')" 
+                required 
+                placeholder="JL. CONTOH RT/RW, DUSUN" 
+            />
 
             @if(Auth::user()->role->slug === 'superadmin')
-                <div>
-                    <label for="desa_id" class="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Wilayah Desa <span class="text-rose-500">*</span></label>
-                    <select name="desa_id" id="desa_id" required
-                        class="w-full bg-slate-50 dark:bg-slate-900/50 border border-black/[0.03] dark:border-white/[0.03] rounded-xl px-4 py-3 text-[11px] font-bold focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn transition dark:text-white uppercase tracking-widest">
-                        <option value="">-- PILIH WILAYAH DESA --</option>
-                        @foreach($villages as $village)
-                            <option value="{{ $village->id }}" {{ old('desa_id', $citizen->desa_id ?? '') == $village->id ? 'selected' : '' }}>{{ $village->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('desa_id') <p class="text-rose-500 text-[10px] font-bold mt-1 uppercase">{{ $message }}</p> @enderror
-                </div>
+                <x-select label="Wilayah Desa" name="desa_id" required>
+                    <option value="">-- PILIH WILAYAH DESA --</option>
+                    @foreach($villages as $village)
+                        <option value="{{ $village->id }}" {{ old('desa_id', $citizen->desa_id ?? '') == $village->id ? 'selected' : '' }}>{{ $village->name }}</option>
+                    @endforeach
+                </x-select>
             @endif
         </div>
     </div>
@@ -106,45 +105,37 @@
             </div>
 
             <div class="space-y-4">
-                <div>
-                    <label for="poverty_status" class="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Status Penetapan</label>
-                    <select name="poverty_status" id="poverty_status" :required="hasPovertyData"
-                        class="w-full bg-slate-50 dark:bg-slate-900/50 border border-black/[0.03] dark:border-white/[0.03] rounded-xl px-4 py-3 text-[11px] font-bold focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn transition dark:text-white uppercase tracking-widest">
-                        <option value="" disabled selected>-- PILIH STATUS --</option>
-                        <option value="ACTIVE" {{ old('poverty_status', $povertyRecord->status ?? '') === 'ACTIVE' ? 'selected' : '' }}>AKTIF MEMBUTUHKAN BANTUAN</option>
-                        <option value="PENDING_REVIEW" {{ old('poverty_status', $povertyRecord->status ?? '') === 'PENDING_REVIEW' ? 'selected' : '' }}>MENUNGGU TINJAUAN LAPANGAN</option>
-                        <option value="EXPIRED" {{ old('poverty_status', $povertyRecord->status ?? '') === 'EXPIRED' ? 'selected' : '' }}>KEDALUWARSA / DICABUT</option>
-                    </select>
-                    @error('poverty_status') <p class="text-rose-500 text-[10px] font-bold mt-1 uppercase">{{ $message }}</p> @enderror
-                </div>
+                <x-select label="Status Penetapan" name="poverty_status" :required="true" x-bind:required="hasPovertyData">
+                    <option value="" disabled selected>-- PILIH STATUS --</option>
+                    <option value="ACTIVE" {{ old('poverty_status', $povertyRecord->status ?? '') === 'ACTIVE' ? 'selected' : '' }}>AKTIF MEMBUTUHKAN BANTUAN</option>
+                    <option value="PENDING_REVIEW" {{ old('poverty_status', $povertyRecord->status ?? '') === 'PENDING_REVIEW' ? 'selected' : '' }}>MENUNGGU TINJAUAN LAPANGAN</option>
+                    <option value="EXPIRED" {{ old('poverty_status', $povertyRecord->status ?? '') === 'EXPIRED' ? 'selected' : '' }}>KEDALUWARSA / DICABUT</option>
+                </x-select>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label for="valid_from" class="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Tgl. Penetapan</label>
-                        <input type="date" name="valid_from" id="valid_from" value="{{ old('valid_from', isset($povertyRecord) ? $povertyRecord->valid_from->format('Y-m-d') : '') }}" :required="hasPovertyData"
-                            class="w-full bg-slate-50 dark:bg-slate-900/50 border border-black/[0.03] dark:border-white/[0.03] rounded-xl px-4 py-3 text-[11px] font-bold focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn transition dark:text-white uppercase tracking-widest">
-                        @error('valid_from') <p class="text-rose-500 text-[10px] font-bold mt-1 uppercase">{{ $message }}</p> @enderror
-                    </div>
-                    <div>
-                        <label for="income_range" class="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Rentang Pendapatan</label>
-                        <select name="income_range" id="income_range" :required="hasPovertyData"
-                            class="w-full bg-slate-50 dark:bg-slate-900/50 border border-black/[0.03] dark:border-white/[0.03] rounded-xl px-4 py-3 text-[11px] font-bold focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn transition dark:text-white uppercase tracking-widest">
-                            <option value="" disabled selected>-- PILIH RENTANG --</option>
-                            <option value="< Rp 500.000" {{ old('income_range', $povertyRecord->income_range ?? '') === '< Rp 500.000' ? 'selected' : '' }}>< RP 500.000 / BLN</option>
-                            <option value="Rp 500.000 - Rp 1.000.000" {{ old('income_range', $povertyRecord->income_range ?? '') === 'Rp 500.000 - Rp 1.000.000' ? 'selected' : '' }}>RP 500.000 - RP 1.000.000</option>
-                            <option value="Rp 1.000.000 - Rp 2.000.000" {{ old('income_range', $povertyRecord->income_range ?? '') === 'Rp 1.000.000 - Rp 2.000.000' ? 'selected' : '' }}>RP 1.000.000 - RP 2.000.000</option>
-                        </select>
-                        @error('income_range') <p class="text-rose-500 text-[10px] font-bold mt-1 uppercase">{{ $message }}</p> @enderror
-                    </div>
+                    <x-input 
+                        label="Tgl. Penetapan" 
+                        name="valid_from" 
+                        type="date" 
+                        :value="old('valid_from', isset($povertyRecord) ? $povertyRecord->valid_from->format('Y-m-d') : '')" 
+                        x-bind:required="hasPovertyData" 
+                    />
+                    
+                    <x-select label="Rentang Pendapatan" name="income_range" x-bind:required="hasPovertyData">
+                        <option value="" disabled selected>-- PILIH RENTANG --</option>
+                        <option value="< Rp 500.000" {{ old('income_range', $povertyRecord->income_range ?? '') === '< Rp 500.000' ? 'selected' : '' }}>< RP 500.000 / BLN</option>
+                        <option value="Rp 500.000 - Rp 1.000.000" {{ old('income_range', $povertyRecord->income_range ?? '') === 'Rp 500.000 - Rp 1.000.000' ? 'selected' : '' }}>RP 500.000 - RP 1.000.000</option>
+                        <option value="Rp 1.000.000 - Rp 2.000.000" {{ old('income_range', $povertyRecord->income_range ?? '') === 'Rp 1.000.000 - Rp 2.000.000' ? 'selected' : '' }}>RP 1.000.000 - RP 2.000.000</option>
+                    </x-select>
                 </div>
 
-                <div>
-                    <label for="source" class="block text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Sumber Berkas/Data</label>
-                    <input type="text" name="source" id="source" value="{{ old('source', $povertyRecord->source ?? 'Verifikasi Lapangan Desa') }}" :required="hasPovertyData"
-                        class="w-full bg-slate-50 dark:bg-slate-900/50 border border-black/[0.03] dark:border-white/[0.03] rounded-xl px-4 py-3 text-[11px] font-bold focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn transition dark:text-white placeholder-slate-400 uppercase tracking-widest"
-                        placeholder="MISAL: SURAT PENGANTAR RT/RW">
-                    @error('source') <p class="text-rose-500 text-[10px] font-bold mt-1 uppercase">{{ $message }}</p> @enderror
-                </div>
+                <x-input 
+                    label="Sumber Berkas/Data" 
+                    name="source" 
+                    :value="old('source', $povertyRecord->source ?? 'Verifikasi Lapangan Desa')" 
+                    x-bind:required="hasPovertyData" 
+                    placeholder="MISAL: SURAT PENGANTAR RT/RW" 
+                />
             </div>
         </div>
         

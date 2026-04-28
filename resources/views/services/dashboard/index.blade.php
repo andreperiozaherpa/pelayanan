@@ -26,59 +26,30 @@
 
         <!-- Stats Widgets -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-2 lg:gap-4 xl:gap-6">
-            <!-- Total Verifications -->
-            <div
-                class="premium-card p-5 xl:p-6 flex items-center gap-5 group hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300">
-                <div
-                    class="w-12 h-12 rounded-xl bg-primary-acorn/10 flex items-center justify-center text-primary-acorn shrink-0">
-                    <iconify-icon icon="lucide:database" class="text-2xl"></iconify-icon>
-                </div>
-                <div class="min-w-0">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">Total Data</p>
-                    <p class="text-xl font-black text-slate-800 dark:text-white mt-0.5 tabular-nums truncate">
-                        {{ number_format($stats['total_verifications']) }}</p>
-                </div>
-            </div>
-
-            <!-- Valid Status -->
-            <div
-                class="premium-card p-5 xl:p-6 flex items-center gap-5 group hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300">
-                <div
-                    class="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
-                    <iconify-icon icon="lucide:check-circle-2" class="text-2xl"></iconify-icon>
-                </div>
-                <div class="min-w-0">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">Status Valid</p>
-                    <p class="text-xl font-black text-emerald-500 mt-0.5 tabular-nums truncate">
-                        {{ number_format($stats['status_distribution']['active']) }}</p>
-                </div>
-            </div>
-
-            <!-- Expired Status -->
-            <div
-                class="premium-card p-5 xl:p-6 flex items-center gap-5 group hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300">
-                <div class="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
-                    <iconify-icon icon="lucide:clock" class="text-2xl"></iconify-icon>
-                </div>
-                <div class="min-w-0">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">Kadaluarsa</p>
-                    <p class="text-xl font-black text-amber-500 mt-0.5 tabular-nums truncate">
-                        {{ number_format($stats['status_distribution']['expired']) }}</p>
-                </div>
-            </div>
-
-            <!-- Pending/Unmapped -->
-            <div
-                class="premium-card p-5 xl:p-6 flex items-center gap-5 group hover:-translate-y-1 hover:scale-[1.02] transition-all duration-300">
-                <div class="w-12 h-12 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500 shrink-0">
-                    <iconify-icon icon="lucide:alert-triangle" class="text-2xl"></iconify-icon>
-                </div>
-                <div class="min-w-0">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">Unmapped</p>
-                    <p class="text-xl font-black text-rose-500 mt-0.5 tabular-nums truncate">
-                        {{ number_format($stats['status_distribution']['pending']) }}</p>
-                </div>
-            </div>
+            <x-stats-card 
+                label="Total Data" 
+                :value="$stats['total_verifications']" 
+                icon="lucide:database" 
+                color="primary" 
+            />
+            <x-stats-card 
+                label="Status Valid" 
+                :value="$stats['status_distribution']['active']" 
+                icon="lucide:check-circle-2" 
+                color="emerald" 
+            />
+            <x-stats-card 
+                label="Kadaluarsa" 
+                :value="$stats['status_distribution']['expired']" 
+                icon="lucide:clock" 
+                color="amber" 
+            />
+            <x-stats-card 
+                label="Unmapped" 
+                :value="$stats['status_distribution']['pending']" 
+                icon="lucide:alert-triangle" 
+                color="rose" 
+            />
         </div>
 
         <!-- Content Grid -->
@@ -93,14 +64,14 @@
                         Semua Registry</a>
                 </div>
 
-                <div class="premium-card overflow-hidden">
+                <x-card padding="p-0">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-slate-50 dark:bg-slate-900 border-b border-black/[0.03] dark:border-white/[0.03]">
                                 <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama
                                     Desa</th>
                                 <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Kode
-                                </th>
+                                 </th>
                                 <th
                                     class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
                                     Verifikasi</th>
@@ -125,7 +96,7 @@
                             @endforeach
                         </tbody>
                     </table>
-                </div>
+                </x-card>
             </div>
 
             <!-- Quick Actions & Feed -->
