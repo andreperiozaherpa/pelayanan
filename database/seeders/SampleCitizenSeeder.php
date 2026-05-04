@@ -25,7 +25,7 @@ class SampleCitizenSeeder extends Seeder
                 'tgl_lahir' => '1985-05-20',
                 'alamat_desa' => 'Jl. Merdeka No. 10, Desa Maju Jaya',
                 'kontak' => '081234567890',
-                'desa_id' => 1
+                'desa_id' => 1,
             ]
         );
 
@@ -37,7 +37,7 @@ class SampleCitizenSeeder extends Seeder
                 'valid_from' => now()->subMonths(6),
                 'valid_until' => now()->addMonths(6),
                 'verified_by' => $admin->id,
-                'source' => 'Manual Entry'
+                'source' => 'Manual Entry',
             ]
         );
 
@@ -50,7 +50,7 @@ class SampleCitizenSeeder extends Seeder
                 'tgl_lahir' => '1990-12-12',
                 'alamat_desa' => 'Dusun Sejahtera RT 02, Desa Maju Jaya',
                 'kontak' => '089876543210',
-                'desa_id' => 1
+                'desa_id' => 1,
             ]
         );
 
@@ -62,7 +62,7 @@ class SampleCitizenSeeder extends Seeder
                 'valid_from' => now()->subYear(),
                 'valid_until' => now()->subMonth(),
                 'verified_by' => $admin->id,
-                'source' => 'Manual Entry'
+                'source' => 'Manual Entry',
             ]
         );
     }

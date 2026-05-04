@@ -1,12 +1,12 @@
 <?php
 
-use App\Models\User;
-use App\Models\Role;
 use App\Models\Citizen;
 use App\Models\PovertyRecord;
+use App\Models\Role;
+use App\Models\User;
+use App\Models\Village;
 use Database\Seeders\RBACSeeder;
 use Database\Seeders\VillageSeeder;
-use App\Models\Village;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 
@@ -19,12 +19,12 @@ beforeEach(function () {
 
 test('poverty status check returns active for valid record', function () {
     $petugas = User::factory()->create([
-        'role_id' => Role::where('slug', 'petugasfrontoffice')->first()->id
+        'role_id' => Role::where('slug', 'petugasfrontoffice')->first()->id,
     ]);
-    
+
     $citizen = Citizen::factory()->create([
         'nik' => '1234567890123456',
-        'desa_id' => Village::first()->id
+        'desa_id' => Village::first()->id,
     ]);
     PovertyRecord::factory()->create([
         'citizen_nik' => $citizen->nik,
@@ -39,19 +39,19 @@ test('poverty status check returns active for valid record', function () {
         ->assertJson([
             'status' => 'success',
             'data' => [
-                'status' => 'ACTIVE'
-            ]
+                'status' => 'ACTIVE',
+            ],
         ]);
 });
 
 test('poverty status results are cached in redis', function () {
     $petugas = User::factory()->create([
-        'role_id' => Role::where('slug', 'petugasfrontoffice')->first()->id
+        'role_id' => Role::where('slug', 'petugasfrontoffice')->first()->id,
     ]);
-    
+
     $citizen = Citizen::factory()->create([
         'nik' => '9999999999999999',
-        'desa_id' => Village::first()->id
+        'desa_id' => Village::first()->id,
     ]);
     PovertyRecord::factory()->create([
         'citizen_nik' => $citizen->nik,
@@ -59,17 +59,17 @@ test('poverty status results are cached in redis', function () {
         'valid_until' => now()->addYear(),
     ]);
 
-    $cacheKey = "poverty_status_9999999999999999";
-    
+    $cacheKey = 'poverty_status_9999999999999999';
+
     // First call: Should populate cache
     $this->actingAs($petugas, 'sanctum')
         ->getJson("/api/v1/poverty/status/{$citizen->nik}");
-        
+
     expect(Cache::has($cacheKey))->toBeTrue();
-    
+
     // Modify status in DB but cache should still be old
     PovertyRecord::where('citizen_nik', $citizen->nik)->update(['status' => 'EXPIRED']);
-    
+
     $response = $this->actingAs($petugas, 'sanctum')
         ->getJson("/api/v1/poverty/status/{$citizen->nik}");
 

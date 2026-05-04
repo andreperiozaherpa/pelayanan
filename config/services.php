@@ -35,6 +35,19 @@ return [
         ],
     ],
 
+    'service_types' => [
+        'LAYANAN KESEHATAN',
+        'LAYANAN PENDIDIKAN',
+        'BANTUAN SOSIAL',
+        'BANTUAN PANGAN',
+        'BANTUAN PERUMAHAN',
+        'PELAYANAN ADMINISTRASI',
+        'PENDAMPINGAN HUKUM',
+        'PELATIHAN KERJA',
+        'MODAL USAHA',
+        'LAINNYA',
+    ],
+
     'browsershot' => [
         'node_binary' => env('BROWSERSHOT_NODE_BINARY', '/usr/bin/node'),
         'npm_binary' => env('BROWSERSHOT_NPM_BINARY', '/usr/bin/npm'),

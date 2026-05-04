@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Facades\Audit;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Web\StoreUserRequest;
 use App\Http\Requests\Web\UpdateUserRequest;
@@ -58,12 +59,7 @@ class UserController extends Controller
 
         $user = User::create($validated);
 
-        Auth::user()->recordAuditLog(
-            action: 'CREATE_USER',
-            table: 'users',
-            targetId: $user->id,
-            newValue: $user->toArray()
-        );
+        Audit::log('CREATE_USER', $user, $user->toArray());
 
         return redirect()->route('users.index')->with('success', "User {$user->name} berhasil dibuat.");
     }
@@ -107,13 +103,7 @@ class UserController extends Controller
 
         $user->update($validated);
 
-        Auth::user()->recordAuditLog(
-            action: 'UPDATE_USER',
-            table: 'users',
-            targetId: $user->id,
-            oldValue: $oldValue,
-            newValue: $user->fresh()->toArray()
-        );
+        Audit::log('UPDATE_USER', $user, $user->fresh()->toArray(), $oldValue);
 
         return redirect()->route('users.index')->with('success', "Data user {$user->name} berhasil diperbarui.");
     }
@@ -130,12 +120,7 @@ class UserController extends Controller
         $oldValue = $user->toArray();
         $user->delete();
 
-        Auth::user()->recordAuditLog(
-            action: 'DELETE_USER',
-            table: 'users',
-            targetId: $user->id,
-            oldValue: $oldValue
-        );
+        Audit::log('DELETE_USER', $user, null, $oldValue);
 
         return redirect()->route('users.index')->with('success', "User {$user->name} telah dihapus.");
     }

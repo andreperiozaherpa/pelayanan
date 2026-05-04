@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Facades\Audit;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Web\StoreRoleRequest;
 use App\Http\Requests\Web\UpdateRoleRequest;
 use App\Models\Permission;
 use App\Models\Role;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class RoleController extends Controller
@@ -43,12 +43,7 @@ class RoleController extends Controller
         $role = Role::create($validated);
         $role->permissions()->sync($request->permissions);
 
-        Auth::user()->recordAuditLog(
-            action: 'CREATE_ROLE',
-            table: 'roles',
-            targetId: $role->id,
-            newValue: $role->load('permissions')->toArray()
-        );
+        Audit::log('CREATE_ROLE', $role, $role->load('permissions')->toArray());
 
         return redirect()->route('roles.index')->with('success', "Role {$role->name} berhasil dibuat.");
     }
@@ -88,13 +83,7 @@ class RoleController extends Controller
         $role->update($validated);
         $role->permissions()->sync($request->permissions);
 
-        Auth::user()->recordAuditLog(
-            action: 'UPDATE_ROLE',
-            table: 'roles',
-            targetId: $role->id,
-            oldValue: $oldValue,
-            newValue: $role->fresh()->load('permissions')->toArray()
-        );
+        Audit::log('UPDATE_ROLE', $role, $role->fresh()->load('permissions')->toArray(), $oldValue);
 
         return redirect()->route('roles.index')->with('success', "Role {$role->name} berhasil diperbarui.");
     }
@@ -117,12 +106,7 @@ class RoleController extends Controller
         $oldValue = $role->load('permissions')->toArray();
         $role->delete();
 
-        Auth::user()->recordAuditLog(
-            action: 'DELETE_ROLE',
-            table: 'roles',
-            targetId: $role->id,
-            oldValue: $oldValue
-        );
+        Audit::log('DELETE_ROLE', $role, null, $oldValue);
 
         return redirect()->route('roles.index')->with('success', "Role {$role->name} telah dihapus.");
     }

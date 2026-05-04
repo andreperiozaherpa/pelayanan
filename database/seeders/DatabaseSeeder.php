@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Village;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -25,8 +26,8 @@ class DatabaseSeeder extends Seeder
         $roleFO = Role::where('slug', 'petugasfrontoffice')->first();
         $roleDesa = Role::where('slug', 'operatordesa')->first();
 
-        $desaSukamaju = \App\Models\Village::where('name', 'Desa Sukamaju')->first();
-        $desaSukaraya = \App\Models\Village::where('name', 'Desa Sukaraya')->first();
+        $desaSukamaju = Village::where('name', 'Desa Sukamaju')->first();
+        $desaSukaraya = Village::where('name', 'Desa Sukaraya')->first();
 
         // 3. Buat Akun Login untuk tiap Role
 

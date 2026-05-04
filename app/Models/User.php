@@ -6,6 +6,8 @@ use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Notifications\DatabaseNotificationCollection;
@@ -61,6 +63,7 @@ class User extends Authenticatable
         'password',
         'role_id',
         'desa_id',
+        'district_id',
         'is_active',
         'last_login_at',
     ];
@@ -87,8 +90,48 @@ class User extends Authenticatable
         return $this->belongsTo(Village::class, 'desa_id', 'id');
     }
 
+    public function district(): BelongsTo
+    {
+        return $this->belongsTo(District::class);
+    }
+
+    public function activeVillageLeader(): HasOne
+    {
+        return $this->hasOne(VillageLeader::class)->where('is_active', true);
+    }
+
+    public function activeDistrictLeader(): HasOne
+    {
+        return $this->hasOne(DistrictLeader::class)->where('is_active', true);
+    }
+
     public function hasPermission(string $permissionSlug): bool
     {
         return $this->role && $this->role->permissions()->where('slug', $permissionSlug)->exists();
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role && $this->role->slug === 'superadmin';
+    }
+
+    public function isOperatorDesa(): bool
+    {
+        return $this->role && $this->role->slug === 'operatordesa';
+    }
+
+    public function isPetugasFrontOffice(): bool
+    {
+        return $this->role && $this->role->slug === 'petugasfrontoffice';
+    }
+
+    public function isAuditor(): bool
+    {
+        return $this->role && $this->role->slug === 'auditor';
+    }
+
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(UserCertificate::class);
     }
 }

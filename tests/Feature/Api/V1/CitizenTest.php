@@ -1,11 +1,11 @@
 <?php
 
-use App\Models\User;
-use App\Models\Role;
 use App\Models\Citizen;
+use App\Models\Role;
+use App\Models\User;
+use App\Models\Village;
 use Database\Seeders\RBACSeeder;
 use Database\Seeders\VillageSeeder;
-use App\Models\Village;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -18,7 +18,7 @@ beforeEach(function () {
 test('operator desa can only see citizens in their village', function () {
     $operatorA = User::factory()->create([
         'role_id' => Role::where('slug', 'operatordesa')->first()->id,
-        'desa_id' => Village::first()->id
+        'desa_id' => Village::first()->id,
     ]);
 
     $citizenA = Citizen::factory()->create(['desa_id' => Village::first()->id]);
@@ -36,7 +36,7 @@ test('operator desa can only see citizens in their village', function () {
 
 test('data masking works for unauthorized users', function () {
     $petugas = User::factory()->create([
-        'role_id' => Role::where('slug', 'petugasfrontoffice')->first()->id
+        'role_id' => Role::where('slug', 'petugasfrontoffice')->first()->id,
     ]);
 
     $alamatAsli = 'Jl. Merdeka No. 123';
@@ -45,7 +45,7 @@ test('data masking works for unauthorized users', function () {
     $citizen = Citizen::factory()->create([
         'desa_id' => Village::first()->id,
         'alamat_desa' => $alamatAsli,
-        'kontak' => $kontakAsli
+        'kontak' => $kontakAsli,
     ]);
 
     $response = $this->actingAs($petugas, 'sanctum')
@@ -74,13 +74,13 @@ test('data masking works for unauthorized users', function () {
 test('operator desa sees unmasked data in their own village', function () {
     $operator = User::factory()->create([
         'role_id' => Role::where('slug', 'operatordesa')->first()->id,
-        'desa_id' => Village::first()->id
+        'desa_id' => Village::first()->id,
     ]);
 
     $citizen = Citizen::factory()->create([
         'desa_id' => Village::first()->id,
         'alamat_desa' => 'Jl. Merdeka No. 123',
-        'kontak' => '08123456789'
+        'kontak' => '08123456789',
     ]);
 
     $response = $this->actingAs($operator, 'sanctum')
@@ -93,7 +93,7 @@ test('operator desa sees unmasked data in their own village', function () {
 
 test('masking preserves data length consistency', function () {
     $petugas = User::factory()->create([
-        'role_id' => Role::where('slug', 'petugasfrontoffice')->first()->id
+        'role_id' => Role::where('slug', 'petugasfrontoffice')->first()->id,
     ]);
 
     // Test dengan berbagai panjang data
@@ -109,7 +109,7 @@ test('masking preserves data length consistency', function () {
         $citizen = Citizen::factory()->create([
             'desa_id' => Village::first()->id,
             'alamat_desa' => $case['alamat'],
-            'kontak' => $case['kontak']
+            'kontak' => $case['kontak'],
         ]);
 
         $response = $this->actingAs($petugas, 'sanctum')

@@ -14,8 +14,8 @@ class PovertyRecordResource extends JsonResource
     {
         $user = $request->user();
         $isAuthorized = $user && (
-            $user->role->slug === 'superadmin' || 
-            ($user->role->slug === 'operatordesa' && $user->desa_id === $this->citizen->desa_id)
+            $user->isSuperAdmin() ||
+            ($user->isOperatorDesa() && $user->desa_id === $this->citizen->desa_id)
         );
 
         return [

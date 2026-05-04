@@ -24,13 +24,13 @@ class PovertyController extends Controller
         $status = Cache::remember($cacheKey, now()->addHours(24), function () use ($nik) {
             $citizen = Citizen::where('nik', $nik)->first();
 
-            if (!$citizen) {
+            if (! $citizen) {
                 return ['status' => 'NOT_FOUND', 'message' => 'Citizen record not found.'];
             }
 
             $record = $citizen->povertyRecords()->latest()->first();
 
-            if (!$record) {
+            if (! $record) {
                 return ['status' => 'PENDING_REVIEW', 'message' => 'No poverty record found. Review required.'];
             }
 
@@ -43,7 +43,7 @@ class PovertyController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data' => $status
+            'data' => $status,
         ]);
     }
 
@@ -71,7 +71,7 @@ class PovertyController extends Controller
         $user = $request->user();
         $query = PovertyRecord::with('citizen');
 
-        if ($user->role->slug === 'operatordesa') {
+        if ($user->isOperatorDesa()) {
             $query->whereHas('citizen', function ($q) use ($user) {
                 $q->where('desa_id', $user->desa_id);
             });

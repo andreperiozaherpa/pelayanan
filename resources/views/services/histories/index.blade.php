@@ -75,7 +75,23 @@
                                     <!-- Icon & Type -->
                                     <div class="flex items-center gap-4 shrink-0">
                                         <div class="w-12 h-12 bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center text-xl shadow-sm border border-black/[0.02]">
-                                            {{ $log['icon'] }}
+                                            @if ($log['type'] === 'VERIFICATION')
+                                                <iconify-icon icon="lucide:search" class="text-primary-acorn"></iconify-icon>
+                                            @elseif (str_contains($log['action'], 'Cetak') || str_contains($log['action'], 'Print'))
+                                                <iconify-icon icon="lucide:file-text" class="text-amber-500"></iconify-icon>
+                                            @elseif (str_contains($log['action'], 'Lapor') || str_contains($log['action'], 'Report'))
+                                                <iconify-icon icon="lucide:check-circle" class="text-emerald-500"></iconify-icon>
+                                            @elseif (str_contains($log['action'], 'Warga') || str_contains($log['action'], 'Citizen') || str_contains($log['action'], 'CITIZEN') || str_contains($log['action'], 'Data'))
+                                                <iconify-icon icon="lucide:users" class="text-blue-500"></iconify-icon>
+                                            @elseif (str_contains($log['action'], 'User') || str_contains($log['action'], 'USER') || str_contains($log['action'], 'Pengguna'))
+                                                <iconify-icon icon="lucide:key-round" class="text-purple-500"></iconify-icon>
+                                            @elseif (str_contains($log['action'], 'Masuk') || str_contains($log['action'], 'LOGIN'))
+                                                <iconify-icon icon="lucide:log-in" class="text-green-500"></iconify-icon>
+                                            @elseif (str_contains($log['action'], 'Keluar') || str_contains($log['action'], 'LOGOUT'))
+                                                <iconify-icon icon="lucide:log-out" class="text-rose-500"></iconify-icon>
+                                            @else
+                                                <iconify-icon icon="lucide:activity" class="text-slate-400"></iconify-icon>
+                                            @endif
                                         </div>
                                         <div class="sm:hidden">
                                             <x-badge :variant="$log['type'] === 'VERIFICATION' ? 'success' : 'slate'" :label="$log['type']" />
@@ -125,7 +141,7 @@
                                         </span>
                                         @if ($log['type'] === 'VERIFICATION' && strlen($log['target']) === 16)
                                             @can('poverty.print_proof')
-                                                <a href="{{ route('dashboard.proof', ['nik' => $log['target']]) }}" target="_blank"
+                                                <a href="{{ route('verification.proof', ['nik' => $log['target']]) }}" target="_blank"
                                                     class="p-2 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-xl hover:bg-primary-acorn hover:text-white transition shadow-sm border border-black/[0.03]">
                                                     <iconify-icon icon="lucide:printer" class="text-lg"></iconify-icon>
                                                 </a>

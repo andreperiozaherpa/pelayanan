@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Citizen;
 use App\Models\PovertyRecord;
+use App\Models\Village;
 use Illuminate\Database\Seeder;
 
 class CitizenSeeder extends Seeder
@@ -14,7 +15,7 @@ class CitizenSeeder extends Seeder
     public function run(): void
     {
         // 1. Create a FIXED resident for predictable manual testing (Fase 4 Refinement)
-        $fixedVillage = \App\Models\Village::first();
+        $fixedVillage = Village::first();
         Citizen::create([
             'nik' => '1234567890123456',
             'nama_lengkap' => 'Budi Sudarsono',

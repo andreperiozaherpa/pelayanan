@@ -189,12 +189,16 @@
             <p>Mengetahui,</p>
             <p>Kepala Desa {{ $citizen->village->name ?? 'Setempat' }}</p>
             <div class="box"
-                style="margin: 15px 0; display: flex; justify-content: center; align-items: center; border: 1px dashed #e2e8f0; height: 110px; border-radius: 8px; background: #fcfcfc;">
-                <div id="qrcode"></div>
+                style="margin: 15px 0; position: relative; display: flex; justify-content: center; align-items: center; border: 1px dashed #e2e8f0; height: 110px; border-radius: 8px; background: #fcfcfc;">
+                {!! $qrcode !!}
+                <!-- Visual TTE Indicator -->
+                <div style="position: absolute; bottom: 5px; right: -20px; transform: rotate(-15deg); background: rgba(255, 255, 255, 0.9); border: 2px solid #2f855a; color: #2f855a; padding: 2px 6px; font-size: 8px; font-weight: bold; border-radius: 4px; text-transform: uppercase;">
+                    TTE Valid
+                </div>
             </div>
             <p><strong>__________________________</strong></p>
             <p style="font-size: 8px; color: #718096; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px;">
-                E-Signature Digital Sistem Verifikasi ---------</p>
+                Dokumen ini ditandatangani secara elektronik</p>
         </div>
     </div>
 
@@ -204,17 +208,6 @@
         Keaslian dokumen dapat dipastikan dengan memindai kode QR di atas.
     </p>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script>
-        new QRCode(document.getElementById("qrcode"), {
-            text: "{{ $validationUrl }}",
-            width: 100,
-            height: 100,
-            colorDark: "#000000",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-        });
-    </script>
 </body>
 
 </html>

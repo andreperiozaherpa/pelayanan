@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Facades\Audit;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -31,16 +33,18 @@ class LoginController extends Controller
             'password' => ['required'],
         ]);
 
+        $user = User::where('email', $credentials['email'])->first();
+
+        if ($user && ! $user->is_active) {
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda telah dinonaktifkan. Silakan hubungi administrator.',
+            ]);
+        }
+
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            // Audit Log
-            \App\Models\AuditLog::create([
-                'user_id' => Auth::id(),
-                'action' => 'LOGIN',
-                'ip_address' => $request->ip(),
-                'timestamp' => now()
-            ]);
+            Audit::log('LOGIN', Auth::user());
 
             return redirect()->intended(route('dashboard.index'));
         }
@@ -56,20 +60,17 @@ class LoginController extends Controller
     public function logout(Request $request)
     {
         $userId = Auth::id();
-        
+
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        // Audit Log
         if ($userId) {
-            \App\Models\AuditLog::create([
-                'user_id' => $userId,
-                'action' => 'LOGOUT',
-                'ip_address' => $request->ip(),
-                'timestamp' => now()
-            ]);
+            $user = User::find($userId);
+            if ($user) {
+                Audit::log('LOGOUT', $user);
+            }
         }
 
         return redirect('/login');

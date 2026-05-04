@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Facades\Audit;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Web\DistrictRequest;
 use App\Models\District;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class DistrictController extends Controller
 {
@@ -43,12 +43,7 @@ class DistrictController extends Controller
     {
         $district = District::create($request->validated());
 
-        Auth::user()->recordAuditLog(
-            action: 'CREATE_DISTRICT',
-            table: 'districts',
-            targetId: $district->id,
-            newValue: $district->toArray()
-        );
+        Audit::log('CREATE_DISTRICT', $district, $district->toArray());
 
         return redirect()->route('districts.index')->with('success', "Kecamatan {$district->name} berhasil ditambahkan.");
     }
@@ -69,13 +64,7 @@ class DistrictController extends Controller
         $oldValue = $district->toArray();
         $district->update($request->validated());
 
-        Auth::user()->recordAuditLog(
-            action: 'UPDATE_DISTRICT',
-            table: 'districts',
-            targetId: $district->id,
-            oldValue: $oldValue,
-            newValue: $district->fresh()->toArray()
-        );
+        Audit::log('UPDATE_DISTRICT', $district, $district->fresh()->toArray(), $oldValue);
 
         return redirect()->route('districts.index')->with('success', "Data kecamatan {$district->name} berhasil diperbarui.");
     }
@@ -92,12 +81,7 @@ class DistrictController extends Controller
         $oldValue = $district->toArray();
         $district->delete();
 
-        Auth::user()->recordAuditLog(
-            action: 'DELETE_DISTRICT',
-            table: 'districts',
-            targetId: $district->id,
-            oldValue: $oldValue
-        );
+        Audit::log('DELETE_DISTRICT', $district, null, $oldValue);
 
         return redirect()->route('districts.index')->with('success', "Kecamatan {$district->name} telah dihapus.");
     }

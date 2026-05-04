@@ -9,6 +9,56 @@
                 "artisan",
                 "boost:mcp"
             ]
+        },
+        "laravel-filesystem": {
+            "type": "local",
+            "enabled": true,
+            "command": [
+                "/home/andre/.local/share/lerd/bin/npx",
+                "-y",
+                "@modelcontextprotocol/server-filesystem",
+                "/home/andre/Development/Laravel/pelayanan"
+            ],
+            "timeout": 60000
+        },
+        "database-mysql": {
+            "type": "local",
+            "enabled": true,
+            "command": [
+                "/home/andre/.local/share/lerd/bin/npx",
+                "-y",
+                "@hechtcarmel/mysql-mcp-server"
+            ],
+            "timeout": 60000,
+            "environment": {
+                "MYSQL_HOST": "localhost",
+                "MYSQL_PORT": "3306",
+                "MYSQL_USER": "root",
+                "MYSQL_PASSWORD": "lerd",
+                "MYSQL_DATABASE": "pelayanan"
+            }
+        },
+        "web-fetcher": {
+            "type": "local",
+            "enabled": true,
+            "command": [
+                "/home/andre/.local/share/lerd/bin/npx",
+                "-y",
+                "mcp-fetch-server"
+            ],
+            "timeout": 60000
+        },
+        "lerd": {
+            "type": "local",
+            "enabled": true,
+            "command": [
+                "lerd",
+                "mcp"
+            ],
+            "timeout": 30000,
+            "environment": {
+                "LERD_SITE_PATH": "/home/andre/Development/Laravel/pelayanan"
+            }
         }
     }
 }

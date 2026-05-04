@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Web\CertificateController;
 use App\Http\Controllers\Web\CitizenController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\DistrictController;
@@ -38,9 +39,13 @@ Route::middleware('auth')->group(function () {
     Route::resource('districts', DistrictController::class)
         ->middleware('permission:districts.manage');
 
-    Route::get('/verify', [DashboardController::class, 'verify'])->name('dashboard.verify');
+    // Super Admin - Certificate Management
+    Route::get('/admin/certificates', [CertificateController::class, 'index'])->name('admin.certificates.index');
+    Route::post('/admin/certificates/{user_id}/generate', [CertificateController::class, 'generate'])->name('admin.certificates.generate');
+
+    Route::get('/verify', [VerificationController::class, 'index'])->name('verification.index');
     Route::get('/history', [DashboardController::class, 'history'])->name('dashboard.history');
-    Route::get('/proof/{nik}', [DashboardController::class, 'proof'])->name('dashboard.proof');
+    Route::get('/proof/{nik}', [VerificationController::class, 'proof'])->where('nik', '[0-9]{16}')->name('verification.proof');
 
     Route::post('/api/verify-check', [VerificationController::class, 'check'])->name('api.verification.check');
     Route::post('/api/service-report', [ServiceController::class, 'store'])->name('service.store');

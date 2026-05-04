@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Facades\Audit;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\LoginRequest;
 use App\Http\Resources\V1\UserResource;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 
 class AuthController extends Controller
 {
@@ -19,42 +20,49 @@ class AuthController extends Controller
     {
         $credentials = $request->only('email', 'password');
 
-        if (!Auth::attempt($credentials)) {
-            // Log failed attempt (Audit)
-            $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->first();
+
+        if (! $user || ! Auth::attempt($credentials)) {
             if ($user) {
-                $user->recordAuditLog('login_failed', 'users', $user->id, null, [
+                Audit::log('login_failed', $user, [
                     'ip' => $request->ip(),
-                    'ua' => $request->userAgent()
+                    'ua' => $request->userAgent(),
                 ]);
             }
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Invalid credentials'
+                'message' => 'Invalid credentials',
             ], 401);
+        }
+
+        if (! $user->is_active) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Account has been deactivated.',
+            ], 403);
         }
 
         $user = Auth::user();
 
         // Token name includes IP and UA for binding awareness
-        $tokenName = 'auth_token_' . md5($request->ip() . $request->userAgent());
+        $tokenName = 'auth_token_'.md5($request->ip().$request->userAgent());
 
         // Access Token: 15 minutes (Blueprint 3.2)
         $token = $user->createToken($tokenName, ['*'], now()->addMinutes(15))->plainTextToken;
 
         // Log successful login (Audit)
-        $user->recordAuditLog('login_success', 'users', $user->id, null, [
+        Audit::log('login_success', $user, [
             'ip' => $request->ip(),
-            'ua' => $request->userAgent()
+            'ua' => $request->userAgent(),
         ]);
 
         return response()->json([
             'status' => 'success',
             'data' => [
                 'token' => $token,
-                'user' => new UserResource($user)
-            ]
+                'user' => new UserResource($user),
+            ],
         ]);
     }
 
@@ -69,14 +77,14 @@ class AuthController extends Controller
         $user->currentAccessToken()->delete();
 
         // Issue new access token (15 mins)
-        $tokenName = 'auth_token_' . md5($request->ip() . $request->userAgent());
+        $tokenName = 'auth_token_'.md5($request->ip().$request->userAgent());
         $token = $user->createToken($tokenName, ['*'], now()->addMinutes(15))->plainTextToken;
 
         return response()->json([
             'status' => 'success',
             'data' => [
-                'token' => $token
-            ]
+                'token' => $token,
+            ],
         ]);
     }
 
@@ -88,14 +96,14 @@ class AuthController extends Controller
         $user = $request->user();
 
         // Log logout (Audit)
-        $user->recordAuditLog('logout', 'users', $user->id);
+        Audit::log('logout', $user);
 
         // Revoke current token
         $user->currentAccessToken()->delete();
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Successfully logged out'
+            'message' => 'Successfully logged out',
         ]);
     }
 }

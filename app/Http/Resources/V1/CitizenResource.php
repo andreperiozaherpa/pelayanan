@@ -14,8 +14,8 @@ class CitizenResource extends JsonResource
     {
         $user = $request->user();
         $isAuthorized = $user && (
-            $user->role->slug === 'superadmin' ||
-            ($user->role->slug === 'operatordesa' && $user->desa_id === $this->desa_id)
+            $user->isSuperAdmin() ||
+            ($user->isOperatorDesa() && $user->desa_id === $this->desa_id)
         );
 
         return [
@@ -36,7 +36,7 @@ class CitizenResource extends JsonResource
      */
     private function maskAddress(?string $address): string
     {
-        if (!$address) {
+        if (! $address) {
             return '**********';
         }
 
@@ -45,7 +45,7 @@ class CitizenResource extends JsonResource
         $stars = str_repeat('*', $remainingLength);
 
         // ✅ Dengan spasi untuk alamat
-        return $prefix . ' ' . $stars;
+        return $prefix.' '.$stars;
     }
 
     /**
@@ -54,7 +54,7 @@ class CitizenResource extends JsonResource
      */
     private function maskPhone(?string $phone): string
     {
-        if (!$phone) {
+        if (! $phone) {
             return '**********';
         }
 
@@ -63,6 +63,6 @@ class CitizenResource extends JsonResource
         $stars = str_repeat('*', $remainingLength);
 
         // ✅ Tanpa spasi untuk nomor telepon
-        return $prefix . $stars;
+        return $prefix.$stars;
     }
 }

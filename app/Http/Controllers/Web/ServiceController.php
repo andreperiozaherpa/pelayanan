@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Facades\Audit;
 use App\Http\Controllers\Controller;
+use App\Models\Citizen;
 use App\Models\ServiceRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use App\Models\Citizen;
 
 class ServiceController extends Controller
 {
@@ -20,24 +22,23 @@ class ServiceController extends Controller
 
         $request->validate([
             'citizen_nik' => 'required|string|size:16|exists:citizens,nik',
-            'service_type' => 'required|string|max:255',
-            'notes' => 'nullable|string'
+            'service_type' => ['required', 'string', 'max:255', 'in:'.implode(',', config('services.service_types'))],
+            'notes' => 'nullable|string',
         ]);
 
-        // Security Scoping (Fase 3 - Backend Protection)
         $user = Auth::user();
-        if ($user->role->slug === 'operatordesa') {
+        if ($user->isOperatorDesa()) {
             $citizen = Citizen::where('nik', $request->citizen_nik)->first();
             if ($citizen->desa_id != $user->desa_id) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Anda tidak memiliki hak untuk memberikan layanan di luar wilayah tugas Anda.'
+                    'message' => 'Anda tidak memiliki hak untuk memberikan layanan di luar wilayah tugas Anda.',
                 ], 403);
             }
         }
 
         // Security Hardening: Atomic check and create to prevent race conditions
-        return \DB::transaction(function () use ($request) {
+        return DB::transaction(function () use ($request) {
             $exists = ServiceRequest::where('citizen_nik', $request->citizen_nik)
                 ->where('service_type', $request->service_type)
                 ->whereDate('created_at', now()->toDateString())
@@ -47,7 +48,7 @@ class ServiceController extends Controller
             if ($exists) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Layanan ini sudah dilaporkan untuk warga tersebut hari ini.'
+                    'message' => 'Layanan ini sudah dilaporkan untuk warga tersebut hari ini.',
                 ], 422);
             }
 
@@ -56,22 +57,14 @@ class ServiceController extends Controller
                 'service_type' => $request->service_type,
                 'status' => 'APPROVED',
                 'front_office_user_id' => Auth::user()->id,
-                'notes' => $request->notes
+                'notes' => $request->notes,
             ]);
 
-            // Audit Log
-            \App\Models\AuditLog::create([
-                'user_id' => Auth::user()->id,
-                'action' => 'REPORT_SERVICE',
-                'target_table' => 'service_requests',
-                'target_id' => $service->id,
-                'new_value' => $service->toArray(),
-                'timestamp' => now()
-            ]);
+            Audit::log('REPORT_SERVICE', $service, $service->toArray());
 
             return response()->json([
                 'success' => true,
-                'message' => 'Pelayanan berhasil dicatat.'
+                'message' => 'Pelayanan berhasil dicatat.',
             ]);
         });
     }

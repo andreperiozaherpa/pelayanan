@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -56,5 +57,15 @@ class Village extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class, 'desa_id', 'id');
+    }
+
+    public function leaders(): HasMany
+    {
+        return $this->hasMany(VillageLeader::class);
+    }
+
+    public function activeLeader(): HasOne
+    {
+        return $this->hasOne(VillageLeader::class)->where('is_active', true);
     }
 }

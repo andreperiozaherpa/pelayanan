@@ -34,8 +34,7 @@ class StoreCitizenRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        // For OperatorDesa, automatically set desa_id to their own desa_id
-        if ($this->user()->role->slug === 'operatordesa') {
+        if ($this->user()->isOperatorDesa()) {
             $this->merge([
                 'desa_id' => $this->user()->desa_id,
             ]);

@@ -6,7 +6,7 @@ use App\Models\PovertyRecord;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\PovertyRecord>
+ * @extends Factory<PovertyRecord>
  */
 class PovertyRecordFactory extends Factory
 {

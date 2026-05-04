@@ -20,8 +20,7 @@ class CitizenController extends Controller
         $user = $request->user();
         $query = Citizen::query();
 
-        // Scoping: OperatorDesa only see their desa
-        if ($user->role->slug === 'operatordesa') {
+        if ($user->isOperatorDesa()) {
             $query->where('desa_id', $user->desa_id);
         }
 
@@ -47,8 +46,7 @@ class CitizenController extends Controller
     {
         $user = $request->user();
 
-        // Scoping: OperatorDesa only see their desa
-        if ($user->role->slug === 'operatordesa' && $user->desa_id !== $citizen->desa_id) {
+        if ($user->isOperatorDesa() && $user->desa_id !== $citizen->desa_id) {
             abort(403, 'Unauthorized access to citizen data in another village.');
         }
 
@@ -60,6 +58,12 @@ class CitizenController extends Controller
      */
     public function update(UpdateCitizenRequest $request, Citizen $citizen): CitizenResource
     {
+        $user = $request->user();
+
+        if ($user->isOperatorDesa() && $user->desa_id !== $citizen->desa_id) {
+            abort(403, 'Unauthorized access to citizen data in another village.');
+        }
+
         $citizen->update($request->validated());
 
         return new CitizenResource($citizen);

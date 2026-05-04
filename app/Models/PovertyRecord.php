@@ -46,6 +46,7 @@ class PovertyRecord extends Model
     protected $fillable = [
         'citizen_nik',
         'status',
+        'signed_pdf_path',
         'income_range',
         'valid_from',
         'valid_until',

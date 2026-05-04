@@ -13,9 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
-use Spatie\Browsershot\Browsershot;
 
 class DashboardController extends Controller
 {
@@ -27,7 +25,7 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         // 1. Role-based Redirection
-        if ($user->role->slug === 'operatordesa') {
+        if ($user->isOperatorDesa()) {
             return redirect()->route('dashboard.desa');
         }
 
@@ -86,20 +84,12 @@ class DashboardController extends Controller
     }
 
     /**
-     * Display the verification page.
-     */
-    public function verify(): View
-    {
-        return view('services.verification.index');
-    }
-
-    /**
      * Display the unified history of verifications and system audits.
      */
     public function history(Request $request): View
     {
         $user = Auth::user();
-        $isOperatorDesa = $user->role->slug === 'operatordesa';
+        $isOperatorDesa = $user->isOperatorDesa();
         $desaId = $user->desa_id;
 
         $search = $request->query('search');
@@ -132,7 +122,6 @@ class DashboardController extends Controller
                     'target_name' => $log->citizen->nama_lengkap ?? null,
                     'result' => $log->result,
                     'details' => "Metode: {$log->method}, IP: {$log->ip_address}",
-                    'icon' => '🔍',
                 ];
             });
 
@@ -208,14 +197,6 @@ class DashboardController extends Controller
                     'target_name' => $targetName,
                     'result' => null,
                     'details' => $log->action === 'REPORT_SERVICE' && is_array($log->new_value) ? ($log->new_value['service_type'] ?? '') : '',
-                    'icon' => match (true) {
-                        $log->action === 'PRINT_PROOF' => '📄',
-                        $log->action === 'REPORT_SERVICE' => '✅',
-                        str_contains($log->action, 'CITIZEN') => '👤',
-                        str_contains($log->action, 'USER') => '🔑',
-                        str_contains($log->action, 'LOGIN') => '🔓',
-                        default => '🔒'
-                    },
                 ];
             });
 
@@ -244,49 +225,5 @@ class DashboardController extends Controller
             'search' => $search,
             'perPage' => $perPage,
         ]);
-    }
-
-    /**
-     * Generate a high-fidelity PDF proof of verification.
-     */
-    public function proof(string $nik)
-    {
-        // 1. Authorization
-        Gate::authorize('poverty.print_proof');
-
-        $citizen = Citizen::with(['village', 'povertyRecords' => function ($q) {
-            $q->latest();
-        }])->where('nik', $nik)->firstOrFail();
-
-        $record = $citizen->povertyRecords->first();
-
-        // Generate a validation URL
-        $validationUrl = route('dashboard.verify', ['nik' => $nik]);
-
-        // Audit Log
-        AuditLog::create([
-            'user_id' => Auth::user()->id,
-            'action' => 'PRINT_PROOF',
-            'target_table' => 'citizens',
-            'target_id' => null,
-            'new_value' => ['nik' => $nik],
-            'timestamp' => now(),
-        ]);
-
-        $html = view('documents.doc_poverty', compact('citizen', 'record', 'validationUrl'))->render();
-
-        $pdf = Browsershot::html($html)
-            ->setNodeBinary(config('services.browsershot.node_binary'))
-            ->setNpmBinary(config('services.browsershot.npm_binary'))
-            ->setChromePath(config('services.browsershot.chrome_path'))
-            ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox'])
-            ->provideHtmlViaOpenPage()
-            ->format('A5')
-            ->margins(0, 0, 0, 0)
-            ->pdf();
-
-        return response($pdf)
-            ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="bukti-verifikasi-'.$nik.'.pdf"');
     }
 }

@@ -65,7 +65,7 @@
         </div>
 
         <!-- Verification Action -->
-        <a href="{{ route('dashboard.verify') }}" class="premium-card p-8 flex flex-col items-center justify-center text-center group border-dashed border-2 border-primary-acorn/20 bg-slate-50/30 hover:bg-slate-50 transition duration-300">
+        <a href="{{ route('verification.index') }}" class="premium-card p-8 flex flex-col items-center justify-center text-center group border-dashed border-2 border-primary-acorn/20 bg-slate-50/30 hover:bg-slate-50 transition duration-300">
             <div class="w-14 h-14 rounded-2xl bg-primary-acorn flex items-center justify-center text-white shadow-lg shadow-primary-acorn/30 group-hover:scale-110 transition duration-500 mb-4">
                 <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>

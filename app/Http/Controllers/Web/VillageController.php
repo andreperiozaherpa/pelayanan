@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Facades\Audit;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Web\VillageRequest;
 use App\Models\District;
 use App\Models\Village;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class VillageController extends Controller
 {
@@ -48,12 +48,7 @@ class VillageController extends Controller
     {
         $village = Village::create($request->validated());
 
-        Auth::user()->recordAuditLog(
-            action: 'CREATE_VILLAGE',
-            table: 'villages',
-            targetId: $village->id,
-            newValue: $village->toArray()
-        );
+        Audit::log('CREATE_VILLAGE', $village, $village->toArray());
 
         return redirect()->route('villages.index')->with('success', "Desa {$village->name} berhasil ditambahkan.");
     }
@@ -76,13 +71,7 @@ class VillageController extends Controller
         $oldValue = $village->toArray();
         $village->update($request->validated());
 
-        Auth::user()->recordAuditLog(
-            action: 'UPDATE_VILLAGE',
-            table: 'villages',
-            targetId: $village->id,
-            oldValue: $oldValue,
-            newValue: $village->fresh()->toArray()
-        );
+        Audit::log('UPDATE_VILLAGE', $village, $village->fresh()->toArray(), $oldValue);
 
         return redirect()->route('villages.index')->with('success', "Data desa {$village->name} berhasil diperbarui.");
     }
@@ -99,12 +88,7 @@ class VillageController extends Controller
         $oldValue = $village->toArray();
         $village->delete();
 
-        Auth::user()->recordAuditLog(
-            action: 'DELETE_VILLAGE',
-            table: 'villages',
-            targetId: $village->id,
-            oldValue: $oldValue
-        );
+        Audit::log('DELETE_VILLAGE', $village, null, $oldValue);
 
         return redirect()->route('villages.index')->with('success', "Desa {$village->name} telah dihapus.");
     }

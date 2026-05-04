@@ -26,8 +26,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Global Gate Bridge (RBAC)
         Gate::before(function (User $user, string $ability) {
-            // SuperAdmin bypass
-            if ($user->role && $user->role->slug === 'superadmin') {
+            if ($user->isSuperAdmin()) {
                 return true;
             }
 

@@ -24,8 +24,7 @@ class CitizenController extends Controller
 
         $query = Citizen::with(['village', 'povertyRecords']);
 
-        // Data Isolation Rule: OperatorDesa only sees their own village.
-        if ($user->role->slug === 'operatordesa') {
+        if ($user->isOperatorDesa()) {
             $query->where('desa_id', $user->desa_id);
         }
 
@@ -49,8 +48,7 @@ class CitizenController extends Controller
         $user = Auth::user();
         $villages = [];
 
-        // Super Admin needs to select a village manually. Operator Desa uses their assigned village.
-        if ($user->role->slug === 'superadmin') {
+        if ($user->isSuperAdmin()) {
             $villages = Village::orderBy('name')->get();
         }
 
@@ -65,8 +63,7 @@ class CitizenController extends Controller
         $user = Auth::user();
         $validated = $request->validated();
 
-        // Enforce Data Isolation
-        if ($user->role->slug === 'operatordesa') {
+        if ($user->isOperatorDesa()) {
             $validated['desa_id'] = $user->desa_id;
         } else {
             // Super Admin must provide it
@@ -93,13 +90,12 @@ class CitizenController extends Controller
     {
         $user = Auth::user();
 
-        // Enforce Data Isolation
-        if ($user->role->slug === 'operatordesa') {
+        if ($user->isOperatorDesa()) {
             abort_if($citizen->desa_id !== $user->desa_id, 403, 'Anda tidak diizinkan mengubah data warga di luar wilayah Anda.');
         }
 
         $villages = [];
-        if ($user->role->slug === 'superadmin') {
+        if ($user->isSuperAdmin()) {
             $villages = Village::orderBy('name')->get();
         }
 
@@ -116,14 +112,13 @@ class CitizenController extends Controller
     {
         $user = Auth::user();
 
-        // Enforce Data Isolation
-        if ($user->role->slug === 'operatordesa') {
+        if ($user->isOperatorDesa()) {
             abort_if($citizen->desa_id !== $user->desa_id, 403, 'Akses ditolak.');
         }
 
         $validated = $request->validated();
 
-        if ($user->role->slug === 'operatordesa') {
+        if ($user->isOperatorDesa()) {
             // Re-enforce avoiding overrides via manipulated payloads
             $validated['desa_id'] = $user->desa_id;
         } else {
@@ -148,7 +143,7 @@ class CitizenController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->role->slug === 'operatordesa') {
+        if ($user->isOperatorDesa()) {
             abort_if($citizen->desa_id !== $user->desa_id, 403, 'Akses ditolak.');
         }
 
@@ -170,22 +165,13 @@ class CitizenController extends Controller
         // Crucial Business Rule: Force exact 3 month validity from start date.
         $validUntil = $validFrom->copy()->addMonths(3);
 
-        $citizen->povertyRecords()->updateOrCreate(
-            [
-                // If there's an existing active record, we might just create a new one, but for simplicity:
-                // We update the latest one, or we just insert a new line. Given updateOrCreate requires unique constraints,
-                // let's do a simple update or create based on NIK. If one exists, update it. If we want history, we should create new.
-                // Let's just update the most recent one or create.
-                'citizen_nik' => $citizen->nik,
-            ],
-            [
-                'status' => $data['poverty_status'],
-                'income_range' => $data['income_range'],
-                'valid_from' => $validFrom->format('Y-m-d'),
-                'valid_until' => $validUntil->format('Y-m-d'),
-                'verified_by' => $userId,
-                'source' => $data['source'],
-            ]
-        );
+        $citizen->povertyRecords()->create([
+            'status' => $data['poverty_status'],
+            'income_range' => $data['income_range'],
+            'valid_from' => $validFrom->format('Y-m-d'),
+            'valid_until' => $validUntil->format('Y-m-d'),
+            'verified_by' => $userId,
+            'source' => $data['source'],
+        ]);
     }
 }

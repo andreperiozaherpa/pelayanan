@@ -26,7 +26,7 @@
                         </button>
 
                         <a href="{{ route('dashboard.index') }}"
-                            class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('dashboard.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                            class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('dashboard.*') || request()->routeIs('verification.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
                             <iconify-icon icon="lucide:layout-grid" class="text-xl"></iconify-icon>
                         </a>
                         <a href="{{ route('citizens.index') }}"
@@ -35,7 +35,7 @@
                         </a>
                         @if (Auth::user()->hasPermission('users.manage'))
                             <a href="{{ route('users.index') }}"
-                                class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('users.*') || request()->routeIs('roles.*') || request()->routeIs('districts.*') || request()->routeIs('villages.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                                class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('users.*') || request()->routeIs('roles.*') || request()->routeIs('districts.*') || request()->routeIs('villages.*') || request()->routeIs('admin.certificates.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
                                 <iconify-icon icon="lucide:settings-2" class="text-xl"></iconify-icon>
                             </a>
                         @endif
@@ -49,14 +49,14 @@
                     <div class="flex-1 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-2xl shadow-sm p-4 flex flex-col custom-scrollbar overflow-y-auto"
                         x-show="sidebarOpen">
                         <nav class="flex-grow space-y-0.5">
-                            @if (request()->routeIs('dashboard.*'))
+                            @if (request()->routeIs('dashboard.*') || request()->routeIs('verification.*'))
                                 <div class="px-4 py-4">
                                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                         Dashboards</p>
                                 </div>
                                 <x-nav-link href="{{ route('dashboard.index') }}" :active="request()->routeIs('dashboard.index')"
                                     icon="lucide:layout-dashboard">Default</x-nav-link>
-                                <x-nav-link href="{{ route('dashboard.verify') }}" :active="request()->routeIs('dashboard.verify')"
+                                <x-nav-link href="{{ route('verification.index') }}" :active="request()->routeIs('verification.index')"
                                     icon="lucide:scan-line">Analytics</x-nav-link>
                                 <x-nav-link href="{{ route('dashboard.history') }}" :active="request()->routeIs('dashboard.history')"
                                     icon="lucide:history">History</x-nav-link>
@@ -72,7 +72,8 @@
                             @elseif(request()->routeIs('users.*') ||
                                     request()->routeIs('roles.*') ||
                                     request()->routeIs('districts.*') ||
-                                    request()->routeIs('villages.*'))
+                                    request()->routeIs('villages.*') ||
+                                    request()->routeIs('admin.certificates.*'))
                                 <div class="px-4 py-4">
                                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Settings
                                     </p>
@@ -85,6 +86,10 @@
                                     icon="lucide:map">Districts</x-nav-link>
                                 <x-nav-link href="{{ route('villages.index') }}" :active="request()->routeIs('villages.*')"
                                     icon="lucide:home">Villages</x-nav-link>
+                                @if (Auth::user()->isSuperAdmin())
+                                    <x-nav-link href="{{ route('admin.certificates.index') }}" :active="request()->routeIs('admin.certificates.*')"
+                                        icon="lucide:badge-check">Sertifikat TTE</x-nav-link>
+                                @endif
                             @endif
                         </nav>
                     </div>
