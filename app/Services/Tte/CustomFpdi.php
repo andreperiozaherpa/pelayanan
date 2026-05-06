@@ -11,7 +11,7 @@ class CustomFpdi extends Fpdi
      * We make it public to allow template_id injection.
      */
     public $signature_appearance = ['page' => 1, 'rect' => '0 0 0 0', 'name' => 'Signature'];
-    
+
     /**
      * Link a template to a specific page's resources so it's written to the PDF.
      */
@@ -35,20 +35,20 @@ class CustomFpdi extends Fpdi
             $templateId = $this->signature_appearance['template_id'];
             if (isset($this->xobjects[$templateId]['n'])) {
                 $xobjId = $this->xobjects[$templateId]['n'];
-                
+
                 // The signature widget was JUST written to the buffer by _enddoc()
                 // We find the signature widget start and inject the /AP stream
                 // We use a more flexible regex-like approach to find the widget
                 $patterns = [
                     '/Type /Annot /Subtype /Widget',
                     '/Type /Annot/Subtype /Widget',
-                    '/Type/Annot/Subtype/Widget'
+                    '/Type/Annot/Subtype/Widget',
                 ];
-                
+
                 foreach ($patterns as $search) {
                     $pos = strrpos($this->buffer, $search);
                     if ($pos !== false) {
-                        $this->buffer = substr_replace($this->buffer, $search . ' /AP << /N ' . $xobjId . ' 0 R >>', $pos, strlen($search));
+                        $this->buffer = substr_replace($this->buffer, $search.' /AP << /N '.$xobjId.' 0 R >>', $pos, strlen($search));
                         break;
                     }
                 }

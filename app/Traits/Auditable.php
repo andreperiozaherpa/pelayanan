@@ -3,7 +3,14 @@
 namespace App\Traits;
 
 use App\Facades\Audit;
+use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @mixin Model
+ * @method static void created(\Closure|string $callback)
+ * @method static void updated(\Closure|string $callback)
+ * @method static void deleted(\Closure|string $callback)
+ */
 trait Auditable
 {
     /**
@@ -20,7 +27,7 @@ trait Auditable
             }
 
             Audit::log(
-                'CREATE_'.strtoupper(class_basename($model)),
+                'CREATE_' . strtoupper(class_basename($model)),
                 $model,
                 $data
             );
@@ -35,7 +42,7 @@ trait Auditable
             }
 
             Audit::log(
-                'UPDATE_'.strtoupper(class_basename($model)),
+                'UPDATE_' . strtoupper(class_basename($model)),
                 $model,
                 $changes,
                 $oldValues
@@ -49,7 +56,7 @@ trait Auditable
             }
 
             Audit::log(
-                'DELETE_'.strtoupper(class_basename($model)),
+                'DELETE_' . strtoupper(class_basename($model)),
                 $model,
                 $data,
                 $model->getRawOriginal()
