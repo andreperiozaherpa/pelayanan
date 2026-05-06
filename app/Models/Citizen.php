@@ -54,6 +54,7 @@ class Citizen extends Model
 
     protected $fillable = [
         'nik',
+        'household_card_id',
         'nama_lengkap',
         'tgl_lahir',
         'alamat_desa',
@@ -65,6 +66,14 @@ class Citizen extends Model
         'tgl_lahir' => 'date',
         'alamat_desa' => 'encrypted', // Blueprint requirement: Encrypted at application level
     ];
+
+    /**
+     * Get the household card associated with the citizen.
+     */
+    public function householdCard(): BelongsTo
+    {
+        return $this->belongsTo(HouseholdCard::class, 'household_card_id', 'no_kk');
+    }
 
     public function povertyRecords(): HasMany
     {

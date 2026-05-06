@@ -1,14 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Verifikasi Nomor Induk')
-
 @section('content')
-    <div class="space-y-8" x-data="verificationApp()">
+    <div x-data="verificationApp()" class="max-w-5xl mx-auto space-y-10 pb-20">
+
         <!-- Header -->
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
                 <h1 class="text-xl font-black text-slate-800 dark:text-white tracking-tight uppercase">
-                    Verifikasi Data Penduduk
+                    Data Dokumen
                 </h1>
                 <p class="text-xs text-slate-500 font-medium tracking-tight mt-1">
                     Gunakan Nomor Induk Kependudukan atau Pindai Kode QR untuk validasi status kemiskinan secara real-time.
@@ -33,7 +32,7 @@
                     </div>
                     <input type="text" x-model="nik" @keyup.enter="verifyNik('NIK')"
                         class="block w-full pl-12 pr-4 py-3.5 bg-slate-50 dark:bg-slate-900/50 border border-black/[0.03] dark:border-white/[0.03] rounded-2xl text-sm font-bold placeholder-slate-300 focus:ring-4 focus:ring-primary-acorn/10 focus:border-primary-acorn outline-none transition uppercase tracking-wider"
-                        placeholder="MASUKKAN 16 DIGIT NOMOR INDUK KEPENDUDUKAN..." maxlength="16">
+                        placeholder="Input No KK atau NIK" maxlength="16">
                 </div>
                 <button @click="verifyNik('NIK')" :disabled="loading || nik.length < 16"
                     class="bg-primary-acorn hover:bg-primary-acorn/90 disabled:opacity-50 disabled:cursor-not-allowed text-white px-10 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary-acorn/20 transition-all hover:-translate-y-0.5 active:scale-95">
@@ -76,312 +75,228 @@
             </div>
         </div>
 
-        <!-- Result State -->
-        <template x-if="result">
-            <div class="space-y-6" x-transition>
-                <!-- Premium Result Card -->
-                <div class="premium-card overflow-hidden">
-                    <div class="p-8 sm:p-12">
-                        <div class="flex flex-col md:flex-row gap-10 items-start">
-                            <!-- Profile/Avatar -->
-                            <div class="flex-shrink-0">
-                                <div
-                                    class="h-28 w-28 rounded-3xl bg-slate-50 dark:bg-slate-900 border border-black/[0.03] dark:border-white/[0.03] flex items-center justify-center text-4xl shadow-sm">
-                                    👤
-                                </div>
-                            </div>
-
-                            <!-- Data Body -->
-                            <div class="flex-grow min-w-0">
-                                <div class="flex items-center justify-between gap-4">
-                                    <h2 class="text-2xl font-black text-slate-800 dark:text-white tracking-tight uppercase truncate"
-                                        x-text="result.citizen ? result.citizen.nama_lengkap : nik"></h2>
-                                    <span x-show="result.status"
-                                        :class="{
-                                            'bg-emerald-500 shadow-emerald-500/20': result.status === 'ACTIVE',
-                                            'bg-rose-500 shadow-rose-500/20': result.status === 'EXPIRED',
-                                            'bg-amber-500 shadow-amber-500/20': result.status === 'PENDING_REVIEW'
-                                        }"
-                                        class="px-5 py-2 rounded-xl text-[9px] font-black text-white shadow-lg tracking-widest uppercase shrink-0"
-                                        x-text="result.status">
-                                    </span>
-                                </div>
-
-                                <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div>
-                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
-                                            Status Kesejahteraan</p>
-                                        <p class="text-lg font-black text-slate-700 dark:text-white leading-tight uppercase tracking-tight"
-                                            x-text="result.message"></p>
-                                    </div>
-
-                                    <div x-show="result.record">
-                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
-                                            Masa Berlaku</p>
-                                        <p class="text-base font-black text-slate-600 dark:text-slate-300 uppercase tracking-tight"
-                                            x-text="result.record && result.record.valid_until_formatted ? 'HINGGA ' + result.record.valid_until_formatted : 'TIDAK TERBATAS'">
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <!-- Identity Details -->
-                                <div
-                                    class="mt-8 pt-8 border-t border-black/[0.03] dark:border-white/[0.03] grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div x-show="result.citizen">
-                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
-                                            Wilayah Desa</p>
-                                        <p class="text-sm font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight"
-                                            x-text="result.citizen.village ? (typeof result.citizen.village === 'object' ? result.citizen.village.name : result.citizen.village) : 'IDENTITAS DESA: ' + result.citizen.desa_id">
-                                        </p>
-                                    </div>
-                                    <div x-show="result.citizen">
-                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
-                                            Alamat Domisili</p>
-                                        <p class="text-sm font-black text-slate-700 dark:text-slate-200 uppercase tracking-tight"
-                                            x-text="result.citizen.alamat_desa"></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Actions Bar -->
-                <div class="flex flex-wrap justify-center gap-4"
-                    x-show="(result.status === 'ACTIVE' || result.status === 'PENDING_REVIEW' || result.status === 'EXPIRED') && !reported">
-                    @can('service.report')
-                        <button @click="showReportModal = true"
-                            class="bg-slate-900 hover:bg-slate-800 text-white px-10 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl transition-all hover:-translate-y-1 active:scale-95">
-                            Lapor Pelayanan Diberikan
-                        </button>
-                    @endcan
-
-                    @can('poverty.print_proof')
-                        <template x-if="result.status === 'ACTIVE'">
-                            <a :href="'/proof/' + nik" target="_blank"
-                                class="bg-white hover:bg-slate-50 text-slate-800 px-10 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl border border-black/[0.03] transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3">
-                                <iconify-icon icon="lucide:printer" class="text-xl text-primary-acorn"></iconify-icon>
-                                Cetak Bukti Verifikasi
-                            </a>
-                        </template>
-                    @endcan
-                </div>
-
-                <!-- Success Notification -->
-                <div class="flex justify-center" x-show="reported">
-                    <div
-                        class="premium-card px-8 py-4 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20 flex items-center gap-3 shadow-lg shadow-emerald-500/5">
-                        <div class="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center">
-                            <iconify-icon icon="lucide:check-circle" class="text-lg"></iconify-icon>
-                        </div>
-                        <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Laporan Pelayanan
-                            Berhasil Dicatat</span>
-                    </div>
-                </div>
-
-                <!-- Report Modal -->
-                <div x-show="showReportModal"
-                    class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm"
-                    x-transition x-cloak>
-                    <div class="premium-card w-full max-w-lg p-10 relative" @click.away="showReportModal = false">
-                        <button @click="showReportModal = false"
-                            class="absolute top-6 right-6 text-slate-400 hover:text-slate-600">
-                            <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
-                        </button>
-
-                        <h3 class="text-xl font-black text-slate-800 dark:text-white mb-8 uppercase tracking-tight">Lapor
-                            Pelayanan</h3>
-                        <div class="space-y-6">
-                            <div class="space-y-2">
-                                <label
-                                    class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Jenis
-                                    Layanan</label>
-                                <select x-model="report.service_type"
-                                    class="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-900 border border-black/[0.03] dark:border-white/[0.03] rounded-2xl text-[11px] font-bold outline-none focus:ring-4 focus:ring-primary-acorn/10 focus:border-primary-acorn transition uppercase tracking-wider">
-                                    <option value="">PILIH LAYANAN...</option>
-                                    <option value="BANTUAN PANGAN">BANTUAN PANGAN</option>
-                                    <option value="BANTUAN PENDIDIKAN (KIP)">BANTUAN PENDIDIKAN (KIP)</option>
-                                    <option value="JAMINAN KESEHATAN (PBI)">JAMINAN KESEHATAN (PBI)</option>
-                                    <option value="SEMBAKO/BPNT">SEMBAKO/BPNT</option>
-                                    <option value="LAINNYA">LAINNYA</option>
-                                </select>
-                            </div>
-                            <div class="space-y-2">
-                                <label
-                                    class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Catatan
-                                    Tambahan</label>
-                                <textarea x-model="report.notes"
-                                    class="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-900 border border-black/[0.03] dark:border-white/[0.03] rounded-2xl text-[11px] font-bold outline-none focus:ring-4 focus:ring-primary-acorn/10 focus:border-primary-acorn transition uppercase tracking-wider"
-                                    rows="3" placeholder="OPSIONAL..."></textarea>
-                            </div>
-                            <div class="flex gap-3 pt-4">
-                                <button @click="showReportModal = false"
-                                    class="flex-grow py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-[10px] uppercase tracking-widest rounded-2xl transition">Batal</button>
-                                <button @click="submitReport()" :disabled="!report.service_type"
-                                    class="flex-grow py-3.5 bg-primary-acorn hover:bg-primary-acorn/90 text-white font-black text-[10px] uppercase tracking-widest rounded-2xl shadow-lg shadow-primary-acorn/20 transition disabled:opacity-50">Kirim
-                                    Laporan</button>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Loading State -->
+        <div x-show="loading" x-transition class="flex flex-col items-center justify-center py-20 space-y-4">
+            <div class="relative w-16 h-16">
+                <div class="absolute inset-0 border-4 border-primary-acorn/20 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-primary-acorn border-t-transparent rounded-full animate-spin">
                 </div>
             </div>
-        </template>
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Menghubungkan ke Basis
+                Data Pusat...</p>
+        </div>
+
+        <div x-show="!loading && result" x-transition class="space-y-10">
+
+            @include('services.verification.partials._result_citizen')
+
+            @include('services.verification.partials._result_household')
+
+            <!-- Success Notification -->
+            <div x-show="reported" x-transition
+                class="premium-card p-6 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20 flex items-center gap-4">
+                <div class="p-2.5 bg-emerald-500 text-white rounded-xl shadow-lg shadow-emerald-500/20">
+                    <iconify-icon icon="lucide:check-circle" class="text-xl"></iconify-icon>
+                </div>
+                <div>
+                    <p class="text-[11px] font-black text-emerald-600 uppercase tracking-tight">Laporan Pelayanan Berhasil
+                        Tercatat</p>
+                    <p class="text-[10px] text-emerald-500/70 font-medium uppercase tracking-tight">Data telah disinkronkan
+                        dengan sistem audit internal.</p>
+                </div>
+            </div>
+        </div>
+
+        @include('services.verification.partials._report_modal')
+
     </div>
-@endsection
 
-@push('scripts')
-    <!-- CDNs -->
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    @push('scripts')
+        <script src="https://unpkg.com/html5-qrcode"></script>
+        <script>
+            function verificationApp() {
+                return {
+                    nik: '',
+                    loading: false,
+                    result: null,
+                    resultType: null,
+                    lastHouseholdResult: null, // Memory for navigation back
+                    error: null,
+                    showScanner: false,
+                    html5QrCode: null,
+                    showReportModal: false,
+                    reported: false,
+                    report: {
+                        service_type: '',
+                        notes: ''
+                    },
 
-    <script>
-        function verificationApp() {
-            return {
-                nik: '',
-                loading: false,
-                result: null,
-                error: null,
-                showScanner: false,
-                html5QrCode: null,
-                showReportModal: false,
-                reported: false,
-                report: {
-                    service_type: '',
-                    notes: ''
-                },
-
-                async verifyNik(method = 'NIK') {
-                    if (this.nik.length < 16) return;
-
-                    this.loading = true;
-                    this.error = null;
-                    this.result = null;
-                    this.reported = false;
-
-                    try {
-                        const response = await fetch('{{ route('api.verification.check') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            body: JSON.stringify({
-                                nik: this.nik,
-                                method: method
-                            })
-                        });
-
-                        const json = await response.json();
-
-                        if (json.success) {
-                            this.result = json.data;
-                        } else {
-                            this.error = json.message || 'Terjadi kesalahan sistem.';
+                    init() {
+                        // Check if there is a search query in the URL on load
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const q = urlParams.get('q');
+                        if (q && q.length === 16) {
+                            this.nik = q;
+                            this.verifyNik('URL', true, false); // false = don't push state again
                         }
-                    } catch (e) {
-                        this.error = 'Gagal terhubung ke server. Periksa koneksi internet Anda.';
-                    } finally {
-                        this.loading = false;
-                    }
-                },
 
-                async submitReport() {
-                    if (!this.report.service_type) return;
+                        // Listen for browser back/forward buttons
+                        window.onpopstate = (event) => {
+                            if (event.state && event.state.nik) {
+                                this.nik = event.state.nik;
+                                this.verifyNik(event.state.method || 'NIK', event.state.manual || false, false);
+                            } else {
+                                // Reset if we go back to the initial state
+                                this.nik = '';
+                                this.result = null;
+                                this.resultType = null;
+                                this.error = null;
+                            }
+                        };
+                    },
 
-                    this.loading = true;
+                    async verifyNik(method = 'NIK', isManualSearch = true, shouldPushState = true) {
+                        if (this.nik.length < 16) return;
 
-                    try {
-                        const response = await fetch('{{ route('service.store') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            body: JSON.stringify({
-                                citizen_nik: this.nik,
-                                service_type: this.report.service_type,
-                                notes: this.report.notes
-                            })
-                        });
-
-                        const data = await response.json();
-
-                        if (response.ok) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'BERHASIL!',
-                                text: data.message,
-                                timer: 2000,
-                                showConfirmButton: false,
-                                position: 'top-end',
-                                toast: true
-                            });
-                            this.reported = true;
-                            this.showReportModal = false;
-                        } else if (response.status === 422) {
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'CELAH DUPLIKASI!',
-                                text: data.message,
-                                confirmButtonText: 'Tutup',
-                                confirmButtonColor: '#3498db'
-                            });
-                        } else {
-                            throw new Error(data.message || 'Gagal menyimpan laporan.');
+                        // Clear history memory if it's a new manual search from the top bar
+                        if (isManualSearch) {
+                            this.lastHouseholdResult = null;
                         }
-                    } catch (error) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'SISTEM SIBUK',
-                            text: 'Gagal mengirim laporan. Silakan coba beberapa saat lagi.',
-                            confirmButtonColor: '#e74c3c'
-                        });
-                    } finally {
-                        this.loading = false;
-                    }
-                },
 
-                toggleScanner() {
-                    this.showScanner = !this.showScanner;
-                    if (this.showScanner) {
-                        this.$nextTick(() => {
+                        this.loading = true;
+                        this.error = null;
+                        this.result = null;
+                        this.resultType = null;
+                        this.reported = false;
+
+                        try {
+                            const response = await fetch('{{ route('api.verification.check') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({
+                                    nik: this.nik,
+                                    method: method
+                                })
+                            });
+
+                            const json = await response.json();
+
+                            if (json.success) {
+                                this.resultType = json.type || 'CITIZEN';
+                                this.result = json.data;
+
+                                // Update browser URL and history
+                                if (shouldPushState) {
+                                    const newUrl = window.location.pathname + '?q=' + this.nik;
+                                    window.history.pushState({
+                                        nik: this.nik,
+                                        method: method,
+                                        manual: isManualSearch
+                                    }, '', newUrl);
+                                }
+
+                                // If we just found a household, store it for potential 'back' navigation
+                                if (this.resultType === 'HOUSEHOLD') {
+                                    this.lastHouseholdResult = json.data;
+                                }
+                            } else {
+                                this.error = json.data ? json.data.message : (json.message || 'Terjadi kesalahan sistem.');
+                            }
+                        } catch (e) {
+                            this.error = 'Gagal terhubung ke server. Periksa koneksi internet Anda.';
+                        } finally {
+                            this.loading = false;
+                        }
+                    },
+
+                    backToHousehold() {
+                        if (this.lastHouseholdResult) {
+                            window.history.back();
+                        }
+                    },
+
+                    async submitReport() {
+                        if (!this.report.service_type) return;
+
+                        this.loading = true;
+                        try {
+                            const response = await fetch('{{ route('service.store') }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({
+                                    nik: this.nik,
+                                    ...this.report
+                                })
+                            });
+
+                            const json = await response.json();
+                            if (json.success) {
+                                this.reported = true;
+                                this.showReportModal = false;
+                                this.report = {
+                                    service_type: '',
+                                    notes: ''
+                                };
+                            }
+                        } catch (e) {
+                            this.error = 'Gagal mengirim laporan.';
+                        } finally {
+                            this.loading = false;
+                        }
+                    },
+
+                    toggleScanner() {
+                        this.showScanner = !this.showScanner;
+                        if (this.showScanner) {
                             this.startScanner();
-                        });
-                    } else {
-                        this.stopScanner();
-                    }
-                },
-
-                startScanner() {
-                    this.html5QrCode = new Html5Qrcode("qr-reader");
-                    const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-                        this.nik = decodedText;
-                        this.stopScanner();
-                        this.verifyNik('QR_SCAN');
-                    };
-                    const config = {
-                        fps: 10,
-                        qrbox: {
-                            width: 250,
-                            height: 250
+                        } else {
+                            this.stopScanner();
                         }
-                    };
-                    this.html5QrCode.start({
-                        facingMode: "environment"
-                    }, config, qrCodeSuccessCallback);
-                },
+                    },
 
-                stopScanner() {
-                    if (this.html5QrCode) {
-                        this.html5QrCode.stop().then((ignore) => {
-                            this.showScanner = false;
-                        }).catch((err) => {
-                            console.warn("QR Scanner Stop Error: ", err);
+                    startScanner() {
+                        this.$nextTick(() => {
+                            this.html5QrCode = new Html5Qrcode("qr-reader");
+                            this.html5QrCode.start({
+                                    facingMode: "environment"
+                                }, {
+                                    fps: 10,
+                                    qrbox: {
+                                        width: 250,
+                                        height: 250
+                                    }
+                                },
+                                (decodedText) => {
+                                    this.nik = decodedText;
+                                    this.stopScanner();
+                                    this.verifyNik('QR_SCAN');
+                                }
+                            ).catch(err => {
+                                console.error(err);
+                                this.error = "Gagal mengakses kamera.";
+                                this.showScanner = false;
+                            });
                         });
-                    } else {
-                        this.showScanner = false;
+                    },
+
+                    stopScanner() {
+                        if (this.html5QrCode) {
+                            this.html5QrCode.stop().then(() => {
+                                this.html5QrCode.clear();
+                                this.showScanner = false;
+                            }).catch(err => console.error(err));
+                        } else {
+                            this.showScanner = false;
+                        }
                     }
                 }
             }
-        }
-    </script>
-@endpush
+        </script>
+    @endpush
+@endsection

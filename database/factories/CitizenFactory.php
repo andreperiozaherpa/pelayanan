@@ -22,6 +22,7 @@ class CitizenFactory extends Factory
     {
         return [
             'nik' => $this->faker->unique()->numerify('################'),
+            'household_card_id' => null, // Will be set in seeder
             'nama_lengkap' => $this->faker->name(),
             'tgl_lahir' => $this->faker->date(),
             'alamat_desa' => 'Kp. '.$this->faker->lastName.' No. '.$this->faker->buildingNumber.', RT 01/RW 03',

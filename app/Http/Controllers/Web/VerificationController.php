@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Citizen;
+use App\Models\HouseholdCard;
 use App\Models\VerificationLog;
+use App\Services\Tte\ProfessionalSignaturePdf as SignaturePdf;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,7 +18,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
-use LSNepomuceno\LaravelA1PdfSign\Sign\SignaturePdf;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Spatie\Browsershot\Browsershot;
 
@@ -32,10 +33,37 @@ class VerificationController extends Controller
             'method' => 'required|string|in:NIK,QR',
         ]);
 
-        $nik = $request->nik;
+        $input = $request->nik;
+
+        // 1. Check if it's a Household Card (KK)
+        $household = HouseholdCard::with(['village', 'citizens.povertyRecords' => function ($q) {
+            $q->latest();
+        }])->where('no_kk', $input)->first();
+
+        if ($household) {
+            return response()->json([
+                'success' => true,
+                'type' => 'HOUSEHOLD',
+                'data' => [
+                    'household' => $household,
+                    'members' => $household->citizens->map(function ($citizen) {
+                        $record = $citizen->povertyRecords->first();
+
+                        return [
+                            'nik' => $citizen->nik,
+                            'nama_lengkap' => $citizen->nama_lengkap,
+                            'status' => ! $record ? 'PENDING' : (Carbon::parse($record->valid_until)->isPast() ? 'EXPIRED' : 'ACTIVE'),
+                            'record' => $record,
+                        ];
+                    }),
+                ],
+            ]);
+        }
+
+        // 2. Original NIK Verification Logic
+        $nik = $input;
         $cacheKey = "poverty_status_{$nik}";
 
-        // Toba: Check Cache first (Blueprint 4.1)
         $data = Cache::remember($cacheKey, now()->addHours(24), function () use ($nik) {
             $citizen = Citizen::with(['village', 'povertyRecords' => function ($q) {
                 $q->latest();
@@ -98,7 +126,7 @@ class VerificationController extends Controller
         if ($user->isPetugasFrontOffice()) {
             if (isset($status['citizen']['alamat_desa'])) {
                 $addrParts = explode(' ', $status['citizen']['alamat_desa'], 3);
-                $status['citizen']['alamat_desa'] = (count($addrParts) >= 2 ? implode(' ', array_slice($addrParts, 0, 2)) : $addrParts[0]).' *** (Data Disamarkan)';
+                $status['citizen']['alamat_desa'] = (count($addrParts) >= 2 ? implode(' ', array_slice($addrParts, 0, 2)) : $addrParts[0]) . ' *** (Data Disamarkan)';
             }
             if (isset($status['citizen']['kontak'])) {
                 $status['citizen']['kontak'] = '*** (Data Disamarkan)';
@@ -147,6 +175,33 @@ class VerificationController extends Controller
         // Generate a validation URL
         $validationUrl = route('verification.index', ['nik' => $nik]);
 
+        // Fetch Active Village Leader and Certificate first to sync data
+        $village = $citizen->village()->with(['activeLeader.user.certificates' => function ($q) {
+            $q->where('is_active', true)->latest();
+        }])->first();
+
+        $leader = $village->activeLeader ?? null;
+        $signer = $leader ? $leader->user : null;
+        $userCert = $signer ? $signer->certificates->first() : null;
+
+        if (! $signer || ! $userCert) {
+            abort(403, 'Gagal mencetak: Pejabat penandatangan belum memiliki sertifikat TTE yang aktif.');
+        }
+
+        // Initialize Certificate to extract real metadata
+        try {
+            $manageCert = new ManageCert;
+            $manageCert->setPreservePfx(true); // CRITICAL: Prevent vendor library from deleting our certificate!
+            $manageCert->fromPfx(storage_path('app/' . $userCert->certificate_path), $userCert->passphrase);
+            $certData = $manageCert->getCert()->data;
+
+            // Get real serial number from cert
+            $serialNumber = $certData['serialNumber'] ?? 'N/A';
+        } catch (\Exception $e) {
+            Log::error('Certificate initialization failed: ' . $e->getMessage());
+            abort(500, 'Gagal memuat sertifikat TTE: ' . $e->getMessage());
+        }
+
         // Audit Log
         AuditLog::create([
             'user_id' => Auth::user()->id,
@@ -157,14 +212,30 @@ class VerificationController extends Controller
             'timestamp' => now(),
         ]);
 
-        // Generate QR code in backend
-        $qrcode = QrCode::size(100)
-            ->format('svg')
+        // Generate QR code as PNG for visual signature compatibility
+        $qrPath = storage_path('app/private/qr_' . uniqid() . '.png');
+        QrCode::format('png')
+            ->size(300)
             ->margin(1)
             ->errorCorrection('H')
-            ->generate($validationUrl);
+            ->generate($validationUrl . '?sn=' . $serialNumber, $qrPath);
 
-        $html = view('documents.doc_poverty', compact('citizen', 'record', 'validationUrl', 'qrcode'))->render();
+        $html = view('documents.doc_poverty', compact('citizen', 'record', 'validationUrl', 'serialNumber', 'leader'))->render();
+
+        // 2. Detect coordinates of the placeholder via DOM attributes
+        $renderedHtml = Browsershot::html($html)
+            ->setNodeBinary(config('services.browsershot.node_binary'))
+            ->setNpmBinary(config('services.browsershot.npm_binary'))
+            ->setChromePath(config('services.browsershot.chrome_path'))
+            ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox'])
+            ->waitUntilNetworkIdle()
+            ->bodyHtml();
+
+        $coords = [];
+        if (preg_match('/data-tte-page="([^"]+)"/', $renderedHtml, $matchPage)) $coords['page'] = (int) $matchPage[1];
+        if (preg_match('/data-tte-x="([^"]+)"/', $renderedHtml, $matchX)) $coords['x'] = (float) $matchX[1];
+        if (preg_match('/data-tte-y="([^"]+)"/', $renderedHtml, $matchY)) $coords['y'] = (float) $matchY[1];
+        if (preg_match('/data-tte-w="([^"]+)"/', $renderedHtml, $matchW)) $coords['w'] = (float) $matchW[1];
 
         $pdf = Browsershot::html($html)
             ->setNodeBinary(config('services.browsershot.node_binary'))
@@ -172,66 +243,60 @@ class VerificationController extends Controller
             ->setChromePath(config('services.browsershot.chrome_path'))
             ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox'])
             ->provideHtmlViaOpenPage()
-            ->format('A5')
+            ->format('A4')
             ->margins(0, 0, 0, 0)
             ->pdf();
 
-        // 2. Fetch Active Village Leader for Signing
-        $village = $citizen->village()->with(['activeLeader.user.certificates' => function ($q) {
-            $q->where('is_active', true)->latest();
-        }])->first();
+        // 3. Digital Signing
+        $tempPdfPath = storage_path('app/private/temp_' . uniqid() . '.pdf');
+        file_put_contents($tempPdfPath, $pdf);
 
-        $leader = $village->activeLeader ?? null;
-        $signer = $leader ? $leader->user : null;
-        $userCert = $signer ? $signer->certificates->first() : null;
+        try {
+            $signerPdf = new SignaturePdf(
+                $tempPdfPath,
+                $manageCert,
+                SignaturePdf::MODE_RESOURCE
+            );
 
-        if ($signer && $userCert) {
-            $tempPdfPath = storage_path('app/private/temp_'.uniqid().'.pdf');
-            file_put_contents($tempPdfPath, $pdf);
+            $posX = $coords['x'] ?? 105;
+            $posY = $coords['y'] ?? 22;
+            $width = $coords['w'] ?? 30;
+            $pageNumber = $coords['page'] ?? -1;
+            
+            // Set Visual Signature (QR Code) with dynamic page
+            $signerPdf->setImage($qrPath, $posX, $posY, $width, 0, $pageNumber);
 
-            try {
-                $cert = new ManageCert;
-                $cert->fromPfx(storage_path('app/'.$userCert->certificate_path), $userCert->passphrase);
+            $signerName = $leader->name . ($leader->nip ? " (NIP. {$leader->nip})" : '');
 
-                $signerPdf = new SignaturePdf(
-                    $tempPdfPath,
-                    $cert,
-                    SignaturePdf::MODE_RESOURCE
-                );
+            $signerPdf->setInfo(
+                name: $signerName,
+                location: $village->name ?? 'Lampung',
+                reason: 'Penerbitan Surat Keterangan Miskin (TTE Resmi)'
+            );
 
-                // Format: Nama Pejabat (NIP. 123456...)
-                $signerName = $leader->name.($leader->nip ? " (NIP. {$leader->nip})" : '');
+            $pdf = $signerPdf->signature();
 
-                $signerPdf->setInfo(
-                    name: $signerName,
-                    location: $village->name ?? 'Lampung',
-                    reason: 'Penerbitan Surat Keterangan Miskin (TTE Resmi)'
-                );
+            // Save signed PDF to storage
+            $storagePath = "public/poverty_proofs/{$citizen->desa_id}/{$nik}_" . time() . '.pdf';
+            Storage::put($storagePath, $pdf);
 
-                $pdf = $signerPdf->signature();
-
-                // Save signed PDF to storage for permanent record
-                $storagePath = "public/poverty_proofs/{$citizen->desa_id}/{$nik}_".time().'.pdf';
-                Storage::put($storagePath, $pdf);
-
-                // Update the Poverty Record with the path
-                if ($record) {
-                    $record->update(['signed_pdf_path' => $storagePath]);
-                }
-            } catch (\Exception $e) {
-                Log::error('PDF Signing failed for '.($leader->name ?? 'Unknown').': '.$e->getMessage());
-                abort(500, 'Gagal membubuhkan tanda tangan elektronik: '.$e->getMessage());
-            } finally {
-                if (file_exists($tempPdfPath)) {
-                    unlink($tempPdfPath);
-                }
+            if ($record) {
+                $record->update(['signed_pdf_path' => $storagePath]);
             }
-        } else {
-            abort(403, 'Gagal mencetak: Pejabat penandatangan belum memiliki sertifikat TTE yang aktif.');
+        } catch (\Exception $e) {
+            Log::error('PDF Signing failed: ' . $e->getMessage());
+            abort(500, 'Gagal membubuhkan tanda tangan elektronik: ' . $e->getMessage());
+        } finally {
+            if (file_exists($tempPdfPath)) {
+                unlink($tempPdfPath);
+            }
+            if (file_exists($qrPath)) {
+                unlink($qrPath);
+            }
         }
 
         return response($pdf)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="bukti-verifikasi-'.$nik.'.pdf"');
+            ->header('Content-Disposition', 'inline; filename="bukti-verifikasi-' . $nik . '.pdf"');
     }
 }

@@ -7,11 +7,12 @@
             </div>
 
             <!-- Sidebar Area -->
-            <aside :class="{ 
-                    'translate-x-0': mobileSidebar, 
+            <aside
+                :class="{
+                    'translate-x-0': mobileSidebar,
                     '-translate-x-full lg:translate-x-0': !mobileSidebar,
                     'lg:w-[280px]': sidebarOpen,
-                    'lg:w-[60px]': !sidebarOpen 
+                    'lg:w-[60px]': !sidebarOpen
                 }"
                 class="fixed lg:relative inset-y-0 left-0 w-[280px] flex flex-col h-full shrink-0 z-[70] lg:z-0 transition-all duration-300 ease-in-out bg-[var(--color-bg-page)] lg:bg-transparent p-4 lg:p-0 shadow-2xl lg:shadow-none">
                 <div class="flex flex-1 min-h-0">
@@ -22,7 +23,8 @@
                         <button @click="sidebarOpen = !sidebarOpen"
                             class="hidden lg:flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800"
                             title="Toggle Menu">
-                            <iconify-icon :icon="sidebarOpen ? 'lucide:panel-left-close' : 'lucide:panel-left-open'" class="text-xl"></iconify-icon>
+                            <iconify-icon :icon="sidebarOpen ? 'lucide:panel-left-close' : 'lucide:panel-left-open'"
+                                class="text-xl"></iconify-icon>
                         </button>
 
                         <a href="{{ route('dashboard.index') }}"
@@ -57,7 +59,7 @@
                                 <x-nav-link href="{{ route('dashboard.index') }}" :active="request()->routeIs('dashboard.index')"
                                     icon="lucide:layout-dashboard">Default</x-nav-link>
                                 <x-nav-link href="{{ route('verification.index') }}" :active="request()->routeIs('verification.index')"
-                                    icon="lucide:scan-line">Analytics</x-nav-link>
+                                    icon="lucide:scan-line">Data Dokumen</x-nav-link>
                                 <x-nav-link href="{{ route('dashboard.history') }}" :active="request()->routeIs('dashboard.history')"
                                     icon="lucide:history">History</x-nav-link>
                             @elseif(request()->routeIs('citizens.*'))

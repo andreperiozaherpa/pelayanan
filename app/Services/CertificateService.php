@@ -33,14 +33,10 @@ class CertificateService
         $rank = $leader ? $leader->rank : null;
         $unitName = $user->activeVillageLeader ? 'Kepala Desa' : ($user->activeDistrictLeader ? 'Camat' : ($user->role->name ?? 'Pejabat'));
 
-        // Check for existing active certificate
-        $existing = UserCertificate::where('user_id', $userId)
+        // Deactivate ALL existing active certificates for this user
+        UserCertificate::where('user_id', $userId)
             ->where('is_active', true)
-            ->first();
-
-        if ($existing) {
-            $existing->update(['is_active' => false]);
-        }
+            ->update(['is_active' => false]);
 
         $passphrase = Str::random(16);
         $filename = 'certs/cert_user_'.$userId.'_'.time().'.pfx';
