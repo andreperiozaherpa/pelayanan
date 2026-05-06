@@ -173,7 +173,7 @@ class VerificationController extends Controller
         $record = $citizen->povertyRecords->first();
 
         // Generate a validation URL
-        $validationUrl = route('verification.index', ['nik' => $nik]);
+        $validationUrl = route('verification.index', ['q' => $nik]);
 
         // Fetch Active Village Leader and Certificate first to sync data
         $village = $citizen->village()->with(['activeLeader.user.certificates' => function ($q) {
@@ -214,8 +214,9 @@ class VerificationController extends Controller
 
         // Generate QR code as PNG for visual signature compatibility
         $qrPath = storage_path('app/private/qr_' . uniqid() . '.png');
-        QrCode::format('png')
-            ->size(300)
+        /** @var \SimpleSoftwareIO\QrCode\Generator $qr */
+        $qr = QrCode::format('png');
+        $qr->size(300)
             ->margin(1)
             ->errorCorrection('H')
             ->generate($validationUrl . '?sn=' . $serialNumber, $qrPath);
@@ -262,7 +263,7 @@ class VerificationController extends Controller
             $posY = $coords['y'] ?? 22;
             $width = $coords['w'] ?? 30;
             $pageNumber = $coords['page'] ?? -1;
-            
+
             // Set Visual Signature (QR Code) with dynamic page
             $signerPdf->setImage($qrPath, $posX, $posY, $width, 0, $pageNumber);
 
