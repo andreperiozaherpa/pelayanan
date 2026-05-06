@@ -173,7 +173,7 @@ class VerificationController extends Controller
         $record = $citizen->povertyRecords->first();
 
         // Generate a validation URL
-        $validationUrl = route('verification.index', ['q' => $nik]);
+        $validationUrl = route('verification.index', ['nik' => $nik]);
 
         // Fetch Active Village Leader and Certificate first to sync data
         $village = $citizen->village()->with(['activeLeader.user.certificates' => function ($q) {
