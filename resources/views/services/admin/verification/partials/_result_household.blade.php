@@ -12,27 +12,27 @@
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">DATA
                         KARTU KELUARGA</p>
                     <h2 class="text-2xl font-black text-slate-800 dark:text-white tracking-tight uppercase"
-                        x-text="'NO. KK: ' + result.household.no_kk"></h2>
+                        x-text="'NO. KK: ' + (result?.household?.no_kk || '-')"></h2>
                     <div class="mt-3 flex flex-wrap justify-center md:justify-start gap-6">
                         <div>
                             <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                                 Kepala
                                 Keluarga</p>
                             <p class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase"
-                                x-text="result.household.head_name"></p>
+                                x-text="result?.household?.head_name"></p>
                         </div>
                         <div>
                             <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                                 Alamat
                             </p>
                             <p class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase"
-                                x-text="result.household.address"></p>
+                                x-text="result?.household?.address"></p>
                         </div>
                         <div>
                             <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">RT/RW
                             </p>
                             <p class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase"
-                                x-text="result.household.rt + ' / ' + result.household.rw"></p>
+                                x-text="(result?.household?.rt || '-') + ' / ' + (result?.household?.rw || '-')"></p>
                         </div>
                     </div>
                 </div>
@@ -62,7 +62,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-black/[0.03] dark:divide-white/[0.03]">
-                        <template x-for="member in result.members" :key="member.nik">
+                        <template x-for="member in (result?.members || [])" :key="member.nik">
                             <tr class="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="text-xs font-bold text-slate-500" x-text="member.nik"></span>
@@ -76,7 +76,8 @@
                                         :class="{
                                             'bg-emerald-500': member.status === 'ACTIVE',
                                             'bg-rose-500': member.status === 'EXPIRED',
-                                            'bg-amber-500': member.status === 'PENDING'
+                                            'bg-amber-500': member.status === 'PENDING',
+                                            'bg-slate-500': member.status === 'UNREGISTERED'
                                         }"
                                         class="px-3 py-1 rounded-lg text-[8px] font-black text-white uppercase tracking-tighter"
                                         x-text="member.status">
@@ -84,8 +85,10 @@
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <button @click="nik = member.nik; verifyNik('NIK', false)"
-                                        class="text-[9px] font-black text-primary-acorn uppercase tracking-widest hover:underline">
+                                        class="bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-400 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md hover:shadow-emerald-500/30 hover:-translate-y-0.5 transition-all active:scale-95 inline-flex items-center gap-2 ml-auto">
                                         Detail Individu
+                                        <iconify-icon icon="lucide:arrow-right"
+                                            class="text-base opacity-50"></iconify-icon>
                                     </button>
                                 </td>
                             </tr>

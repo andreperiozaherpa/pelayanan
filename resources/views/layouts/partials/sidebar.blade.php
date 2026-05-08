@@ -31,16 +31,26 @@
                             class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('dashboard.*') || request()->routeIs('verification.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
                             <iconify-icon icon="lucide:layout-grid" class="text-xl"></iconify-icon>
                         </a>
+                        @can('citizens.manage')
                         <a href="{{ route('citizens.index') }}"
                             class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('citizens.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
                             <iconify-icon icon="lucide:users-2" class="text-xl"></iconify-icon>
                         </a>
-                        @if (Auth::user()->hasPermission('users.manage'))
+                        @endcan
+
+                        @can('service.manage')
+                            <a href="{{ route('service.requests.index') }}"
+                                class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('service.requests.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                                <iconify-icon icon="lucide:clipboard-list" class="text-xl"></iconify-icon>
+                            </a>
+                        @endcan
+
+                        @if (Auth::user()->hasAnyPermission(['users.manage', 'roles.manage', 'villages.manage', 'districts.manage']))
                             <a href="{{ route('users.index') }}"
                                 class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('users.*') || request()->routeIs('roles.*') || request()->routeIs('districts.*') || request()->routeIs('villages.*') || request()->routeIs('admin.certificates.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
                                 <iconify-icon icon="lucide:settings-2" class="text-xl"></iconify-icon>
                             </a>
-                        @endif
+                        @endcan
                         <button
                             class="mt-auto flex items-center justify-center w-12 h-12 rounded-xl text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800 transition-all duration-300">
                             <iconify-icon icon="lucide:code-2" class="text-xl"></iconify-icon>
@@ -58,10 +68,21 @@
                                 </div>
                                 <x-nav-link href="{{ route('dashboard.index') }}" :active="request()->routeIs('dashboard.index')"
                                     icon="lucide:layout-dashboard">Default</x-nav-link>
-                                <x-nav-link href="{{ route('verification.index') }}" :active="request()->routeIs('verification.index')"
-                                    icon="lucide:scan-line">Data Dokumen</x-nav-link>
-                                <x-nav-link href="{{ route('dashboard.history') }}" :active="request()->routeIs('dashboard.history')"
-                                    icon="lucide:history">History</x-nav-link>
+                                @can('poverty.verify')
+                                    <x-nav-link href="{{ route('verification.index') }}" :active="request()->routeIs('verification.index')"
+                                        icon="lucide:scan-line">Data Dokumen</x-nav-link>
+                                @endcan
+                                @can('audit.view')
+                                    <x-nav-link href="{{ route('dashboard.history') }}" :active="request()->routeIs('dashboard.history')"
+                                        icon="lucide:history">History</x-nav-link>
+                                @endcan
+                            @elseif(request()->routeIs('service.requests.*'))
+                                <div class="px-4 py-4">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Layanan
+                                    </p>
+                                </div>
+                                <x-nav-link href="{{ route('service.requests.index') }}" :active="request()->routeIs('service.requests.index')"
+                                    icon="lucide:inbox">Antrean Permohonan</x-nav-link>
                             @elseif(request()->routeIs('citizens.*'))
                                 <div class="px-4 py-4">
                                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Citizens
@@ -80,14 +101,22 @@
                                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Settings
                                     </p>
                                 </div>
-                                <x-nav-link href="{{ route('users.index') }}" :active="request()->routeIs('users.*')"
-                                    icon="lucide:user-cog">Users</x-nav-link>
-                                <x-nav-link href="{{ route('roles.index') }}" :active="request()->routeIs('roles.*')"
-                                    icon="lucide:shield-check">Roles</x-nav-link>
-                                <x-nav-link href="{{ route('districts.index') }}" :active="request()->routeIs('districts.*')"
-                                    icon="lucide:map">Districts</x-nav-link>
-                                <x-nav-link href="{{ route('villages.index') }}" :active="request()->routeIs('villages.*')"
-                                    icon="lucide:home">Villages</x-nav-link>
+                                @can('users.manage')
+                                    <x-nav-link href="{{ route('users.index') }}" :active="request()->routeIs('users.*')"
+                                        icon="lucide:user-cog">Users</x-nav-link>
+                                @endcan
+                                @can('roles.manage')
+                                    <x-nav-link href="{{ route('roles.index') }}" :active="request()->routeIs('roles.*')"
+                                        icon="lucide:shield-check">Roles</x-nav-link>
+                                @endcan
+                                @can('districts.manage')
+                                    <x-nav-link href="{{ route('districts.index') }}" :active="request()->routeIs('districts.*')"
+                                        icon="lucide:map">Districts</x-nav-link>
+                                @endcan
+                                @can('villages.manage')
+                                    <x-nav-link href="{{ route('villages.index') }}" :active="request()->routeIs('villages.*')"
+                                        icon="lucide:home">Villages</x-nav-link>
+                                @endcan
                                 @if (Auth::user()->isSuperAdmin())
                                     <x-nav-link href="{{ route('admin.certificates.index') }}" :active="request()->routeIs('admin.certificates.*')"
                                         icon="lucide:badge-check">Sertifikat TTE</x-nav-link>

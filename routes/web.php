@@ -4,6 +4,7 @@ use App\Http\Controllers\Web\CertificateController;
 use App\Http\Controllers\Web\CitizenController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\DistrictController;
+use App\Http\Controllers\Web\HistoryController;
 use App\Http\Controllers\Web\LoginController;
 use App\Http\Controllers\Web\ReportController;
 use App\Http\Controllers\Web\RoleController;
@@ -44,11 +45,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/certificates/{user_id}/generate', [CertificateController::class, 'generate'])->name('admin.certificates.generate');
 
     Route::get('/verify', [VerificationController::class, 'index'])->name('verification.index');
-    Route::get('/history', [DashboardController::class, 'history'])->name('dashboard.history');
+    Route::get('/history', [HistoryController::class, 'index'])->name('dashboard.history');
     Route::get('/proof/{nik}', [VerificationController::class, 'proof'])->where('nik', '[0-9]{16}')->name('verification.proof');
 
     Route::post('/api/verify-check', [VerificationController::class, 'check'])->name('api.verification.check');
     Route::post('/api/service-report', [ServiceController::class, 'store'])->name('service.store');
+    Route::get('/service-requests', [ServiceController::class, 'index'])->name('service.requests.index');
+    Route::post('/service-requests/{serviceRequest}/approve', [ServiceController::class, 'approve'])->name('service.requests.approve');
+    Route::post('/service-requests/{serviceRequest}/reject', [ServiceController::class, 'reject'])->name('service.requests.reject');
 
     Route::get('/reports/citizens', [ReportController::class, 'exportCitizens'])->name('reports.citizens');
     Route::get('/reports/audit', [ReportController::class, 'exportAuditLogs'])->name('reports.audit');

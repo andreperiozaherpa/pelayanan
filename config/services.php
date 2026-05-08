@@ -36,15 +36,11 @@ return [
     ],
 
     'service_types' => [
-        'LAYANAN KESEHATAN',
-        'LAYANAN PENDIDIKAN',
-        'BANTUAN SOSIAL',
-        'BANTUAN PANGAN',
-        'BANTUAN PERUMAHAN',
-        'PELAYANAN ADMINISTRASI',
-        'PENDAMPINGAN HUKUM',
-        'PELATIHAN KERJA',
-        'MODAL USAHA',
+        'KETERANGAN KEMISKINAN',
+        'PENGANTAR PINDAH',
+        'LAPOR DATANG',
+        'KETERANGAN DOMISILI',
+        'SURAT KEMATIAN',
         'LAINNYA',
     ],
 

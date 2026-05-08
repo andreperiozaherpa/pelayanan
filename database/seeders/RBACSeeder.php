@@ -32,8 +32,8 @@ class RBACSeeder extends Seeder
         // Define Roles & Assign Permissions
         $roles = [
             'SuperAdmin' => ['poverty.verify', 'poverty.print_proof', 'service.report', 'citizens.manage', 'audit.view', 'system.manage', 'users.manage', 'roles.manage', 'villages.manage', 'districts.manage', 'reports.export'],
-            'OperatorDesa' => ['poverty.verify', 'service.report'],
-            'PetugasFrontOffice' => ['poverty.verify', 'poverty.print_proof'],
+            'OperatorDesa' => ['poverty.verify'],
+            'PetugasFrontOffice' => ['poverty.verify', 'poverty.print_proof', 'service.report'],
             'Auditor' => ['audit.view', 'reports.export'],
         ];
 

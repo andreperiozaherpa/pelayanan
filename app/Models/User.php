@@ -110,6 +110,11 @@ class User extends Authenticatable
         return $this->role && $this->role->permissions()->where('slug', $permissionSlug)->exists();
     }
 
+    public function hasAnyPermission(array $permissionSlugs): bool
+    {
+        return $this->role && $this->role->permissions()->whereIn('slug', $permissionSlugs)->exists();
+    }
+
     public function isSuperAdmin(): bool
     {
         return $this->role && $this->role->slug === 'superadmin';

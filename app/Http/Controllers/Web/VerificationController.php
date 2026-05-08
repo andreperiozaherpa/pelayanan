@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Citizen;
 use App\Models\HouseholdCard;
+use App\Models\ServiceRequest;
 use App\Models\VerificationLog;
 use App\Services\Tte\ProfessionalSignaturePdf as SignaturePdf;
 use Carbon\Carbon;
@@ -19,6 +20,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use LSNepomuceno\LaravelA1PdfSign\Sign\ManageCert;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use SimpleSoftwareIO\QrCode\Generator;
 use Spatie\Browsershot\Browsershot;
 
 class VerificationController extends Controller
@@ -52,7 +54,7 @@ class VerificationController extends Controller
                         return [
                             'nik' => $citizen->nik,
                             'nama_lengkap' => $citizen->nama_lengkap,
-                            'status' => ! $record ? 'PENDING' : (Carbon::parse($record->valid_until)->isPast() ? 'EXPIRED' : 'ACTIVE'),
+                            'status' => ! $record ? 'UNREGISTERED' : ($record->status ?? (Carbon::parse($record->valid_until)->isPast() ? 'EXPIRED' : 'ACTIVE')),
                             'record' => $record,
                         ];
                     }),
@@ -115,12 +117,27 @@ class VerificationController extends Controller
         }
 
         $status = [
-            'status' => ! $data['record'] ? 'PENDING_REVIEW' : ($data['is_expired'] ? 'EXPIRED' : 'ACTIVE'),
+            'status' => ! $data['record']
+                ? 'UNREGISTERED'
+                : ($data['record']['status'] === 'PENDING'
+                    ? 'PENDING'
+                    : ($data['record']['status'] === 'REJECTED'
+                        ? 'REJECTED'
+                        : ($data['record']['status'] === 'EXPIRED' || $data['is_expired'] ? 'EXPIRED' : 'ACTIVE'))),
             'message' => ! $data['record']
-                ? 'Data kemiskinan belum ada. Perlu tinjauan desa.'
-                : ($data['is_expired'] ? 'Status kemiskinan kadaluarsa.' : 'Status kemiskinan Aktif.'),
+                ? 'Data tidak ditemukan dalam basis data kemiskinan.'
+                : ($data['record']['status'] === 'PENDING'
+                    ? 'Sedang dalam proses verifikasi desa.'
+                    : ($data['record']['status'] === 'REJECTED'
+                        ? 'Permohonan verifikasi ditolak oleh desa.'
+                        : ($data['record']['status'] === 'EXPIRED' || $data['is_expired']
+                            ? 'Status kemiskinan kadaluarsa. Silakan ajukan ulang.'
+                            : 'Status kemiskinan Aktif.'))),
             'citizen' => $data['citizen'],
             'record' => $record,
+            'rejection_reason' => ($data['record'] && $data['record']['status'] === 'REJECTED')
+                ? ServiceRequest::where('citizen_nik', $nik)->where('status', 'REJECTED')->latest()->value('notes')
+                : null,
         ];
 
         if ($user->isPetugasFrontOffice()) {
@@ -155,7 +172,7 @@ class VerificationController extends Controller
 
     public function index(): View
     {
-        return view('services.verification.index');
+        return view('services.admin.verification.index');
     }
 
     /**
@@ -173,7 +190,7 @@ class VerificationController extends Controller
         $record = $citizen->povertyRecords->first();
 
         // Generate a validation URL
-        $validationUrl = route('verification.index', ['nik' => $nik]);
+        $validationUrl = route('verification.index', ['q' => $nik]);
 
         // Fetch Active Village Leader and Certificate first to sync data
         $village = $citizen->village()->with(['activeLeader.user.certificates' => function ($q) {
@@ -214,7 +231,7 @@ class VerificationController extends Controller
 
         // Generate QR code as PNG for visual signature compatibility
         $qrPath = storage_path('app/private/qr_' . uniqid() . '.png');
-        /** @var \SimpleSoftwareIO\QrCode\Generator $qr */
+        /** @var Generator $qr */
         $qr = QrCode::format('png');
         $qr->size(300)
             ->margin(1)
@@ -233,10 +250,18 @@ class VerificationController extends Controller
             ->bodyHtml();
 
         $coords = [];
-        if (preg_match('/data-tte-page="([^"]+)"/', $renderedHtml, $matchPage)) $coords['page'] = (int) $matchPage[1];
-        if (preg_match('/data-tte-x="([^"]+)"/', $renderedHtml, $matchX)) $coords['x'] = (float) $matchX[1];
-        if (preg_match('/data-tte-y="([^"]+)"/', $renderedHtml, $matchY)) $coords['y'] = (float) $matchY[1];
-        if (preg_match('/data-tte-w="([^"]+)"/', $renderedHtml, $matchW)) $coords['w'] = (float) $matchW[1];
+        if (preg_match('/data-tte-page="([^"]+)"/', $renderedHtml, $matchPage)) {
+            $coords['page'] = (int) $matchPage[1];
+        }
+        if (preg_match('/data-tte-x="([^"]+)"/', $renderedHtml, $matchX)) {
+            $coords['x'] = (float) $matchX[1];
+        }
+        if (preg_match('/data-tte-y="([^"]+)"/', $renderedHtml, $matchY)) {
+            $coords['y'] = (float) $matchY[1];
+        }
+        if (preg_match('/data-tte-w="([^"]+)"/', $renderedHtml, $matchW)) {
+            $coords['w'] = (float) $matchW[1];
+        }
 
         $pdf = Browsershot::html($html)
             ->setNodeBinary(config('services.browsershot.node_binary'))
