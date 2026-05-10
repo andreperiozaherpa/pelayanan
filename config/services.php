@@ -35,15 +35,6 @@ return [
         ],
     ],
 
-    'service_types' => [
-        'KETERANGAN KEMISKINAN',
-        'PENGANTAR PINDAH',
-        'LAPOR DATANG',
-        'KETERANGAN DOMISILI',
-        'SURAT KEMATIAN',
-        'LAINNYA',
-    ],
-
     'browsershot' => [
         'node_binary' => env('BROWSERSHOT_NODE_BINARY', '/usr/bin/node'),
         'npm_binary' => env('BROWSERSHOT_NPM_BINARY', '/usr/bin/npm'),

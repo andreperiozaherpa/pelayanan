@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ServiceType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -46,6 +47,18 @@ class ServiceRequest extends Model
         'front_office_user_id',
         'notes',
     ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'service_type' => ServiceType::class,
+        ];
+    }
 
     public function citizen(): BelongsTo
     {

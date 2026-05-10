@@ -46,7 +46,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/verify', [VerificationController::class, 'index'])->name('verification.index');
     Route::get('/history', [HistoryController::class, 'index'])->name('dashboard.history');
-    Route::get('/proof/{nik}', [VerificationController::class, 'proof'])->where('nik', '[0-9]{16}')->name('verification.proof');
+    Route::get('/proof/{nik}/{type}', [VerificationController::class, 'proof'])->where('nik', '[0-9]{16}')->name('verification.proof');
 
     Route::post('/api/verify-check', [VerificationController::class, 'check'])->name('api.verification.check');
     Route::post('/api/service-report', [ServiceController::class, 'store'])->name('service.store');

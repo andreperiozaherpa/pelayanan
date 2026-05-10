@@ -155,7 +155,7 @@
                                     <div class="flex items-center justify-end gap-3">
                                         @if (!Auth::user()->isSuperAdmin())
                                             <button
-                                                @click.stop="openApproveModal({{ $req->id }}, '{{ addslashes($req->citizen->nama_lengkap) }}')"
+                                                @click.stop="openApproveModal({{ $req->id }}, '{{ addslashes($req->citizen->nama_lengkap) }}', '{{ $req->service_type->name }}', '{{ addslashes($req->notes) }}')"
                                                 class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md hover:shadow-emerald-500/20 hover:-translate-y-0.5 transition-all active:scale-95 inline-flex items-center gap-2">
                                                 Setujui
                                                 <iconify-icon icon="lucide:check-circle" class="text-base"></iconify-icon>
@@ -231,7 +231,8 @@
                     </div>
 
                     <div class="space-y-8">
-                        <div class="space-y-3">
+                        <!-- Poverty Specific Field -->
+                        <div class="space-y-3" x-show="selectedRequest.type === 'POVERTY'">
                             <label
                                 class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
                                 <iconify-icon icon="lucide:coins" class="text-primary-acorn"></iconify-icon>
@@ -245,6 +246,18 @@
                                 <option value="RP 1.000.000 - RP 2.000.000">RP 1.000.000 - RP 2.000.000</option>
                                 <option value="DI ATAS RP 2.000.000">DI ATAS RP 2.000.000</option>
                             </select>
+                        </div>
+
+                        <!-- Domicile Specific Field -->
+                        <div class="space-y-3" x-show="selectedRequest.type === 'DOMICILE'">
+                            <label
+                                class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                                <iconify-icon icon="lucide:info" class="text-primary-acorn"></iconify-icon>
+                                Keperluan Domisili
+                            </label>
+                            <textarea x-model="form.purpose" rows="3"
+                                placeholder="CONTOH: PERSYARATAN ADMINISTRASI BANK / KERJA..."
+                                class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 border border-black/[0.03] rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-primary-acorn/10 focus:border-primary-acorn transition-all uppercase tracking-wider placeholder:opacity-30"></textarea>
                         </div>
 
                         <div class="space-y-3">
@@ -337,40 +350,52 @@
                     showRejectModal: false,
                     selectedRequest: {
                         id: null,
-                        name: ''
+                        name: '',
+                        type: ''
                     },
                     loading: false,
                     form: {
                         income_range: '',
+                        purpose: '',
                         valid_until: '',
                         reason: ''
                     },
 
-                    openApproveModal(id, name) {
+                    openApproveModal(id, name, type, notes) {
                         this.selectedRequest = {
                             id,
-                            name
+                            name,
+                            type
                         };
                         this.form.income_range = '';
-                        // Default valid until 6 months from now
+                        this.form.purpose = type === 'DOMICILE' ? notes : '';
+
+                        // Default valid until based on type
+                        // Poverty: 6 months, Domicile: 3 months
                         const d = new Date();
-                        d.setMonth(d.getMonth() + 6);
+                        if (type === 'POVERTY') {
+                            d.setMonth(d.getMonth() + 6);
+                        } else {
+                            d.setMonth(d.getMonth() + 3);
+                        }
                         this.form.valid_until = d.toISOString().split('T')[0];
                         this.showApproveModal = true;
                     },
 
                     async submitApproval() {
-                        if (!this.form.income_range || !this.form.valid_until) {
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'DATA TIDAK LENGKAP',
-                                text: 'Harap pilih rentang penghasilan dan tanggal berlaku.',
-                                customClass: {
-                                    popup: 'rounded-[1.5rem] border-none shadow-2xl',
-                                    confirmButton: 'bg-amber-500 text-white rounded-xl px-8 py-3 font-bold'
-                                },
-                                buttonsStyling: false
-                            });
+                        // Validation logic
+                        if (!this.form.valid_until) {
+                            this.showWarning('TANGGAL WAJIB DIISI', 'Harap tentukan masa berlaku dokumen.');
+                            return;
+                        }
+
+                        if (this.selectedRequest.type === 'POVERTY' && !this.form.income_range) {
+                            this.showWarning('DATA TIDAK LENGKAP', 'Harap pilih rentang penghasilan.');
+                            return;
+                        }
+
+                        if (this.selectedRequest.type === 'DOMICILE' && !this.form.purpose) {
+                            this.showWarning('DATA TIDAK LENGKAP', 'Harap isi keperluan domisili.');
                             return;
                         }
 
@@ -413,6 +438,19 @@
                         }
                     },
 
+                    showWarning(title, text) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: title,
+                            text: text,
+                            customClass: {
+                                popup: 'rounded-[1.5rem] border-none shadow-2xl',
+                                confirmButton: 'bg-amber-500 text-white rounded-xl px-8 py-3 font-bold'
+                            },
+                            buttonsStyling: false
+                        });
+                    },
+
                     openRejectModal(id, name) {
                         this.selectedRequest = {
                             id,
@@ -424,16 +462,7 @@
 
                     async submitRejection() {
                         if (!this.form.reason) {
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'ALASAN WAJIB DIISI',
-                                text: 'Berikan alasan penolakan untuk petugas Front Office.',
-                                customClass: {
-                                    popup: 'rounded-[1.5rem] border-none shadow-2xl',
-                                    confirmButton: 'bg-rose-500 text-white rounded-xl px-8 py-3 font-bold'
-                                },
-                                buttonsStyling: false
-                            });
+                            this.showWarning('ALASAN WAJIB DIISI', 'Berikan alasan penolakan untuk petugas Front Office.');
                             return;
                         }
 

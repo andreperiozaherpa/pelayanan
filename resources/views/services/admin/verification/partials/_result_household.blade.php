@@ -72,16 +72,30 @@
                                         x-text="member.nama_lengkap"></span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span
-                                        :class="{
-                                            'bg-emerald-500': member.status === 'ACTIVE',
-                                            'bg-rose-500': member.status === 'EXPIRED',
-                                            'bg-amber-500': member.status === 'PENDING',
-                                            'bg-slate-500': member.status === 'UNREGISTERED'
-                                        }"
-                                        class="px-3 py-1 rounded-lg text-[8px] font-black text-white uppercase tracking-tighter"
-                                        x-text="member.status">
-                                    </span>
+                                    <div class="flex flex-col items-center gap-1.5">
+                                        <span
+                                            :class="{
+                                                'bg-emerald-500': member.poverty_status === 'ACTIVE',
+                                                'bg-rose-500': member.poverty_status === 'EXPIRED',
+                                                'bg-amber-500': member.poverty_status === 'PENDING',
+                                                'bg-rose-600': member.poverty_status === 'REJECTED',
+                                                'bg-slate-500': member.poverty_status === 'UNREGISTERED'
+                                            }"
+                                            class="px-2 py-0.5 rounded text-[7px] font-black text-white uppercase tracking-tighter w-20 inline-block"
+                                            x-text="'POV: ' + member.poverty_status">
+                                        </span>
+                                        <span
+                                            :class="{
+                                                'bg-blue-500': member.domicile_status === 'ACTIVE',
+                                                'bg-rose-500': member.domicile_status === 'EXPIRED',
+                                                'bg-amber-500': member.domicile_status === 'PENDING',
+                                                'bg-rose-600': member.domicile_status === 'REJECTED',
+                                                'bg-slate-500': member.domicile_status === 'UNREGISTERED'
+                                            }"
+                                            class="px-2 py-0.5 rounded text-[7px] font-black text-white uppercase tracking-tighter w-20 inline-block"
+                                            x-text="'DOM: ' + member.domicile_status">
+                                        </span>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <button @click="nik = member.nik; verifyNik('NIK', false)"

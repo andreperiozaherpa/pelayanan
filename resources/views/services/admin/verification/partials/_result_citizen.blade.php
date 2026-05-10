@@ -27,29 +27,65 @@
                                 </div>
                             </div>
 
-                            <!-- Name & Status -->
+                            <!-- Name & Status Row -->
                             <div class="flex-grow min-w-0">
-                                <div class="flex flex-wrap items-center gap-4 mb-2">
-                                    <h2 class="text-2xl font-black text-slate-800 dark:text-white tracking-tight uppercase truncate"
-                                        x-text="result?.citizen ? result.citizen.nama_lengkap : nik"></h2>
-                                    <div x-show="result?.status"
-                                        :class="{
-                                            'bg-emerald-500 shadow-emerald-500/20': result?.status === 'ACTIVE',
-                                            'bg-rose-500 shadow-rose-500/20': result?.status === 'EXPIRED',
-                                            'bg-rose-600 shadow-rose-600/20': result?.status === 'REJECTED',
-                                            'bg-amber-500 shadow-amber-500/20': result?.status === 'PENDING',
-                                            'bg-slate-500 shadow-slate-500/20': result?.status === 'UNREGISTERED'
-                                        }"
-                                        class="px-4 py-1.5 rounded-xl text-[8px] font-black text-white shadow-lg tracking-widest uppercase shrink-0 flex items-center gap-2">
-                                        <iconify-icon
-                                            :icon="result?.status === 'ACTIVE' ? 'lucide:check-circle' : (result?.status === 'PENDING' ? 'lucide:hourglass' : 'lucide:alert-circle')"></iconify-icon>
-                                        <span x-text="result?.status.replace('_', ' ')"></span>
-                                    </div>
+                                <h2 class="text-2xl font-black text-slate-800 dark:text-white tracking-tight uppercase truncate mb-4"
+                                    x-text="result?.citizen ? result.citizen.nama_lengkap : nik"></h2>
+
+                                <div class="flex flex-wrap items-center gap-3 mb-6">
+                                    <!-- SKTM Badge -->
+                                    <template x-if="result?.poverty_status">
+                                        <div x-cloak
+                                            :class="{
+                                                'bg-emerald-500 shadow-emerald-500/20': result
+                                                    .poverty_status === 'ACTIVE',
+                                                'bg-rose-500 shadow-rose-500/20': result.poverty_status === 'EXPIRED',
+                                                'bg-rose-500 shadow-rose-500/20': result.poverty_status === 'REJECTED',
+                                                'bg-amber-500 shadow-amber-500/20': result
+                                                    .poverty_status === 'PENDING',
+                                                'bg-slate-500 shadow-slate-500/20': result
+                                                    .poverty_status === 'UNREGISTERED'
+                                            }"
+                                            class="px-4 py-1.5 rounded-xl text-[8px] font-black text-white shadow-lg tracking-widest uppercase shrink-0 flex items-center gap-2">
+                                            <iconify-icon
+                                                :icon="result.poverty_status === 'ACTIVE' ? 'lucide:shield-check' : (result
+                                                    .poverty_status === 'PENDING' ? 'lucide:hourglass' :
+                                                    'lucide:alert-circle')"></iconify-icon>
+                                            <span class="font-black"
+                                                x-text="'SKTM: ' + result.poverty_status.replace('_', ' ')"></span>
+                                        </div>
+                                    </template>
+
+                                    <!-- SKD Badge -->
+                                    <template x-if="result?.domicile_status">
+                                        <div x-cloak
+                                            :class="{
+                                                'bg-emerald-500 shadow-emerald-500/20': result
+                                                    .domicile_status === 'ACTIVE',
+                                                'bg-rose-500 shadow-rose-500/20': result.domicile_status === 'EXPIRED',
+                                                'bg-rose-500 shadow-rose-500/20': result.domicile_status === 'REJECTED',
+                                                'bg-amber-500 shadow-amber-500/20': result
+                                                    .domicile_status === 'PENDING',
+                                                'bg-slate-500 shadow-slate-500/20': result
+                                                    .domicile_status === 'UNREGISTERED'
+                                            }"
+                                            class="px-4 py-1.5 rounded-xl text-[8px] font-black text-white shadow-lg tracking-widest uppercase shrink-0 flex items-center gap-2">
+                                            <iconify-icon
+                                                :icon="result.domicile_status === 'ACTIVE' ? 'lucide:shield-check' : (result
+                                                    .domicile_status === 'PENDING' ? 'lucide:hourglass' :
+                                                    'lucide:alert-circle')"></iconify-icon>
+                                            <span class="font-black"
+                                                x-text="'SKD: ' + result.domicile_status.replace('_', ' ')"></span>
+                                        </div>
+                                    </template>
                                 </div>
-                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Nomor
-                                    Induk Kependudukan</p>
-                                <p class="text-lg font-black text-slate-600 dark:text-slate-300 tracking-wider"
-                                    x-text="nik"></p>
+
+                                <div class="space-y-1">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nomor
+                                        Induk Kependudukan</p>
+                                    <p class="text-lg font-black text-slate-600 dark:text-slate-300 tracking-wider"
+                                        x-text="nik"></p>
+                                </div>
                             </div>
                         </div>
 
@@ -60,13 +96,26 @@
                                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Status
                                     Kesejahteraan</p>
                                 <p class="text-sm font-black text-slate-700 dark:text-white uppercase leading-relaxed"
-                                    x-text="result?.message"></p>
+                                    x-text="result?.poverty_message"></p>
                             </div>
-                            <div x-show="result?.record">
+                            <div x-show="result?.domicile_message">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Status
+                                    Domisili</p>
+                                <p class="text-sm font-black text-slate-700 dark:text-white uppercase leading-relaxed"
+                                    x-text="result?.domicile_message"></p>
+                            </div>
+                            <div x-show="result?.poverty_record">
                                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Masa
-                                    Berlaku</p>
+                                    Berlaku Kemiskinan</p>
                                 <p class="text-sm font-black text-slate-700 dark:text-white uppercase"
-                                    x-text="result?.record && result.record.valid_until_formatted ? 'HINGGA ' + result.record.valid_until_formatted : 'TIDAK TERBATAS'">
+                                    x-text="result?.poverty_record && result.poverty_record.valid_until_formatted ? 'HINGGA ' + result.poverty_record.valid_until_formatted : 'TIDAK TERBATAS'">
+                                </p>
+                            </div>
+                            <div x-show="result?.domicile_record">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Masa
+                                    Berlaku Domisili</p>
+                                <p class="text-sm font-black text-slate-700 dark:text-white uppercase"
+                                    x-text="result?.domicile_record && result.domicile_record.valid_until_formatted ? 'HINGGA ' + result.domicile_record.valid_until_formatted : 'TIDAK TERBATAS'">
                                 </p>
                             </div>
                             <div x-show="result?.citizen">
@@ -96,8 +145,8 @@
 
                         <div class="flex flex-col gap-4">
                             <!-- Poverty Proof -->
-                            <template x-if="result?.status === 'ACTIVE'">
-                                <a :href="'/proof/' + nik" target="_blank"
+                            <template x-if="result?.poverty_status === 'ACTIVE'">
+                                <a :href="'/proof/' + nik + '/poverty'" target="_blank"
                                     class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-black/[0.03] hover:border-primary-acorn/30 hover:bg-white dark:hover:bg-slate-800 transition-all group shadow-sm">
                                     <div
                                         class="h-10 w-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
@@ -106,8 +155,8 @@
                                     <div class="min-w-0">
                                         <p
                                             class="text-[10px] font-black text-slate-800 dark:text-white uppercase truncate">
-                                            Bukti Kemiskinan</p>
-                                        <p class="text-[9px] text-slate-400 font-medium uppercase truncate">
+                                            Bukti Surat Keterangan Miskin</p>
+                                        <p class="text-[9px] text-emerald-500 font-bold uppercase truncate">
                                             Terverifikasi Aktif</p>
                                     </div>
                                     <iconify-icon icon="lucide:chevron-right"
@@ -115,7 +164,7 @@
                                 </a>
                             </template>
 
-                            <template x-if="result?.status === 'EXPIRED'">
+                            <template x-if="result?.poverty_status === 'EXPIRED'">
                                 <div class="flex flex-col gap-4">
                                     <div
                                         class="flex items-center gap-4 p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/30 opacity-80">
@@ -126,13 +175,13 @@
                                         <div class="min-w-0">
                                             <p
                                                 class="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase truncate">
-                                                Bukti Kemiskinan</p>
+                                                Bukti SKTM</p>
                                             <p class="text-[9px] text-rose-500 font-bold uppercase truncate"
-                                                x-text="result?.message.includes('SLA') ? 'Gagal Verifikasi (SLA)' : 'Status Kadaluarsa'">
+                                                x-text="result?.poverty_message.includes('SLA') ? 'Gagal Verifikasi (SLA)' : 'Status Kadaluarsa'">
                                             </p>
                                         </div>
                                     </div>
-                                    <div x-show="result?.message.includes('SLA')"
+                                    <div x-show="result?.poverty_message.includes('SLA')"
                                         class="p-4 rounded-xl bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900/30 text-[9px] text-orange-800 dark:text-orange-300 font-medium leading-relaxed">
                                         Desa tidak merespons dalam waktu 24 jam. Dokumen tidak dapat diterbitkan.
                                         Silakan klik tombol di bawah untuk mengajukan ulang.
@@ -140,7 +189,7 @@
                                 </div>
                             </template>
 
-                            <template x-if="result?.status === 'REJECTED'">
+                            <template x-if="result?.poverty_status === 'REJECTED'">
                                 <div
                                     class="flex flex-col gap-4 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/30 shadow-sm shadow-rose-500/5">
                                     <div class="flex items-center gap-4">
@@ -151,20 +200,23 @@
                                         <div class="min-w-0">
                                             <p
                                                 class="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase truncate">
-                                                Bukti Kemiskinan</p>
+                                                Bukti Surat Keterangan Miskin</p>
                                             <p class="text-[9px] text-rose-600 font-bold uppercase truncate">
                                                 Verifikasi Ditolak</p>
                                         </div>
                                     </div>
-                                    <div x-show="result?.rejection_reason"
+                                    <div x-show="result?.poverty_rejection_reason"
                                         class="mt-2 p-3 rounded-xl bg-white/50 dark:bg-rose-900/40 border border-rose-100 dark:border-rose-800/50">
-                                        <p class="text-[10px] font-black text-rose-800 dark:text-rose-300 uppercase tracking-widest mb-1">Alasan Penolakan:</p>
-                                        <p class="text-[11px] text-rose-700 dark:text-rose-400 font-medium italic leading-relaxed" x-text="result.rejection_reason"></p>
+                                        <p
+                                            class="text-[10px] font-black text-rose-800 dark:text-rose-300 uppercase tracking-widest mb-1">
+                                            Alasan Penolakan:</p>
+                                        <p class="text-[11px] text-rose-700 dark:text-rose-400 font-medium italic leading-relaxed"
+                                            x-text="result.poverty_rejection_reason"></p>
                                     </div>
                                 </div>
                             </template>
 
-                            <template x-if="result?.status === 'PENDING'">
+                            <template x-if="result?.poverty_status === 'PENDING'">
                                 <div
                                     class="flex items-center gap-4 p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30 opacity-80">
                                     <div
@@ -174,14 +226,14 @@
                                     <div class="min-w-0">
                                         <p
                                             class="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase truncate">
-                                            Bukti Kemiskinan</p>
+                                            Bukti Surat Keterangan Miskin</p>
                                         <p class="text-[9px] text-amber-500 font-bold uppercase truncate">
                                             Menunggu Verifikasi</p>
                                     </div>
                                 </div>
                             </template>
 
-                            <template x-if="result?.status === 'UNREGISTERED'">
+                            <template x-if="result?.poverty_status === 'UNREGISTERED'">
                                 <div
                                     class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/20 border border-black/[0.03] dark:border-white/[0.03] opacity-60 grayscale">
                                     <div
@@ -191,7 +243,7 @@
                                     <div class="min-w-0">
                                         <p
                                             class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase truncate">
-                                            Bukti Kemiskinan</p>
+                                            Bukti Surat Keterangan Miskin</p>
                                         <p class="text-[9px] text-slate-400 font-medium uppercase truncate">
                                             Belum Ada Dokumen</p>
                                     </div>
@@ -199,25 +251,106 @@
                             </template>
 
 
-                            <!-- Domicile -->
-                            <a href="#"
-                                class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-black/[0.03] hover:border-primary-acorn/30 hover:bg-white dark:hover:bg-slate-800 transition-all group opacity-60 grayscale hover:grayscale-0 hover:opacity-100 shadow-sm">
+                            <!-- Domicile Record Status Flow -->
+                            <template x-if="result?.domicile_status === 'ACTIVE'">
+                                <a :href="'/proof/' + nik + '/domicile'" target="_blank"
+                                    class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-black/[0.03] hover:border-primary-acorn/30 hover:bg-white dark:hover:bg-slate-800 transition-all group shadow-sm">
+                                    <div
+                                        class="h-10 w-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
+                                        <iconify-icon icon="lucide:shield-check"></iconify-icon>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p
+                                            class="text-[10px] font-black text-slate-800 dark:text-white uppercase truncate">
+                                            Bukti Surat Keterangan Domisili</p>
+                                        <p class="text-[9px] text-emerald-500 font-bold uppercase truncate">
+                                            Terverifikasi Aktif</p>
+                                    </div>
+                                    <iconify-icon icon="lucide:chevron-right"
+                                        class="ml-auto text-slate-300 group-hover:text-primary-acorn transition-colors"></iconify-icon>
+                                </a>
+                            </template>
+
+                            <template x-if="result?.domicile_status === 'PENDING'">
                                 <div
-                                    class="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-500/20 text-blue-600 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
-                                    <iconify-icon icon="lucide:map-pin"></iconify-icon>
+                                    class="flex items-center gap-4 p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30">
+                                    <div
+                                        class="h-10 w-10 rounded-xl bg-amber-100 dark:bg-amber-800/50 text-amber-500 flex items-center justify-center text-xl shrink-0">
+                                        <iconify-icon icon="lucide:hourglass"></iconify-icon>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p
+                                            class="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase truncate">
+                                            Bukti Surat Keterangan Domisili</p>
+                                        <p class="text-[9px] text-amber-500 font-bold uppercase truncate">
+                                            Menunggu Verifikasi</p>
+                                    </div>
                                 </div>
-                                <div class="min-w-0">
-                                    <p class="text-[10px] font-black text-slate-800 dark:text-white uppercase truncate">
-                                        Ket. Domisili</p>
-                                    <p class="text-[9px] text-slate-400 font-medium uppercase truncate">Penerbitan Baru
-                                    </p>
+                            </template>
+
+                            <template x-if="result?.domicile_status === 'EXPIRED'">
+                                <div
+                                    class="flex items-center gap-4 p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/30">
+                                    <div
+                                        class="h-10 w-10 rounded-xl bg-rose-100 dark:bg-rose-800/50 text-rose-500 flex items-center justify-center text-xl shrink-0">
+                                        <iconify-icon icon="lucide:file-warning"></iconify-icon>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p
+                                            class="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase truncate">
+                                            Bukti Surat Keterangan Domisili</p>
+                                        <p class="text-[9px] text-rose-500 font-bold uppercase truncate">
+                                            Status Kadaluarsa</p>
+                                    </div>
                                 </div>
-                                <iconify-icon icon="lucide:chevron-right"
-                                    class="ml-auto text-slate-300"></iconify-icon>
-                            </a>
+                            </template>
+                            <template x-if="result?.domicile_status === 'REJECTED'">
+                                <div
+                                    class="flex flex-col gap-4 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/30 shadow-sm shadow-rose-500/5">
+                                    <div class="flex items-center gap-4">
+                                        <div
+                                            class="h-10 w-10 rounded-xl bg-rose-100 dark:bg-rose-500/20 text-rose-600 flex items-center justify-center text-xl shrink-0">
+                                            <iconify-icon icon="lucide:file-x"></iconify-icon>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <p
+                                                class="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase truncate">
+                                                Bukti Surat Keterangan Domisili</p>
+                                            <p class="text-[9px] text-rose-600 font-bold uppercase truncate">
+                                                Verifikasi Ditolak</p>
+                                        </div>
+                                    </div>
+                                    <div x-show="result?.domicile_rejection_reason"
+                                        class="mt-2 p-3 rounded-xl bg-white/50 dark:bg-rose-900/40 border border-rose-100 dark:border-rose-800/50">
+                                        <p
+                                            class="text-[10px] font-black text-rose-800 dark:text-rose-300 uppercase tracking-widest mb-1">
+                                            Alasan Penolakan:</p>
+                                        <p class="text-[11px] text-rose-700 dark:text-rose-400 font-medium italic leading-relaxed"
+                                            x-text="result.domicile_rejection_reason"></p>
+                                    </div>
+                                </div>
+                            </template>
+
+
+                            <template x-if="result?.domicile_status === 'UNREGISTERED'">
+                                <div
+                                    class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/20 border border-black/[0.03] dark:border-white/[0.03] opacity-60 grayscale">
+                                    <div
+                                        class="h-10 w-10 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-400 flex items-center justify-center text-xl shrink-0">
+                                        <iconify-icon icon="lucide:file-x-2"></iconify-icon>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p
+                                            class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase truncate">
+                                            Bukti SKD</p>
+                                        <p class="text-[9px] text-slate-400 font-medium uppercase truncate">
+                                            Belum Ada Dokumen</p>
+                                    </div>
+                                </div>
+                            </template>
 
                             <!-- Move -->
-                            <a href="#"
+                            <a :href="'/proof/' + nik + '/move'" target="_blank"
                                 class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-black/[0.03] hover:border-primary-acorn/30 hover:bg-white dark:hover:bg-slate-800 transition-all group opacity-60 grayscale hover:grayscale-0 hover:opacity-100 shadow-sm">
                                 <div
                                     class="h-10 w-10 rounded-xl bg-orange-100 dark:bg-orange-500/20 text-orange-600 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
@@ -235,7 +368,7 @@
                             </a>
 
                             <!-- Arrival -->
-                            <a href="#"
+                            <a :href="'/proof/' + nik + '/arrival'" target="_blank"
                                 class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-black/[0.03] hover:border-primary-acorn/30 hover:bg-white dark:hover:bg-slate-800 transition-all group opacity-60 grayscale hover:grayscale-0 hover:opacity-100 shadow-sm">
                                 <div
                                     class="h-10 w-10 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
@@ -253,7 +386,7 @@
                             </a>
 
                             <!-- Death -->
-                            <a href="#"
+                            <a :href="'/proof/' + nik + '/death'" target="_blank"
                                 class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-black/[0.03] hover:border-primary-acorn/30 hover:bg-white dark:hover:bg-slate-800 transition-all group opacity-60 grayscale hover:grayscale-0 hover:opacity-100 shadow-sm">
                                 <div
                                     class="h-10 w-10 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-600 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
@@ -278,12 +411,12 @@
 
         <!-- Actions Bar (Report Service) -->
         <div class="flex flex-wrap justify-center gap-4"
-            x-show="(result?.status === 'ACTIVE' || result?.status === 'PENDING' || result?.status === 'EXPIRED' || result?.status === 'REJECTED' || result?.status === 'UNREGISTERED') && !reported">
+            x-show="((result?.poverty_status && result.poverty_status !== 'CITIZEN_NOT_FOUND') || (result?.domicile_status && result.domicile_status !== 'CITIZEN_NOT_FOUND')) && !reported">
             @can('service.report')
                 <button @click="showReportModal = true"
                     class="bg-slate-900 hover:bg-slate-800 text-white px-10 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3">
                     <iconify-icon icon="lucide:send" class="text-lg opacity-50"></iconify-icon>
-                    <span x-text="result?.status === 'UNREGISTERED' ? 'Daftarkan Verifikasi Baru' : (result?.status === 'ACTIVE' ? 'Perbarui Data Verifikasi' : 'Ajukan Verifikasi Ulang')"></span>
+                    <span>Ajukan / Perbarui Verifikasi</span>
                 </button>
             @endcan
         </div>

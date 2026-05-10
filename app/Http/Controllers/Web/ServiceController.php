@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\ServiceType;
 use App\Facades\Audit;
 use App\Http\Controllers\Controller;
 use App\Models\Citizen;
+use App\Models\DomicileRecord;
 use App\Models\PovertyRecord;
 use App\Models\ServiceRequest;
 use Illuminate\Http\Request;
@@ -24,7 +26,7 @@ class ServiceController extends Controller
 
         $request->validate([
             'citizen_nik' => 'required|string|size:16|exists:citizens,nik',
-            'service_type' => ['required', 'string', 'max:255', 'in:'.implode(',', config('services.service_types'))],
+            'service_type' => ['required', 'string', 'max:255', 'in:'.implode(',', ServiceType::values())],
             'notes' => 'nullable|string',
         ]);
 
@@ -40,12 +42,15 @@ class ServiceController extends Controller
         }
 
         // Security Hardening: Atomic check and create to prevent race conditions
-        if ($request->service_type == 'KETERANGAN KEMISKINAN') {
-            return DB::transaction(function () use ($request) {
+        $isPoverty = $request->service_type == ServiceType::POVERTY->value;
+        $isDomicile = $request->service_type == ServiceType::DOMICILE->value;
+
+        if ($isPoverty || $isDomicile) {
+            return DB::transaction(function () use ($request, $isPoverty, $isDomicile) {
                 $exists = ServiceRequest::where('citizen_nik', $request->citizen_nik)
                     ->where('service_type', $request->service_type)
                     ->whereDate('created_at', now()->toDateString())
-                    ->lockForUpdate() // Prevent other processes from writing/checking at same time
+                    ->lockForUpdate()
                     ->exists();
 
                 if ($exists) {
@@ -63,17 +68,19 @@ class ServiceController extends Controller
                     'notes' => $request->notes,
                 ]);
 
-                // Synchronize with poverty_records so FO sees "PENDING" status on the citizen card
-                // We only set it to PENDING if there's no record or the existing record is not ACTIVE
-                PovertyRecord::updateOrCreate(
-                    ['citizen_nik' => $request->citizen_nik],
-                    [
-                        'status' => 'PENDING',
-                        'source' => 'FRONT_OFFICE_REQUEST',
-                    ]
-                );
-
-                Cache::forget("poverty_status_{$request->citizen_nik}");
+                if ($isPoverty) {
+                    PovertyRecord::updateOrCreate(
+                        ['citizen_nik' => $request->citizen_nik],
+                        ['status' => 'PENDING', 'source' => 'FRONT_OFFICE_REQUEST']
+                    );
+                    Cache::forget("poverty_status_{$request->citizen_nik}");
+                } elseif ($isDomicile) {
+                    DomicileRecord::updateOrCreate(
+                        ['citizen_nik' => $request->citizen_nik],
+                        ['status' => 'PENDING', 'source' => 'FRONT_OFFICE_REQUEST']
+                    );
+                    Cache::forget("poverty_status_{$request->citizen_nik}");
+                }
 
                 Audit::log('REPORT_SERVICE', $service, $service->toArray());
 
@@ -126,28 +133,50 @@ class ServiceController extends Controller
             abort(403, 'Persetujuan hanya dapat dilakukan oleh otoritas desa setempat. Super Admin hanya memiliki akses pemantauan.');
         }
 
-        $request->validate([
-            'income_range' => 'required|string',
+        $validationRules = [
             'valid_until' => 'required|date|after:today',
-        ]);
+        ];
+
+        if ($serviceRequest->service_type === ServiceType::POVERTY) {
+            $validationRules['income_range'] = 'required|string';
+        }
+
+        if ($serviceRequest->service_type === ServiceType::DOMICILE) {
+            $validationRules['purpose'] = 'required|string';
+        }
+
+        $request->validate($validationRules);
 
         return DB::transaction(function () use ($request, $serviceRequest) {
-            // ... logic stays the same ...
             $serviceRequest->update(['status' => 'APPROVED']);
 
-            PovertyRecord::updateOrCreate(
-                ['citizen_nik' => $serviceRequest->citizen_nik],
-                [
-                    'status' => 'ACTIVE',
-                    'income_range' => $request->income_range,
-                    'valid_from' => now(),
-                    'valid_until' => $request->valid_until,
-                    'verified_by' => Auth::user()->id,
-                    'source' => 'VILLAGE_VERIFICATION',
-                ]
-            );
-
-            Cache::forget("poverty_status_{$serviceRequest->citizen_nik}");
+            if ($serviceRequest->service_type === ServiceType::POVERTY) {
+                PovertyRecord::updateOrCreate(
+                    ['citizen_nik' => $serviceRequest->citizen_nik],
+                    [
+                        'status' => 'ACTIVE',
+                        'income_range' => $request->income_range,
+                        'valid_from' => now(),
+                        'valid_until' => $request->valid_until,
+                        'verified_by' => Auth::user()->id,
+                        'source' => 'VILLAGE_VERIFICATION',
+                    ]
+                );
+                Cache::forget("poverty_status_{$serviceRequest->citizen_nik}");
+            } elseif ($serviceRequest->service_type === ServiceType::DOMICILE) {
+                DomicileRecord::updateOrCreate(
+                    ['citizen_nik' => $serviceRequest->citizen_nik],
+                    [
+                        'status' => 'ACTIVE',
+                        'purpose' => $request->purpose,
+                        'valid_from' => now(),
+                        'valid_until' => $request->valid_until,
+                        'verified_by' => Auth::user()->id,
+                        'source' => 'VILLAGE_VERIFICATION',
+                    ]
+                );
+                Cache::forget("poverty_status_{$serviceRequest->citizen_nik}");
+            }
 
             Audit::log('APPROVE_SERVICE', $serviceRequest, [
                 'citizen_nik' => $serviceRequest->citizen_nik,
@@ -183,12 +212,18 @@ class ServiceController extends Controller
                 'notes' => $request->reason, // Save the rejection reason to notes for easy display
             ]);
 
-            // Update PovertyRecord if it was PENDING
-            PovertyRecord::where('citizen_nik', $serviceRequest->citizen_nik)
-                ->where('status', 'PENDING')
-                ->update(['status' => 'REJECTED']);
-
-            Cache::forget("poverty_status_{$serviceRequest->citizen_nik}");
+            // Update Records if they were PENDING
+            if ($serviceRequest->service_type === ServiceType::POVERTY) {
+                PovertyRecord::where('citizen_nik', $serviceRequest->citizen_nik)
+                    ->where('status', 'PENDING')
+                    ->update(['status' => 'REJECTED']);
+                Cache::forget("poverty_status_{$serviceRequest->citizen_nik}");
+            } elseif ($serviceRequest->service_type === ServiceType::DOMICILE) {
+                DomicileRecord::where('citizen_nik', $serviceRequest->citizen_nik)
+                    ->where('status', 'PENDING')
+                    ->update(['status' => 'REJECTED']);
+                Cache::forget("poverty_status_{$serviceRequest->citizen_nik}");
+            }
 
             Audit::log('REJECT_SERVICE', $serviceRequest, [
                 'reason' => $request->reason,

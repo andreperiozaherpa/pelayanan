@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\ServiceType;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Citizen;
@@ -37,137 +38,19 @@ class VerificationController extends Controller
 
         $input = $request->nik;
 
-        // 1. Check if it's a Household Card (KK)
-        $household = HouseholdCard::with(['village', 'citizens.povertyRecords' => function ($q) {
-            $q->latest();
-        }])->where('no_kk', $input)->first();
+        // 1. Try Household Check First
+        $household = HouseholdCard::with([
+            'village',
+            'citizens.povertyRecords' => fn ($q) => $q->latest(),
+            'citizens.domicileRecords' => fn ($q) => $q->latest(),
+        ])->where('no_kk', $input)->first();
 
         if ($household) {
-            return response()->json([
-                'success' => true,
-                'type' => 'HOUSEHOLD',
-                'data' => [
-                    'household' => $household,
-                    'members' => $household->citizens->map(function ($citizen) {
-                        $record = $citizen->povertyRecords->first();
-
-                        return [
-                            'nik' => $citizen->nik,
-                            'nama_lengkap' => $citizen->nama_lengkap,
-                            'status' => ! $record ? 'UNREGISTERED' : ($record->status ?? (Carbon::parse($record->valid_until)->isPast() ? 'EXPIRED' : 'ACTIVE')),
-                            'record' => $record,
-                        ];
-                    }),
-                ],
-            ]);
+            return $this->handleHouseholdCheck($household);
         }
 
-        // 2. Original NIK Verification Logic
-        $nik = $input;
-        $cacheKey = "poverty_status_{$nik}";
-
-        $data = Cache::remember($cacheKey, now()->addHours(24), function () use ($nik) {
-            $citizen = Citizen::with(['village', 'povertyRecords' => function ($q) {
-                $q->latest();
-            }])->where('nik', $nik)->first();
-
-            if (! $citizen) {
-                return null;
-            }
-
-            $record = $citizen->povertyRecords->first();
-            $isExpired = $record ? Carbon::parse($record->valid_until)->isPast() : false;
-
-            return [
-                'citizen' => $citizen->toArray(),
-                'record' => $record ? $record->toArray() : null,
-                'is_expired' => $isExpired,
-            ];
-        });
-
-        // 1. Check if Citizen Exists Globaly
-        if (! $data) {
-            return response()->json([
-                'success' => false,
-                'data' => [
-                    'status' => 'NOT_FOUND',
-                    'message' => 'Data warga tidak ditemukan di sistem.',
-                ],
-            ]);
-        }
-
-        // 2. Role-Based Scoping (Security Fix)
-        $user = Auth::user();
-        if ($user->isOperatorDesa()) {
-            if ($data['citizen']['desa_id'] != $user->desa_id) {
-                return response()->json([
-                    'success' => false,
-                    'data' => [
-                        'status' => 'NOT_FOUND',
-                        'message' => 'Data warga tidak ditemukan atau di luar wilayah tugas Anda.',
-                    ],
-                ]);
-            }
-        }
-
-        // 3. Construct Response Array
-        $record = $data['record'];
-        if ($record && isset($record['valid_until'])) {
-            $record['valid_until_formatted'] = Carbon::parse($record['valid_until'])->translatedFormat('d F Y');
-        }
-
-        $status = [
-            'status' => ! $data['record']
-                ? 'UNREGISTERED'
-                : ($data['record']['status'] === 'PENDING'
-                    ? 'PENDING'
-                    : ($data['record']['status'] === 'REJECTED'
-                        ? 'REJECTED'
-                        : ($data['record']['status'] === 'EXPIRED' || $data['is_expired'] ? 'EXPIRED' : 'ACTIVE'))),
-            'message' => ! $data['record']
-                ? 'Data tidak ditemukan dalam basis data kemiskinan.'
-                : ($data['record']['status'] === 'PENDING'
-                    ? 'Sedang dalam proses verifikasi desa.'
-                    : ($data['record']['status'] === 'REJECTED'
-                        ? 'Permohonan verifikasi ditolak oleh desa.'
-                        : ($data['record']['status'] === 'EXPIRED' || $data['is_expired']
-                            ? 'Status kemiskinan kadaluarsa. Silakan ajukan ulang.'
-                            : 'Status kemiskinan Aktif.'))),
-            'citizen' => $data['citizen'],
-            'record' => $record,
-            'rejection_reason' => ($data['record'] && $data['record']['status'] === 'REJECTED')
-                ? ServiceRequest::where('citizen_nik', $nik)->where('status', 'REJECTED')->latest()->value('notes')
-                : null,
-        ];
-
-        if ($user->isPetugasFrontOffice()) {
-            if (isset($status['citizen']['alamat_desa'])) {
-                $addrParts = explode(' ', $status['citizen']['alamat_desa'], 3);
-                $status['citizen']['alamat_desa'] = (count($addrParts) >= 2 ? implode(' ', array_slice($addrParts, 0, 2)) : $addrParts[0]) . ' *** (Data Disamarkan)';
-            }
-            if (isset($status['citizen']['kontak'])) {
-                $status['citizen']['kontak'] = '*** (Data Disamarkan)';
-            }
-            if (isset($status['record']['income_range'])) {
-                $status['record']['income_range'] = '*** (Data Disamarkan)';
-            }
-        }
-
-        // Audit Log for Verification (Blueprint 6)
-        VerificationLog::create([
-            'user_id' => Auth::user()->id,
-            'nik' => $nik,
-            'method' => $request->method,
-            'result' => $status['status'],
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'timestamp' => now(),
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'data' => $status,
-        ]);
+        // 2. Fallback to Citizen Check
+        return $this->handleCitizenCheck($input, $request);
     }
 
     public function index(): View
@@ -178,16 +61,30 @@ class VerificationController extends Controller
     /**
      * Generate a high-fidelity PDF proof of verification.
      */
-    public function proof(string $nik)
+    public function proof(string $nik, string $type)
     {
+        $config = $this->getProofConfig($type);
+
         // 1. Authorization
-        Gate::authorize('poverty.print_proof');
+        Gate::authorize($config['permission']);
 
-        $citizen = Citizen::with(['village', 'povertyRecords' => function ($q) {
-            $q->latest();
-        }])->where('nik', $nik)->firstOrFail();
+        // Check if view template exists
+        if (! view()->exists($config['view'])) {
+            abort(404, "Template dokumen untuk tipe '{$type}' belum tersedia.");
+        }
 
-        $record = $citizen->povertyRecords->first();
+        // 2. Fetch Base Citizen Data
+        $citizen = Citizen::with(['village'])->where('nik', $nik)->firstOrFail();
+        $record = null;
+
+        // Conditional Data Loading
+        if ($type === 'poverty') {
+            $citizen->load(['povertyRecords' => fn ($q) => $q->latest()]);
+            $record = $citizen->povertyRecords->first();
+        } elseif ($type === 'domicile') {
+            $citizen->load(['domicileRecords' => fn ($q) => $q->latest()]);
+            $record = $citizen->domicileRecords->first();
+        }
 
         // Generate a validation URL
         $validationUrl = route('verification.index', ['q' => $nik]);
@@ -209,14 +106,14 @@ class VerificationController extends Controller
         try {
             $manageCert = new ManageCert;
             $manageCert->setPreservePfx(true); // CRITICAL: Prevent vendor library from deleting our certificate!
-            $manageCert->fromPfx(storage_path('app/' . $userCert->certificate_path), $userCert->passphrase);
+            $manageCert->fromPfx(storage_path('app/'.$userCert->certificate_path), $userCert->passphrase);
             $certData = $manageCert->getCert()->data;
 
             // Get real serial number from cert
             $serialNumber = $certData['serialNumber'] ?? 'N/A';
         } catch (\Exception $e) {
-            Log::error('Certificate initialization failed: ' . $e->getMessage());
-            abort(500, 'Gagal memuat sertifikat TTE: ' . $e->getMessage());
+            Log::error('Certificate initialization failed: '.$e->getMessage());
+            abort(500, 'Gagal memuat sertifikat TTE: '.$e->getMessage());
         }
 
         // Audit Log
@@ -225,20 +122,20 @@ class VerificationController extends Controller
             'action' => 'PRINT_PROOF',
             'target_table' => 'citizens',
             'target_id' => null,
-            'new_value' => ['nik' => $nik],
+            'new_value' => ['nik' => $nik, 'type' => $type],
             'timestamp' => now(),
         ]);
 
         // Generate QR code as PNG for visual signature compatibility
-        $qrPath = storage_path('app/private/qr_' . uniqid() . '.png');
+        $qrPath = storage_path('app/private/qr_'.uniqid().'.png');
         /** @var Generator $qr */
         $qr = QrCode::format('png');
         $qr->size(300)
             ->margin(1)
             ->errorCorrection('H')
-            ->generate($validationUrl . '?sn=' . $serialNumber, $qrPath);
+            ->generate($validationUrl.'?sn='.$serialNumber, $qrPath);
 
-        $html = view('documents.doc_poverty', compact('citizen', 'record', 'validationUrl', 'serialNumber', 'leader'))->render();
+        $html = view($config['view'], compact('citizen', 'record', 'validationUrl', 'serialNumber', 'leader'))->render();
 
         // 2. Detect coordinates of the placeholder via DOM attributes
         $renderedHtml = Browsershot::html($html)
@@ -274,7 +171,7 @@ class VerificationController extends Controller
             ->pdf();
 
         // 3. Digital Signing
-        $tempPdfPath = storage_path('app/private/temp_' . uniqid() . '.pdf');
+        $tempPdfPath = storage_path('app/private/temp_'.uniqid().'.pdf');
         file_put_contents($tempPdfPath, $pdf);
 
         try {
@@ -292,26 +189,26 @@ class VerificationController extends Controller
             // Set Visual Signature (QR Code) with dynamic page
             $signerPdf->setImage($qrPath, $posX, $posY, $width, 0, $pageNumber);
 
-            $signerName = $leader->name . ($leader->nip ? " (NIP. {$leader->nip})" : '');
+            $signerName = $leader->name.($leader->nip ? " (NIP. {$leader->nip})" : '');
 
             $signerPdf->setInfo(
                 name: $signerName,
                 location: $village->name ?? 'Lampung',
-                reason: 'Penerbitan Surat Keterangan Miskin (TTE Resmi)'
+                reason: $config['reason']
             );
 
             $pdf = $signerPdf->signature();
 
             // Save signed PDF to storage
-            $storagePath = "public/poverty_proofs/{$citizen->desa_id}/{$nik}_" . time() . '.pdf';
+            $storagePath = "{$config['storage_dir']}/{$citizen->desa_id}/{$nik}_".time().'.pdf';
             Storage::put($storagePath, $pdf);
 
             if ($record) {
                 $record->update(['signed_pdf_path' => $storagePath]);
             }
         } catch (\Exception $e) {
-            Log::error('PDF Signing failed: ' . $e->getMessage());
-            abort(500, 'Gagal membubuhkan tanda tangan elektronik: ' . $e->getMessage());
+            Log::error('PDF Signing failed: '.$e->getMessage());
+            abort(500, 'Gagal membubuhkan tanda tangan elektronik: '.$e->getMessage());
         } finally {
             if (file_exists($tempPdfPath)) {
                 unlink($tempPdfPath);
@@ -323,6 +220,244 @@ class VerificationController extends Controller
 
         return response($pdf)
             ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'inline; filename="bukti-verifikasi-' . $nik . '.pdf"');
+            ->header('Content-Disposition', 'inline; filename="'.$config['filename'].'-'.$nik.'.pdf"');
+    }
+
+    /**
+     * Determine the status of a service based on record data.
+     */
+    private function getServiceStatus(array $data, string $type): string
+    {
+        $record = $data["{$type}_record"] ?? null;
+        $isExpired = $data["is_{$type}_expired"] ?? false;
+
+        if (! $record) {
+            return 'UNREGISTERED';
+        }
+
+        return match ($record['status']) {
+            'PENDING' => 'PENDING',
+            'REJECTED' => 'REJECTED',
+            default => ($record['status'] === 'EXPIRED' || $isExpired) ? 'EXPIRED' : 'ACTIVE',
+        };
+    }
+
+    /**
+     * Get the human-readable message for a specific service status.
+     */
+    private function getServiceStatusMessage(string $status, string $type): string
+    {
+        $label = $type === 'poverty' ? 'kemiskinan' : 'domisili';
+
+        return match ($status) {
+            'UNREGISTERED' => "Data tidak ditemukan dalam basis data {$label}.",
+            'PENDING' => 'Sedang dalam proses verifikasi desa.',
+            'REJECTED' => "Permohonan {$label} ditolak oleh desa.",
+            'EXPIRED' => "Status {$label} kadaluarsa. Silakan ajukan ulang.",
+            'ACTIVE' => "Status {$label} Aktif.",
+            default => 'Status tidak diketahui.',
+        };
+    }
+
+    /**
+     * Mask sensitive data for front office staff.
+     */
+    private function maskSensitiveData(array $status): array
+    {
+        $mask = '*** (Data Disamarkan)';
+
+        if ($address = $status['citizen']['alamat_desa'] ?? null) {
+            $words = explode(' ', (string) $address, 3);
+            $prefix = implode(' ', array_slice($words, 0, 2));
+            $status['citizen']['alamat_desa'] = trim($prefix)." {$mask}";
+        }
+
+        foreach (['citizen.kontak', 'poverty_record.income_range', 'domicile_record.purpose'] as $key) {
+            data_set($status, $key, $mask, false);
+        }
+
+        return $status;
+    }
+
+    /**
+     * Get the configuration for a proof document type.
+     */
+    private function getProofConfig(string $type): array
+    {
+        return match ($type) {
+            'poverty' => [
+                'view' => 'documents.doc_poverty',
+                'reason' => 'Penerbitan Surat Keterangan Miskin (TTE Resmi)',
+                'storage_dir' => 'public/poverty_proofs',
+                'filename' => 'keterangan-kemiskinan',
+                'permission' => 'poverty.print_proof',
+            ],
+            'domicile' => [
+                'view' => 'documents.doc_domicile',
+                'reason' => 'Penerbitan Surat Keterangan Domisili (TTE Resmi)',
+                'storage_dir' => 'public/domicile_proofs',
+                'filename' => 'keterangan-domisili',
+                'permission' => 'poverty.print_proof',
+            ],
+            'move' => [
+                'view' => 'documents.doc_move',
+                'reason' => 'Penerbitan Surat Pengantar Pindah (TTE Resmi)',
+                'storage_dir' => 'public/move_proofs',
+                'filename' => 'pengantar-pindah',
+                'permission' => 'poverty.print_proof',
+            ],
+            'arrival' => [
+                'view' => 'documents.doc_arrival',
+                'reason' => 'Penerbitan Surat Pengantar Datang (TTE Resmi)',
+                'storage_dir' => 'public/arrival_proofs',
+                'filename' => 'pengantar-datang',
+                'permission' => 'poverty.print_proof',
+            ],
+            'death' => [
+                'view' => 'documents.doc_death',
+                'reason' => 'Penerbitan Surat Keterangan Kematian (TTE Resmi)',
+                'storage_dir' => 'public/death_proofs',
+                'filename' => 'keterangan-kematian',
+                'permission' => 'poverty.print_proof',
+            ],
+            default => abort(404, 'Tipe dokumen tidak valid.'),
+        };
+    }
+
+    /**
+     * Handle verification for a household (KK).
+     */
+    private function handleHouseholdCheck(HouseholdCard $household): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'type' => 'HOUSEHOLD',
+            'data' => [
+                'household' => $household,
+                'members' => $household->citizens->map(fn ($citizen) => [
+                    'nik' => $citizen->nik,
+                    'nama_lengkap' => $citizen->nama_lengkap,
+                    'poverty_status' => $this->getServiceStatus(['poverty_record' => $citizen->povertyRecords->first(), 'is_poverty_expired' => $citizen->povertyRecords->first()?->valid_until ? Carbon::parse($citizen->povertyRecords->first()->valid_until)->isPast() : false], 'poverty'),
+                    'poverty_record' => $citizen->povertyRecords->first(),
+                    'domicile_record' => $citizen->domicileRecords->first(),
+                    'domicile_status' => $this->getServiceStatus(['domicile_record' => $citizen->domicileRecords->first(), 'is_domicile_expired' => $citizen->domicileRecords->first()?->valid_until ? Carbon::parse($citizen->domicileRecords->first()->valid_until)->isPast() : false], 'domicile'),
+                    'poverty_rejection_reason' => $this->getRejectionReason($citizen->nik, ServiceType::POVERTY),
+                    'domicile_rejection_reason' => $this->getRejectionReason($citizen->nik, ServiceType::DOMICILE),
+                ]),
+            ],
+        ]);
+    }
+
+    /**
+     * Handle verification for an individual citizen (NIK).
+     */
+    private function handleCitizenCheck(string $nik, Request $request): JsonResponse
+    {
+        $cacheKey = "poverty_status_{$nik}";
+
+        $data = Cache::remember($cacheKey, now()->addHours(24), function () use ($nik) {
+            $citizen = Citizen::with([
+                'village',
+                'povertyRecords' => fn ($q) => $q->latest(),
+                'domicileRecords' => fn ($q) => $q->latest(),
+            ])->where('nik', $nik)->first();
+
+            if (! $citizen) {
+                return null;
+            }
+
+            $record = $citizen->povertyRecords->first();
+            $domicile = $citizen->domicileRecords->first();
+
+            return [
+                'citizen' => $citizen->toArray(),
+                'poverty_record' => $record ? $record->toArray() : null,
+                'domicile_record' => $domicile ? $domicile->toArray() : null,
+                'is_poverty_expired' => $record ? Carbon::parse($record->valid_until)->isPast() : false,
+                'is_domicile_expired' => $domicile ? Carbon::parse($domicile->valid_until)->isPast() : false,
+            ];
+        });
+
+        if (! $data) {
+            return response()->json([
+                'success' => false,
+                'data' => ['status' => 'NOT_FOUND', 'message' => 'Data warga tidak ditemukan di sistem.'],
+            ]);
+        }
+
+        $user = Auth::user();
+        if ($user->isOperatorDesa() && $data['citizen']['desa_id'] != $user->desa_id) {
+            return response()->json([
+                'success' => false,
+                'data' => ['status' => 'NOT_FOUND', 'message' => 'Data warga tidak ditemukan atau di luar wilayah tugas Anda.'],
+            ]);
+        }
+
+        $povertyStatus = $this->getServiceStatus($data, 'poverty');
+        $domicileStatus = $this->getServiceStatus($data, 'domicile');
+
+        $status = [
+            'poverty_status' => $povertyStatus,
+            'poverty_message' => $this->getServiceStatusMessage($povertyStatus, 'poverty'),
+            'citizen' => $data['citizen'],
+            'poverty_record' => $this->formatRecordDates($data['poverty_record']),
+            'domicile_record' => $this->formatRecordDates($data['domicile_record']),
+            'domicile_status' => $domicileStatus,
+            'domicile_message' => $this->getServiceStatusMessage($domicileStatus, 'domicile'),
+            'poverty_rejection_reason' => $this->getRejectionReason($nik, ServiceType::POVERTY, $povertyStatus),
+            'domicile_rejection_reason' => $this->getRejectionReason($nik, ServiceType::DOMICILE, $domicileStatus),
+        ];
+
+        if ($user->isPetugasFrontOffice()) {
+            $status = $this->maskSensitiveData($status);
+        }
+
+        $this->logVerification($nik, $request->method, $status);
+
+        return response()->json(['success' => true, 'data' => $status]);
+    }
+
+    /**
+     * Format record dates if they exist.
+     */
+    private function formatRecordDates(?array $record): ?array
+    {
+        if ($record && isset($record['valid_until'])) {
+            $record['valid_until_formatted'] = Carbon::parse($record['valid_until'])->translatedFormat('d F Y');
+        }
+
+        return $record;
+    }
+
+    /**
+     * Get the rejection reason for a service if it was rejected.
+     */
+    private function getRejectionReason(string $nik, ServiceType $type, ?string $status = null): ?string
+    {
+        if ($status !== null && $status !== 'REJECTED') {
+            return null;
+        }
+
+        return ServiceRequest::where('citizen_nik', $nik)
+            ->where('service_type', $type->value)
+            ->where('status', 'REJECTED')
+            ->latest()
+            ->value('notes');
+    }
+
+    /**
+     * Log verification activity.
+     */
+    private function logVerification(string $nik, string $method, array $status): void
+    {
+        VerificationLog::create([
+            'user_id' => Auth::id(),
+            'nik' => $nik,
+            'method' => $method,
+            'result' => "SKTM: {$status['poverty_status']} | SKD: {$status['domicile_status']}",
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+            'timestamp' => now(),
+        ]);
     }
 }

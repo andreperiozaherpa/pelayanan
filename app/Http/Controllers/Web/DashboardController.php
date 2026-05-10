@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Models\Citizen;
+use App\Models\DomicileRecord;
 use App\Models\PovertyRecord;
 use App\Models\ServiceRequest;
 use App\Models\VerificationLog;
 use App\Models\Village;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -16,7 +17,7 @@ class DashboardController extends Controller
     /**
      * Display the Front Office dashboard.
      */
-    public function index()
+    public function index(): View|RedirectResponse
     {
         $user = Auth::user();
 
@@ -37,12 +38,11 @@ class DashboardController extends Controller
             ->take(6)
             ->get();
 
-        // Poverty status distribution
+        // Record distribution
         $statusDistribution = [
-            'active' => PovertyRecord::where('status', 'ACTIVE')->count(),
-            'expired' => PovertyRecord::where('status', 'EXPIRED')->count()
-                + PovertyRecord::where('status', 'ACTIVE')->where('valid_until', '<', now())->count(),
-            'pending' => Citizen::whereDoesntHave('povertyRecords')->count(),
+            'poverty_active' => PovertyRecord::where('status', 'ACTIVE')->count(),
+            'domicile_active' => DomicileRecord::where('status', 'ACTIVE')->count(),
+            'total_pending' => ServiceRequest::where('status', 'PENDING')->count(),
         ];
 
         $stats = [
@@ -56,24 +56,22 @@ class DashboardController extends Controller
         return view('services.admin.dashboard.index', compact('stats'));
     }
 
+    /**
+     * Display the Village Operator dashboard.
+     */
     public function desa(): View
     {
         $user = Auth::user();
-        // Fallback to 0 if desa_id is magically null (though guarded by middleware)
         $desaId = $user->desa_id ?? 0;
 
+        $villageRequests = ServiceRequest::whereHas('citizen', fn ($q) => $q->where('desa_id', $desaId));
+
         $stats = [
-            'total_verifications' => VerificationLog::where(function ($q) use ($desaId) {
-                // Actions by village operators OR regarding village citizens
-                $q->whereHas('user', fn ($u) => $u->where('desa_id', $desaId))
-                    ->orWhereHas('citizen', fn ($c) => $c->where('desa_id', $desaId));
-            })->count(),
-            'recent_requests' => ServiceRequest::whereHas('citizen', function ($q) use ($desaId) {
-                $q->where('desa_id', $desaId);
-            })->latest()->take(5)->get(),
-            'today_count' => ServiceRequest::whereHas('citizen', function ($q) use ($desaId) {
-                $q->where('desa_id', $desaId);
-            })->whereDate('created_at', today())->count(),
+            'total_verifications' => VerificationLog::whereHas('user', fn ($u) => $u->where('desa_id', $desaId))
+                ->orWhereHas('citizen', fn ($c) => $c->where('desa_id', $desaId))
+                ->count(),
+            'recent_requests' => (clone $villageRequests)->latest()->take(5)->get(),
+            'today_count' => (clone $villageRequests)->whereDate('created_at', today())->count(),
         ];
 
         return view('services.desa.dashboard.index', compact('stats'));

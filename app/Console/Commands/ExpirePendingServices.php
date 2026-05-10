@@ -2,7 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\ServiceType;
 use App\Facades\Audit;
+use App\Models\DomicileRecord;
 use App\Models\PovertyRecord;
 use App\Models\ServiceRequest;
 use Illuminate\Console\Command;
@@ -28,36 +30,39 @@ class ExpirePendingServices extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
         $this->info('Starting to expire pending service requests...');
 
         $expiredCount = DB::transaction(function () {
-            // Find requests created before today that are still PENDING
-            $staleRequests = ServiceRequest::where('status', 'PENDING')
-                ->where('created_at', '<', now()->startOfDay())
-                ->get();
-
             $count = 0;
-            foreach ($staleRequests as $request) {
-                $request->update(['status' => 'EXPIRED']);
 
-                // Also update PovertyRecord if it was PENDING to reflect the expiry
-                PovertyRecord::where('citizen_nik', $request->citizen_nik)
-                    ->where('status', 'PENDING')
-                    ->update(['status' => 'EXPIRED']);
+            ServiceRequest::where('status', 'PENDING')
+                ->where('created_at', '<', now()->startOfDay())
+                ->each(function (ServiceRequest $request) use (&$count) {
+                    $request->update(['status' => 'EXPIRED']);
 
-                // Invalidate cache
-                Cache::forget("poverty_status_{$request->citizen_nik}");
+                    // Also update Records if they were PENDING to reflect the expiry
+                    if ($request->service_type === ServiceType::POVERTY) {
+                        PovertyRecord::where('citizen_nik', $request->citizen_nik)
+                            ->where('status', 'PENDING')
+                            ->update(['status' => 'EXPIRED']);
+                        Cache::forget("poverty_status_{$request->citizen_nik}");
+                    } elseif ($request->service_type === ServiceType::DOMICILE) {
+                        DomicileRecord::where('citizen_nik', $request->citizen_nik)
+                            ->where('status', 'PENDING')
+                            ->update(['status' => 'EXPIRED']);
+                        Cache::forget("poverty_status_{$request->citizen_nik}");
+                    }
 
-                // Log to audit
-                Audit::log('AUTO_EXPIRE_SERVICE', $request, [
-                    'citizen_nik' => $request->citizen_nik,
-                    'reason' => 'SLA 1 Hari: Tidak ditanggapi oleh desa tepat waktu',
-                ]);
+                    // Log to audit
+                    Audit::log('AUTO_EXPIRE_SERVICE', $request, [
+                        'citizen_nik' => $request->citizen_nik,
+                        'reason' => 'SLA 1 Hari: Tidak ditanggapi oleh desa tepat waktu',
+                    ]);
 
-                $count++;
-            }
+                    $count++;
+                });
 
             return $count;
         });
