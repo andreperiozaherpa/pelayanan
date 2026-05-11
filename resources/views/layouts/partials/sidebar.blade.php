@@ -28,7 +28,7 @@
                         </button>
 
                         <a href="{{ route('dashboard.index') }}"
-                            class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('dashboard.*') || request()->routeIs('verification.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                            class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('dashboard.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
                             <iconify-icon icon="lucide:layout-grid" class="text-xl"></iconify-icon>
                         </a>
                         @can('citizens.manage')
@@ -38,9 +38,9 @@
                         </a>
                         @endcan
 
-                        @can('service.manage')
-                            <a href="{{ route('service.requests.index') }}"
-                                class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('service.requests.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                        @can('poverty.verify')
+                            <a href="{{ route('services.verification') }}"
+                                class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('services.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
                                 <iconify-icon icon="lucide:clipboard-list" class="text-xl"></iconify-icon>
                             </a>
                         @endcan
@@ -61,28 +61,43 @@
                     <div class="flex-1 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-2xl shadow-sm p-4 flex flex-col custom-scrollbar overflow-y-auto"
                         x-show="sidebarOpen">
                         <nav class="flex-grow space-y-0.5">
-                            @if (request()->routeIs('dashboard.*') || request()->routeIs('verification.*'))
+                            @if (request()->routeIs('dashboard.*'))
                                 <div class="px-4 py-4">
                                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                         Dashboards</p>
                                 </div>
                                 <x-nav-link href="{{ route('dashboard.index') }}" :active="request()->routeIs('dashboard.index')"
                                     icon="lucide:layout-dashboard">Default</x-nav-link>
-                                @can('poverty.verify')
-                                    <x-nav-link href="{{ route('verification.index') }}" :active="request()->routeIs('verification.index')"
-                                        icon="lucide:scan-line">Data Dokumen</x-nav-link>
-                                @endcan
-                                @can('audit.view')
-                                    <x-nav-link href="{{ route('dashboard.history') }}" :active="request()->routeIs('dashboard.history')"
-                                        icon="lucide:history">History</x-nav-link>
-                                @endcan
-                            @elseif(request()->routeIs('service.requests.*'))
+                                <x-nav-link href="{{ route('dashboard.desa') }}" :active="request()->routeIs('dashboard.desa')"
+                                    icon="lucide:building-2">Dashboard Desa</x-nav-link>
+                            @elseif(request()->routeIs('services.*'))
                                 <div class="px-4 py-4">
                                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Layanan
                                     </p>
                                 </div>
-                                <x-nav-link href="{{ route('service.requests.index') }}" :active="request()->routeIs('service.requests.index')"
-                                    icon="lucide:inbox">Antrean Permohonan</x-nav-link>
+                                <x-nav-link href="{{ route('services.verification') }}" :active="request()->routeIs('services.verification')"
+                                    icon="lucide:scan-line">Cek Data & Dokumen</x-nav-link>
+                                
+                                @can('service.manage')
+                                    <div class="px-4 py-3 mt-4">
+                                        <p class="text-[9px] font-black text-slate-400/60 uppercase tracking-widest">Antrean Permohonan</p>
+                                    </div>
+                                    
+                                    <x-nav-link href="{{ route('services.requests.index') }}" :active="request()->routeIs('services.requests.index') && !request()->has('type')"
+                                        icon="lucide:inbox">Semua Antrean</x-nav-link>
+                                    <x-nav-link href="{{ route('services.requests.index', ['type' => 'KETERANGAN KEMISKINAN']) }}" :active="request()->query('type') === 'KETERANGAN KEMISKINAN'"
+                                        icon="lucide:coins">Surat Miskin</x-nav-link>
+                                    <x-nav-link href="{{ route('services.requests.index', ['type' => 'PENGANTAR PINDAH']) }}" :active="request()->query('type') === 'PENGANTAR PINDAH'"
+                                        icon="lucide:truck">Pengantar Pindah</x-nav-link>
+                                    <x-nav-link href="{{ route('services.requests.index', ['type' => 'KETERANGAN DOMISILI']) }}" :active="request()->query('type') === 'KETERANGAN DOMISILI'"
+                                        icon="lucide:home">Domisili</x-nav-link>
+                                @endcan
+                                
+                                <div class="px-4 py-3 mt-4">
+                                    <p class="text-[9px] font-black text-slate-400/60 uppercase tracking-widest">Lainnya</p>
+                                </div>
+                                <x-nav-link href="{{ route('services.history') }}" :active="request()->routeIs('services.history')"
+                                    icon="lucide:history">History Pelayanan</x-nav-link>
                             @elseif(request()->routeIs('citizens.*'))
                                 <div class="px-4 py-4">
                                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Citizens

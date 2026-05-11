@@ -65,7 +65,7 @@
         </div>
 
         <!-- Verification Action -->
-        <a href="{{ route('verification.index') }}" class="premium-card p-8 flex flex-col items-center justify-center text-center group border-dashed border-2 border-primary-acorn/20 bg-slate-50/30 dark:bg-slate-900/10 hover:bg-white dark:hover:bg-slate-900 transition-all duration-500 shadow-xl shadow-primary-acorn/5">
+        <a href="{{ route('services.verification') }}" class="premium-card p-8 flex flex-col items-center justify-center text-center group border-dashed border-2 border-primary-acorn/20 bg-slate-50/30 dark:bg-slate-900/10 hover:bg-white dark:hover:bg-slate-900 transition-all duration-500 shadow-xl shadow-primary-acorn/5">
             <div class="w-16 h-16 rounded-2xl bg-primary-acorn flex items-center justify-center text-white shadow-2xl shadow-primary-acorn/40 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 mb-5">
                 <iconify-icon icon="lucide:fingerprint" class="text-3xl"></iconify-icon>
             </div>
@@ -84,12 +84,12 @@
                     <h3 class="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-[0.15em]">Log Aktivitas Terkini</h3>
                 </div>
                 <div class="flex items-center gap-4">
-                    <a href="{{ route('service.requests.index') }}" class="group flex items-center gap-2 text-[9px] font-black text-emerald-600 uppercase tracking-[0.2em] hover:gap-3 transition-all">
+                    <a href="{{ route('services.requests.index') }}" class="group flex items-center gap-2 text-[9px] font-black text-emerald-600 uppercase tracking-[0.2em] hover:gap-3 transition-all">
                         Antrean Permohonan
                         <span class="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10 text-[8px]">{{ $stats['recent_requests']->count() }}</span>
                         <iconify-icon icon="lucide:arrow-right" class="text-sm"></iconify-icon>
                     </a>
-                    <a href="{{ route('dashboard.history') }}" class="group flex items-center gap-2 text-[9px] font-black text-primary-acorn uppercase tracking-[0.2em] hover:gap-3 transition-all">
+                    <a href="{{ route('services.history') }}" class="group flex items-center gap-2 text-[9px] font-black text-primary-acorn uppercase tracking-[0.2em] hover:gap-3 transition-all">
                         History Lengkap
                         <iconify-icon icon="lucide:arrow-right" class="text-sm"></iconify-icon>
                     </a>

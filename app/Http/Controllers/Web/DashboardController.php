@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\DomicileRecord;
+use App\Models\MoveRecord;
 use App\Models\PovertyRecord;
 use App\Models\ServiceRequest;
 use App\Models\VerificationLog;
@@ -39,10 +40,18 @@ class DashboardController extends Controller
             ->get();
 
         // Record distribution
+        $activeCount = PovertyRecord::where('status', 'ACTIVE')->count() +
+            DomicileRecord::where('status', 'ACTIVE')->count() +
+            MoveRecord::where('status', 'ACTIVE')->count();
+
+        $expiredCount = PovertyRecord::where('status', 'EXPIRED')->count() +
+            DomicileRecord::where('status', 'EXPIRED')->count() +
+            MoveRecord::where('status', 'EXPIRED')->count();
+
         $statusDistribution = [
-            'poverty_active' => PovertyRecord::where('status', 'ACTIVE')->count(),
-            'domicile_active' => DomicileRecord::where('status', 'ACTIVE')->count(),
-            'total_pending' => ServiceRequest::where('status', 'PENDING')->count(),
+            'active' => $activeCount,
+            'expired' => $expiredCount,
+            'pending' => ServiceRequest::where('status', 'PENDING')->count(),
         ];
 
         $stats = [

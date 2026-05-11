@@ -95,6 +95,17 @@
                                             class="px-2 py-0.5 rounded text-[7px] font-black text-white uppercase tracking-tighter w-20 inline-block"
                                             x-text="'DOM: ' + member.domicile_status">
                                         </span>
+                                        <span
+                                            :class="{
+                                                'bg-emerald-500': member.move_status === 'ACTIVE',
+                                                'bg-rose-500': member.move_status === 'EXPIRED',
+                                                'bg-amber-500': member.move_status === 'PENDING',
+                                                'bg-rose-600': member.move_status === 'REJECTED',
+                                                'bg-slate-500': member.move_status === 'UNREGISTERED'
+                                            }"
+                                            class="px-2 py-0.5 rounded text-[7px] font-black text-white uppercase tracking-tighter w-20 inline-block"
+                                            x-text="'MOV: ' + member.move_status">
+                                        </span>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-right">

@@ -7,8 +7,10 @@ use App\Facades\Audit;
 use App\Http\Controllers\Controller;
 use App\Models\Citizen;
 use App\Models\DomicileRecord;
+use App\Models\MoveRecord;
 use App\Models\PovertyRecord;
 use App\Models\ServiceRequest;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -44,12 +46,43 @@ class ServiceController extends Controller
         // Security Hardening: Atomic check and create to prevent race conditions
         $isPoverty = $request->service_type == ServiceType::POVERTY->value;
         $isDomicile = $request->service_type == ServiceType::DOMICILE->value;
+        $isMove = $request->service_type == ServiceType::MOVE->value;
 
-        if ($isPoverty || $isDomicile) {
-            return DB::transaction(function () use ($request, $isPoverty, $isDomicile) {
+        if ($isPoverty || $isDomicile || $isMove) {
+            // 1. Unified Record Check
+            $record = match (true) {
+                $isPoverty => PovertyRecord::where('citizen_nik', $request->citizen_nik)->latest()->first(),
+                $isDomicile => DomicileRecord::where('citizen_nik', $request->citizen_nik)->latest()->first(),
+                $isMove => MoveRecord::where('citizen_nik', $request->citizen_nik)->latest()->first(),
+                default => null
+            };
+
+            if ($record) {
+                $isExpired = $record->valid_until && Carbon::parse($record->valid_until)->isPast();
+                $isRejected = $record->status === 'REJECTED';
+
+                // Block if status is PENDING or ACTIVE (and not expired)
+                if ($record->status === 'PENDING') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Permohonan layanan ini sedang dalam proses verifikasi desa.',
+                    ], 422);
+                }
+
+                if ($record->status === 'ACTIVE' && ! $isExpired) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Warga ini sudah memiliki layanan yang masih aktif.',
+                    ], 422);
+                }
+            }
+
+            return DB::transaction(function () use ($request, $isPoverty, $isDomicile, $isMove) {
+                // Keep the daily duplicate check as a fallback for the ServiceRequest table itself
                 $exists = ServiceRequest::where('citizen_nik', $request->citizen_nik)
                     ->where('service_type', $request->service_type)
                     ->whereDate('created_at', now()->toDateString())
+                    ->where('status', 'PENDING')
                     ->lockForUpdate()
                     ->exists();
 
@@ -60,12 +93,17 @@ class ServiceController extends Controller
                     ], 422);
                 }
 
+                $finalNotes = $request->notes;
+                if ($isMove && $request->destination_address) {
+                    $finalNotes = "TUJUAN: {$request->destination_address}".($request->notes ? "\nCATATAN: {$request->notes}" : '');
+                }
+
                 $service = ServiceRequest::create([
                     'citizen_nik' => $request->citizen_nik,
                     'service_type' => $request->service_type,
                     'status' => 'PENDING',
                     'front_office_user_id' => Auth::user()->id,
-                    'notes' => $request->notes,
+                    'notes' => $finalNotes,
                 ]);
 
                 if ($isPoverty) {
@@ -73,14 +111,19 @@ class ServiceController extends Controller
                         ['citizen_nik' => $request->citizen_nik],
                         ['status' => 'PENDING', 'source' => 'FRONT_OFFICE_REQUEST']
                     );
-                    Cache::forget("poverty_status_{$request->citizen_nik}");
                 } elseif ($isDomicile) {
                     DomicileRecord::updateOrCreate(
                         ['citizen_nik' => $request->citizen_nik],
                         ['status' => 'PENDING', 'source' => 'FRONT_OFFICE_REQUEST']
                     );
-                    Cache::forget("poverty_status_{$request->citizen_nik}");
+                } elseif ($isMove) {
+                    MoveRecord::updateOrCreate(
+                        ['citizen_nik' => $request->citizen_nik],
+                        ['status' => 'PENDING', 'source' => 'FRONT_OFFICE_REQUEST']
+                    );
                 }
+
+                Cache::forget("citizen_services_{$request->citizen_nik}");
 
                 Audit::log('REPORT_SERVICE', $service, $service->toArray());
 
@@ -93,7 +136,7 @@ class ServiceController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Pelayanan Belum Tersedia.',
-            ]);
+            ], 404);
         }
     }
 
@@ -106,6 +149,11 @@ class ServiceController extends Controller
 
         $user = Auth::user();
         $query = ServiceRequest::with(['citizen', 'citizen.village']);
+
+        // Type Filtering
+        if ($request->has('type')) {
+            $query->where('service_type', $request->type);
+        }
 
         if (! $user->isSuperAdmin()) {
             $desaId = $user->desa_id;
@@ -162,7 +210,7 @@ class ServiceController extends Controller
                         'source' => 'VILLAGE_VERIFICATION',
                     ]
                 );
-                Cache::forget("poverty_status_{$serviceRequest->citizen_nik}");
+                Cache::forget("citizen_services_{$serviceRequest->citizen_nik}");
             } elseif ($serviceRequest->service_type === ServiceType::DOMICILE) {
                 DomicileRecord::updateOrCreate(
                     ['citizen_nik' => $serviceRequest->citizen_nik],
@@ -175,7 +223,20 @@ class ServiceController extends Controller
                         'source' => 'VILLAGE_VERIFICATION',
                     ]
                 );
-                Cache::forget("poverty_status_{$serviceRequest->citizen_nik}");
+                Cache::forget("citizen_services_{$serviceRequest->citizen_nik}");
+            } elseif ($serviceRequest->service_type === ServiceType::MOVE) {
+                MoveRecord::updateOrCreate(
+                    ['citizen_nik' => $serviceRequest->citizen_nik],
+                    [
+                        'status' => 'ACTIVE',
+                        'destination_address' => $request->destination_address,
+                        'reason' => $request->reason,
+                        'valid_until' => $request->valid_until,
+                        'verified_by' => Auth::user()->id,
+                        'issued_at' => now(),
+                    ]
+                );
+                Cache::forget("citizen_services_{$serviceRequest->citizen_nik}");
             }
 
             Audit::log('APPROVE_SERVICE', $serviceRequest, [
@@ -217,12 +278,17 @@ class ServiceController extends Controller
                 PovertyRecord::where('citizen_nik', $serviceRequest->citizen_nik)
                     ->where('status', 'PENDING')
                     ->update(['status' => 'REJECTED']);
-                Cache::forget("poverty_status_{$serviceRequest->citizen_nik}");
+                Cache::forget("citizen_services_{$serviceRequest->citizen_nik}");
             } elseif ($serviceRequest->service_type === ServiceType::DOMICILE) {
                 DomicileRecord::where('citizen_nik', $serviceRequest->citizen_nik)
                     ->where('status', 'PENDING')
                     ->update(['status' => 'REJECTED']);
-                Cache::forget("poverty_status_{$serviceRequest->citizen_nik}");
+                Cache::forget("citizen_services_{$serviceRequest->citizen_nik}");
+            } elseif ($serviceRequest->service_type === ServiceType::MOVE) {
+                MoveRecord::where('citizen_nik', $serviceRequest->citizen_nik)
+                    ->where('status', 'PENDING')
+                    ->update(['status' => 'REJECTED']);
+                Cache::forget("citizen_services_{$serviceRequest->citizen_nik}");
             }
 
             Audit::log('REJECT_SERVICE', $serviceRequest, [

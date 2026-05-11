@@ -43,6 +43,7 @@ class VerificationController extends Controller
             'village',
             'citizens.povertyRecords' => fn ($q) => $q->latest(),
             'citizens.domicileRecords' => fn ($q) => $q->latest(),
+            'citizens.moveRecords' => fn ($q) => $q->latest(),
         ])->where('no_kk', $input)->first();
 
         if ($household) {
@@ -55,6 +56,8 @@ class VerificationController extends Controller
 
     public function index(): View
     {
+        Gate::authorize('poverty.verify');
+
         return view('services.admin.verification.index');
     }
 
@@ -84,10 +87,13 @@ class VerificationController extends Controller
         } elseif ($type === 'domicile') {
             $citizen->load(['domicileRecords' => fn ($q) => $q->latest()]);
             $record = $citizen->domicileRecords->first();
+        } elseif ($type === 'move') {
+            $citizen->load(['moveRecords' => fn ($q) => $q->latest()]);
+            $record = $citizen->moveRecords->first();
         }
 
         // Generate a validation URL
-        $validationUrl = route('verification.index', ['q' => $nik]);
+        $validationUrl = route('services.verification', ['q' => $nik]);
 
         // Fetch Active Village Leader and Certificate first to sync data
         $village = $citizen->village()->with(['activeLeader.user.certificates' => function ($q) {
@@ -247,7 +253,12 @@ class VerificationController extends Controller
      */
     private function getServiceStatusMessage(string $status, string $type): string
     {
-        $label = $type === 'poverty' ? 'kemiskinan' : 'domisili';
+        $label = match ($type) {
+            'poverty' => 'kemiskinan',
+            'domicile' => 'domisili',
+            'move' => 'pindah',
+            default => $type,
+        };
 
         return match ($status) {
             'UNREGISTERED' => "Data tidak ditemukan dalam basis data {$label}.",
@@ -341,8 +352,10 @@ class VerificationController extends Controller
                     'poverty_record' => $citizen->povertyRecords->first(),
                     'domicile_record' => $citizen->domicileRecords->first(),
                     'domicile_status' => $this->getServiceStatus(['domicile_record' => $citizen->domicileRecords->first(), 'is_domicile_expired' => $citizen->domicileRecords->first()?->valid_until ? Carbon::parse($citizen->domicileRecords->first()->valid_until)->isPast() : false], 'domicile'),
+                    'move_status' => $this->getServiceStatus(['move_record' => $citizen->moveRecords->first(), 'is_move_expired' => $citizen->moveRecords->first()?->valid_until ? Carbon::parse($citizen->moveRecords->first()->valid_until)->isPast() : false], 'move'),
                     'poverty_rejection_reason' => $this->getRejectionReason($citizen->nik, ServiceType::POVERTY),
                     'domicile_rejection_reason' => $this->getRejectionReason($citizen->nik, ServiceType::DOMICILE),
+                    'move_rejection_reason' => $this->getRejectionReason($citizen->nik, ServiceType::MOVE),
                 ]),
             ],
         ]);
@@ -353,13 +366,14 @@ class VerificationController extends Controller
      */
     private function handleCitizenCheck(string $nik, Request $request): JsonResponse
     {
-        $cacheKey = "poverty_status_{$nik}";
+        $cacheKey = "citizen_services_{$nik}";
 
         $data = Cache::remember($cacheKey, now()->addHours(24), function () use ($nik) {
             $citizen = Citizen::with([
                 'village',
                 'povertyRecords' => fn ($q) => $q->latest(),
                 'domicileRecords' => fn ($q) => $q->latest(),
+                'moveRecords' => fn ($q) => $q->latest(),
             ])->where('nik', $nik)->first();
 
             if (! $citizen) {
@@ -368,13 +382,16 @@ class VerificationController extends Controller
 
             $record = $citizen->povertyRecords->first();
             $domicile = $citizen->domicileRecords->first();
+            $move = $citizen->moveRecords->first();
 
             return [
                 'citizen' => $citizen->toArray(),
                 'poverty_record' => $record ? $record->toArray() : null,
                 'domicile_record' => $domicile ? $domicile->toArray() : null,
+                'move_record' => $move ? $move->toArray() : null,
                 'is_poverty_expired' => $record ? Carbon::parse($record->valid_until)->isPast() : false,
                 'is_domicile_expired' => $domicile ? Carbon::parse($domicile->valid_until)->isPast() : false,
+                'is_move_expired' => $move ? Carbon::parse($move->valid_until)->isPast() : false,
             ];
         });
 
@@ -395,6 +412,7 @@ class VerificationController extends Controller
 
         $povertyStatus = $this->getServiceStatus($data, 'poverty');
         $domicileStatus = $this->getServiceStatus($data, 'domicile');
+        $moveStatus = $this->getServiceStatus($data, 'move');
 
         $status = [
             'poverty_status' => $povertyStatus,
@@ -402,10 +420,14 @@ class VerificationController extends Controller
             'citizen' => $data['citizen'],
             'poverty_record' => $this->formatRecordDates($data['poverty_record']),
             'domicile_record' => $this->formatRecordDates($data['domicile_record']),
+            'move_record' => $this->formatRecordDates($data['move_record']),
             'domicile_status' => $domicileStatus,
             'domicile_message' => $this->getServiceStatusMessage($domicileStatus, 'domicile'),
+            'move_status' => $moveStatus,
+            'move_message' => $this->getServiceStatusMessage($moveStatus, 'move'),
             'poverty_rejection_reason' => $this->getRejectionReason($nik, ServiceType::POVERTY, $povertyStatus),
             'domicile_rejection_reason' => $this->getRejectionReason($nik, ServiceType::DOMICILE, $domicileStatus),
+            'move_rejection_reason' => $this->getRejectionReason($nik, ServiceType::MOVE, $moveStatus),
         ];
 
         if ($user->isPetugasFrontOffice()) {
@@ -454,7 +476,7 @@ class VerificationController extends Controller
             'user_id' => Auth::id(),
             'nik' => $nik,
             'method' => $method,
-            'result' => "SKTM: {$status['poverty_status']} | SKD: {$status['domicile_status']}",
+            'result' => "SKTM: {$status['poverty_status']} | SKD: {$status['domicile_status']} | PINDAH: ".($status['move_status'] ?? 'N/A'),
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
             'timestamp' => now(),

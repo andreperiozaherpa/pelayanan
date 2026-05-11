@@ -344,7 +344,8 @@
                     reported: false,
                     report: {
                         service_type: '',
-                        notes: ''
+                        notes: '',
+                        destination_address: ''
                     },
 
                     init() {
@@ -476,7 +477,8 @@
                                 this.showReportModal = false;
                                 this.report = {
                                     service_type: '',
-                                    notes: ''
+                                    notes: '',
+                                    destination_address: ''
                                 };
                                 
                                 // Refresh data to show PENDING status

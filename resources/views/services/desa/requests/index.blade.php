@@ -155,13 +155,13 @@
                                     <div class="flex items-center justify-end gap-3">
                                         @if (!Auth::user()->isSuperAdmin())
                                             <button
-                                                @click.stop="openApproveModal({{ $req->id }}, '{{ addslashes($req->citizen->nama_lengkap) }}', '{{ $req->service_type->name }}', '{{ addslashes($req->notes) }}')"
+                                                @click.stop="openApproveModal({{ $req->id }}, {{ json_encode($req->citizen->nama_lengkap) }}, '{{ $req->service_type->name }}', {{ json_encode($req->notes) }})"
                                                 class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md hover:shadow-emerald-500/20 hover:-translate-y-0.5 transition-all active:scale-95 inline-flex items-center gap-2">
                                                 Setujui
                                                 <iconify-icon icon="lucide:check-circle" class="text-base"></iconify-icon>
                                             </button>
                                             <button
-                                                @click.stop="openRejectModal({{ $req->id }}, '{{ addslashes($req->citizen->nama_lengkap) }}')"
+                                                @click.stop="openRejectModal({{ $req->id }}, {{ json_encode($req->citizen->nama_lengkap) }})"
                                                 class="p-2.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-all">
                                                 <iconify-icon icon="lucide:x-circle" class="text-xl"></iconify-icon>
                                             </button>
@@ -255,9 +255,30 @@
                                 <iconify-icon icon="lucide:info" class="text-primary-acorn"></iconify-icon>
                                 Keperluan Domisili
                             </label>
-                            <textarea x-model="form.purpose" rows="3"
-                                placeholder="CONTOH: PERSYARATAN ADMINISTRASI BANK / KERJA..."
+                            <textarea x-model="form.purpose" rows="3" placeholder="CONTOH: PERSYARATAN ADMINISTRASI BANK / KERJA..."
                                 class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 border border-black/[0.03] rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-primary-acorn/10 focus:border-primary-acorn transition-all uppercase tracking-wider placeholder:opacity-30"></textarea>
+                        </div>
+
+                        <!-- Move Specific Fields -->
+                        <div class="space-y-6" x-show="selectedRequest.type === 'MOVE'">
+                            <div class="space-y-3">
+                                <label
+                                    class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                                    <iconify-icon icon="lucide:map-pin" class="text-primary-acorn"></iconify-icon>
+                                    Alamat Tujuan
+                                </label>
+                                <textarea x-model="form.destination_address" rows="2" placeholder="ALAMAT LENGKAP TUJUAN PINDAH..."
+                                    class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 border border-black/[0.03] rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-primary-acorn/10 focus:border-primary-acorn transition-all uppercase tracking-wider placeholder:opacity-30"></textarea>
+                            </div>
+                            <div class="space-y-3">
+                                <label
+                                    class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                                    <iconify-icon icon="lucide:help-circle" class="text-primary-acorn"></iconify-icon>
+                                    Alasan Pindah
+                                </label>
+                                <textarea x-model="form.reason_move" rows="2" placeholder="CONTOH: MENGIKUTI ORANG TUA / PEKERJAAN..."
+                                    class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 border border-black/[0.03] rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-primary-acorn/10 focus:border-primary-acorn transition-all uppercase tracking-wider placeholder:opacity-30"></textarea>
+                            </div>
                         </div>
 
                         <div class="space-y-3">
@@ -324,8 +345,7 @@
                                 <iconify-icon icon="lucide:message-square" class="text-rose-500"></iconify-icon>
                                 Alasan Penolakan
                             </label>
-                            <textarea x-model="form.reason" rows="4"
-                                placeholder="CONTOH: DATA TIDAK SESUAI FAKTA LAPANGAN..."
+                            <textarea x-model="form.reason" rows="4" placeholder="CONTOH: DATA TIDAK SESUAI FAKTA LAPANGAN..."
                                 class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 border border-black/[0.03] rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-rose-500/10 focus:border-rose-500 transition-all uppercase tracking-wider placeholder:opacity-30"></textarea>
                         </div>
 
@@ -357,6 +377,8 @@
                     form: {
                         income_range: '',
                         purpose: '',
+                        destination_address: '',
+                        reason_move: '',
                         valid_until: '',
                         reason: ''
                     },
@@ -370,11 +392,23 @@
                         this.form.income_range = '';
                         this.form.purpose = type === 'DOMICILE' ? notes : '';
 
+                        // Parse multiline notes for MOVE
+                        if (type === 'MOVE' && notes && notes.includes('TUJUAN: ')) {
+                            const parts = notes.split('\nCATATAN: ');
+                            this.form.destination_address = parts[0].replace('TUJUAN: ', '');
+                            this.form.reason_move = parts[1] || '';
+                        } else {
+                            this.form.destination_address = '';
+                            this.form.reason_move = type === 'MOVE' ? notes : '';
+                        }
+
                         // Default valid until based on type
-                        // Poverty: 6 months, Domicile: 3 months
+                        // Poverty: 6 months, Domicile: 3 months, Move: 1 month
                         const d = new Date();
                         if (type === 'POVERTY') {
                             d.setMonth(d.getMonth() + 6);
+                        } else if (type === 'MOVE') {
+                            d.setMonth(d.getMonth() + 1);
                         } else {
                             d.setMonth(d.getMonth() + 3);
                         }
@@ -388,6 +422,7 @@
                             this.showWarning('TANGGAL WAJIB DIISI', 'Harap tentukan masa berlaku dokumen.');
                             return;
                         }
+                        ns
 
                         if (this.selectedRequest.type === 'POVERTY' && !this.form.income_range) {
                             this.showWarning('DATA TIDAK LENGKAP', 'Harap pilih rentang penghasilan.');
@@ -399,18 +434,28 @@
                             return;
                         }
 
+                        if (this.selectedRequest.type === 'MOVE') {
+                            if (!this.form.destination_address || !this.form.reason_move) {
+                                this.showWarning('DATA TIDAK LENGKAP', 'Harap isi alamat tujuan dan alasan pindah.');
+                                return;
+                            }
+                        }
+
                         if (this.loading) return;
                         this.loading = true;
 
                         try {
-                            const response = await fetch(`/service-requests/${this.selectedRequest.id}/approve`, {
+                            const response = await fetch(`/layanan/permohonan/${this.selectedRequest.id}/approve`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
                                     'Accept': 'application/json',
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                                 },
-                                body: JSON.stringify(this.form)
+                                body: JSON.stringify(this.selectedRequest.type === 'MOVE' ? {
+                                    ...this.form,
+                                    reason: this.form.reason_move
+                                } : this.form)
                             });
 
                             const json = await response.json();
@@ -470,7 +515,7 @@
                         this.loading = true;
 
                         try {
-                            const response = await fetch(`/service-requests/${this.selectedRequest.id}/reject`, {
+                            const response = await fetch(`/layanan/permohonan/${this.selectedRequest.id}/reject`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',

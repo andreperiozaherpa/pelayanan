@@ -85,6 +85,11 @@ class Citizen extends Model
         return $this->hasMany(DomicileRecord::class, 'citizen_nik', 'nik');
     }
 
+    public function moveRecords(): HasMany
+    {
+        return $this->hasMany(MoveRecord::class, 'citizen_nik', 'nik');
+    }
+
     public function serviceRequests(): HasMany
     {
         return $this->hasMany(ServiceRequest::class, 'citizen_nik', 'nik');

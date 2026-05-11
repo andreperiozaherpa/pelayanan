@@ -44,15 +44,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/certificates', [CertificateController::class, 'index'])->name('admin.certificates.index');
     Route::post('/admin/certificates/{user_id}/generate', [CertificateController::class, 'generate'])->name('admin.certificates.generate');
 
-    Route::get('/verify', [VerificationController::class, 'index'])->name('verification.index');
-    Route::get('/history', [HistoryController::class, 'index'])->name('dashboard.history');
+    // Services & Verification (Layanan & Verifikasi)
+    Route::prefix('layanan')->name('services.')->group(function () {
+        Route::get('/verifikasi', [VerificationController::class, 'index'])->name('verification');
+        Route::get('/permohonan', [ServiceController::class, 'index'])->name('requests.index');
+        Route::post('/permohonan/{serviceRequest}/approve', [ServiceController::class, 'approve'])->name('requests.approve');
+        Route::post('/permohonan/{serviceRequest}/reject', [ServiceController::class, 'reject'])->name('requests.reject');
+        Route::get('/riwayat', [HistoryController::class, 'index'])->name('history');
+    });
+
     Route::get('/proof/{nik}/{type}', [VerificationController::class, 'proof'])->where('nik', '[0-9]{16}')->name('verification.proof');
 
     Route::post('/api/verify-check', [VerificationController::class, 'check'])->name('api.verification.check');
     Route::post('/api/service-report', [ServiceController::class, 'store'])->name('service.store');
-    Route::get('/service-requests', [ServiceController::class, 'index'])->name('service.requests.index');
-    Route::post('/service-requests/{serviceRequest}/approve', [ServiceController::class, 'approve'])->name('service.requests.approve');
-    Route::post('/service-requests/{serviceRequest}/reject', [ServiceController::class, 'reject'])->name('service.requests.reject');
 
     Route::get('/reports/citizens', [ReportController::class, 'exportCitizens'])->name('reports.citizens');
     Route::get('/reports/audit', [ReportController::class, 'exportAuditLogs'])->name('reports.audit');

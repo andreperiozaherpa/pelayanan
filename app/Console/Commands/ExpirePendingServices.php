@@ -47,12 +47,12 @@ class ExpirePendingServices extends Command
                         PovertyRecord::where('citizen_nik', $request->citizen_nik)
                             ->where('status', 'PENDING')
                             ->update(['status' => 'EXPIRED']);
-                        Cache::forget("poverty_status_{$request->citizen_nik}");
+                        Cache::forget("citizen_services_{$request->citizen_nik}");
                     } elseif ($request->service_type === ServiceType::DOMICILE) {
                         DomicileRecord::where('citizen_nik', $request->citizen_nik)
                             ->where('status', 'PENDING')
                             ->update(['status' => 'EXPIRED']);
-                        Cache::forget("poverty_status_{$request->citizen_nik}");
+                        Cache::forget("citizen_services_{$request->citizen_nik}");
                     }
 
                     // Log to audit

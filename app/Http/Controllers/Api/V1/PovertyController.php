@@ -18,7 +18,7 @@ class PovertyController extends Controller
      */
     public function status(string $nik): JsonResponse
     {
-        $cacheKey = "poverty_status_{$nik}";
+        $cacheKey = "citizen_services_{$nik}";
 
         // Toba: Check Redis cache first
         $status = Cache::remember($cacheKey, now()->addHours(24), function () use ($nik) {
@@ -58,7 +58,7 @@ class PovertyController extends Controller
         $record = PovertyRecord::create($data);
 
         // Clear cache for this citizen
-        Cache::forget("poverty_status_{$data['citizen_nik']}");
+        Cache::forget("citizen_services_{$data['citizen_nik']}");
 
         return new PovertyRecordResource($record);
     }

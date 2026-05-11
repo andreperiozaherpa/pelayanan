@@ -138,7 +138,7 @@
                             <div class="premium-card p-4 flex items-center gap-4 group">
                                 <div
                                     class="h-10 w-10 rounded-lg bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-[10px] font-black text-slate-400 group-hover:text-primary-acorn transition">
-                                    {{ strtoupper(substr($req->service_type, 0, 2)) }}
+                                    {{ strtoupper(substr($req->service_type->value, 0, 2)) }}
                                 </div>
                                 <div class="flex-grow">
                                     <p

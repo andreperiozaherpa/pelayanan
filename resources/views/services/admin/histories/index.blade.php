@@ -17,7 +17,7 @@
 
             <div class="flex flex-col sm:flex-row items-end gap-3">
                 <!-- Items per Page -->
-                <form action="{{ route('dashboard.history') }}" method="GET" id="perPageForm" class="w-32">
+                <form action="{{ route('services.history') }}" method="GET" id="perPageForm" class="w-32">
                     @if (request('search'))
                         <input type="hidden" name="search" value="{{ request('search') }}">
                     @endif
@@ -30,14 +30,14 @@
                 </form>
 
                 <!-- Search -->
-                <form action="{{ route('dashboard.history') }}" method="GET" class="flex-1 sm:w-64">
+                <form action="{{ route('services.history') }}" method="GET" class="flex-1 sm:w-64">
                     @if ($perPage != 15)
                         <input type="hidden" name="per_page" value="{{ $perPage }}">
                     @endif
                     <x-input name="search" :value="$search" placeholder="CARI NIK..." icon="lucide:search">
                         @if ($search)
                             <x-slot:append>
-                                <a href="{{ route('dashboard.history', ['per_page' => $perPage]) }}"
+                                <a href="{{ route('services.history', ['per_page' => $perPage]) }}"
                                     class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-300 hover:text-rose-500 transition">
                                     <iconify-icon icon="lucide:x" class="text-lg"></iconify-icon>
                                 </a>

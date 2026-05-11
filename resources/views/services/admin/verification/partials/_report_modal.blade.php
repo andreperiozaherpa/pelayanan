@@ -75,6 +75,18 @@
                 </div>
             </div>
 
+            <!-- Destination Address (Specific for Move) -->
+            <div class="space-y-3" x-show="report.service_type === 'PENGANTAR PINDAH'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" x-cloak>
+                <label
+                    class="flex items-center gap-2 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">
+                    <iconify-icon icon="lucide:map-pin" class="text-primary-acorn"></iconify-icon>
+                    Alamat Tujuan Pindah
+                </label>
+                <textarea x-model="report.destination_address"
+                    class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border border-black/[0.03] dark:border-white/[0.03] rounded-2xl text-[13px] font-medium outline-none focus:ring-4 focus:ring-primary-acorn/10 focus:border-primary-acorn transition-all placeholder-slate-400 dark:placeholder-slate-500 min-h-[80px]"
+                    placeholder="Tuliskan alamat lengkap tujuan pindah..."></textarea>
+            </div>
+
             <!-- Notes -->
             <div class="space-y-3">
                 <label
