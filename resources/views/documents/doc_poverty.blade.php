@@ -177,24 +177,25 @@
             @if ($record)
                 <tr>
                     <th>MASA BERLAKU DATA</th>
-                    <td>: {{ now()->format('d F Y') }} s/d {{ $record->valid_until->format('d F Y') }}</td>
+                    <td>: {{ now()->translatedFormat('d F Y') }} s/d
+                        {{ $record->valid_until->translatedFormat('d F Y') }}</td>
                 </tr>
             @endif
             <tr>
                 <th>TANGGAL VERIFIKASI</th>
-                <td>: {{ now()->format('d F Y') }}</td>
+                <td>: {{ now()->translatedFormat('d F Y') }}</td>
             </tr>
         </table>
     </div>
 
     <div class="footer" style="display: block; text-align: right;">
         <div class="signature" style="display: inline-block; width: 180px;">
-            <p>Mengetahui,</p>
+            <p>Panaragan, {{ now()->translatedFormat('d F Y') }}</p>
             <p>Kepala Desa {{ $citizen->village->name ?? 'Setempat' }}</p>
             <div id="tte-signature-marker" class="box"
                 style="margin: 15px 0; position: relative; display: flex; justify-content: center; align-items: center; border: 1px dashed #e2e8f0; height: 110px; border-radius: 8px; background: #fcfcfc;">
                 <!-- Official TTE QR marker -->
-                <span style="color: transparent; position: relative;">$TTE_1</span>
+                <span style="color: transparent; position: relative;">$TTE_MARKER</span>
             </div>
 
             <script>
@@ -248,7 +249,7 @@
                     }
                 })();
             </script>
-            <p><strong>__________________________</strong></p>
+            <p><strong>{{ $leader->name }}</strong></p>
             <p style="font-size: 8px; color: #718096; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px;">
                 Dokumen ini ditandatangani secara elektronik</p>
         </div>

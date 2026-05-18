@@ -269,8 +269,28 @@
                 </div>
             </div>
 
-            <!-- Error State -->
-            <div x-show="error" x-transition
+
+            <!-- Not Found State with Lapor Datang Option -->
+            <div x-show="error && error.includes('tidak ditemukan')" x-transition
+                class="premium-card p-8 border-amber-100 dark:border-amber-500/20 bg-amber-50/30 dark:bg-amber-500/5 flex flex-col items-center text-center space-y-6">
+                <div class="p-4 bg-amber-100 dark:bg-amber-500/20 text-amber-600 rounded-2xl shadow-inner">
+                    <iconify-icon icon="lucide:user-search" class="text-4xl"></iconify-icon>
+                </div>
+                <div class="max-w-md">
+                    <h3 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight">Warga Belum Terdaftar</h3>
+                    <p class="text-xs text-slate-500 font-medium leading-relaxed mt-2">
+                        NIK <span class="font-black text-amber-600" x-text="nik"></span> tidak ditemukan dalam basis data penduduk saat ini. Jika ini adalah warga baru yang pindah ke wilayah Anda, silakan gunakan fitur Lapor Datang.
+                    </p>
+                </div>
+                <a :href="'{{ route('services.arrival.create') }}?nik=' + nik"
+                    class="bg-amber-500 hover:bg-amber-600 text-white px-10 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-amber-500/20 transition-all hover:-translate-y-0.5 active:scale-95 flex items-center gap-2">
+                    <iconify-icon icon="lucide:user-plus" class="text-lg"></iconify-icon>
+                    <span>Daftarkan Warga Baru (Lapor Datang)</span>
+                </a>
+            </div>
+
+            <!-- Error State (Generic) -->
+            <div x-show="error && !error.includes('tidak ditemukan')" x-transition
                 class="premium-card p-6 bg-rose-50/50 dark:bg-rose-500/10 border-rose-100 dark:border-rose-500/20 flex items-center gap-4">
                 <div class="p-2.5 bg-rose-500 text-white rounded-xl shadow-lg shadow-rose-500/20">
                     <iconify-icon icon="lucide:alert-circle" class="text-xl"></iconify-icon>
@@ -345,8 +365,12 @@
                     report: {
                         service_type: '',
                         notes: '',
-                        destination_address: ''
+                        destination_address: '',
+                        date_of_death: '',
+                        place_of_death: '',
+                        cause_of_death: ''
                     },
+
 
                     init() {
                         // Check if there is a search query in the URL on load
@@ -404,7 +428,7 @@
                         this.reported = false;
 
                         try {
-                            const response = await fetch('{{ route('api.verification.check') }}', {
+                            const response = await fetch('{{ route('services.verification.check') }}', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -447,6 +471,37 @@
                         }
                     },
 
+                    showDocAlert(status) {
+                        let title = 'Dokumen Belum Tersedia';
+                        let text =
+                            'Penduduk ini belum memiliki riwayat pelayanan atau permohonan untuk jenis dokumen ini di sistem kami.';
+                        let icon = 'info';
+
+                        if (status === 'EXPIRED') {
+                            title = 'Dokumen Kadaluarsa';
+                            text =
+                                'Masa berlaku dokumen ini telah habis. Silakan ajukan pembaruan melalui tombol di bawah jika diperlukan.';
+                            icon = 'warning';
+                        } else if (status === 'REJECTED') {
+                            title = 'Permohonan Ditolak';
+                            text =
+                                'Permohonan untuk dokumen ini telah ditolak oleh verifikator. Silakan periksa alasan penolakan pada detail dokumen.';
+                            icon = 'error';
+                        } else if (status === 'PENDING') {
+                            title = 'Sedang Diproses';
+                            text =
+                                'Dokumen ini sedang dalam tahap verifikasi oleh petugas desa. Mohon tunggu hingga proses selesai.';
+                            icon = 'info';
+                        }
+
+                        Swal.fire({
+                            title: title,
+                            text: text,
+                            icon: icon,
+                            confirmButtonText: 'PAHAM'
+                        });
+                    },
+
                     backToHousehold() {
                         if (this.lastHouseholdResult) {
                             window.history.back();
@@ -458,7 +513,7 @@
 
                         this.loading = true;
                         try {
-                            const response = await fetch('{{ route('service.store') }}', {
+                            const response = await fetch('{{ route('services.requests.store') }}', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -478,22 +533,20 @@
                                 this.report = {
                                     service_type: '',
                                     notes: '',
-                                    destination_address: ''
+                                    destination_address: '',
+                                    date_of_death: '',
+                                    place_of_death: '',
+                                    cause_of_death: ''
                                 };
-                                
+
                                 // Refresh data to show PENDING status
                                 await this.verifyNik('NIK', false, false);
-                                
+
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'BERHASIL!',
                                     text: 'Permohonan verifikasi telah dikirim ke desa.',
-                                    confirmButtonText: 'OK',
-                                    customClass: {
-                                        popup: 'rounded-[1.5rem] border-none shadow-2xl',
-                                        confirmButton: 'bg-primary-acorn hover:bg-primary-acorn/90 text-white rounded-xl px-8 py-3 font-bold transition'
-                                    },
-                                    buttonsStyling: false
+                                    confirmButtonText: 'OK'
                                 });
                             } else {
                                 let errorMsg = json.message || 'Terjadi kesalahan sistem.';
@@ -505,12 +558,7 @@
                                     icon: 'error',
                                     title: 'PENGAJUAN GAGAL',
                                     text: errorMsg,
-                                    confirmButtonText: 'Tutup',
-                                    customClass: {
-                                        popup: 'rounded-[1.5rem] border-none shadow-2xl',
-                                        confirmButton: 'bg-rose-500 hover:bg-rose-600 text-white rounded-xl px-8 py-3 font-bold transition'
-                                    },
-                                    buttonsStyling: false
+                                    confirmButtonText: 'Tutup'
                                 });
                             }
                         } catch (e) {
@@ -518,17 +566,13 @@
                                 icon: 'error',
                                 title: 'KONEKSI BERMASALAH',
                                 text: 'Gagal mengirim laporan. Pastikan koneksi internet Anda stabil.',
-                                confirmButtonText: 'Tutup',
-                                customClass: {
-                                    popup: 'rounded-[1.5rem] border-none shadow-2xl',
-                                    confirmButton: 'bg-rose-500 hover:bg-rose-600 text-white rounded-xl px-8 py-3 font-bold transition'
-                                },
-                                buttonsStyling: false
+                                confirmButtonText: 'Tutup'
                             });
                         } finally {
                             this.loading = false;
                         }
                     },
+
 
                     toggleScanner() {
                         this.showScanner = !this.showScanner;

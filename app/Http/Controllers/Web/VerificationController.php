@@ -31,6 +31,8 @@ class VerificationController extends Controller
      */
     public function check(Request $request): JsonResponse
     {
+        Gate::authorize('service.verify');
+
         $request->validate([
             'nik' => 'required|string|size:16',
             'method' => 'required|string|in:NIK,QR',
@@ -44,6 +46,7 @@ class VerificationController extends Controller
             'citizens.povertyRecords' => fn ($q) => $q->latest(),
             'citizens.domicileRecords' => fn ($q) => $q->latest(),
             'citizens.moveRecords' => fn ($q) => $q->latest(),
+            'citizens.arrivalRecords' => fn ($q) => $q->latest(),
         ])->where('no_kk', $input)->first();
 
         if ($household) {
@@ -56,7 +59,7 @@ class VerificationController extends Controller
 
     public function index(): View
     {
-        Gate::authorize('poverty.verify');
+        Gate::authorize('service.verify');
 
         return view('services.admin.verification.index');
     }
@@ -90,6 +93,12 @@ class VerificationController extends Controller
         } elseif ($type === 'move') {
             $citizen->load(['moveRecords' => fn ($q) => $q->latest()]);
             $record = $citizen->moveRecords->first();
+        } elseif ($type === 'death') {
+            $citizen->load(['deathRecords' => fn ($q) => $q->latest()]);
+            $record = $citizen->deathRecords->first();
+        } elseif ($type === 'arrival') {
+            $citizen->load(['arrivalRecords' => fn ($q) => $q->latest()]);
+            $record = $citizen->arrivalRecords->first();
         }
 
         // Generate a validation URL
@@ -257,6 +266,7 @@ class VerificationController extends Controller
             'poverty' => 'kemiskinan',
             'domicile' => 'domisili',
             'move' => 'pindah',
+            'death' => 'kematian',
             default => $type,
         };
 
@@ -301,35 +311,35 @@ class VerificationController extends Controller
                 'reason' => 'Penerbitan Surat Keterangan Miskin (TTE Resmi)',
                 'storage_dir' => 'public/poverty_proofs',
                 'filename' => 'keterangan-kemiskinan',
-                'permission' => 'poverty.print_proof',
+                'permission' => 'service.print_proof',
             ],
             'domicile' => [
                 'view' => 'documents.doc_domicile',
                 'reason' => 'Penerbitan Surat Keterangan Domisili (TTE Resmi)',
                 'storage_dir' => 'public/domicile_proofs',
                 'filename' => 'keterangan-domisili',
-                'permission' => 'poverty.print_proof',
+                'permission' => 'service.print_proof',
             ],
             'move' => [
                 'view' => 'documents.doc_move',
                 'reason' => 'Penerbitan Surat Pengantar Pindah (TTE Resmi)',
                 'storage_dir' => 'public/move_proofs',
                 'filename' => 'pengantar-pindah',
-                'permission' => 'poverty.print_proof',
-            ],
-            'arrival' => [
-                'view' => 'documents.doc_arrival',
-                'reason' => 'Penerbitan Surat Pengantar Datang (TTE Resmi)',
-                'storage_dir' => 'public/arrival_proofs',
-                'filename' => 'pengantar-datang',
-                'permission' => 'poverty.print_proof',
+                'permission' => 'service.print_proof',
             ],
             'death' => [
                 'view' => 'documents.doc_death',
                 'reason' => 'Penerbitan Surat Keterangan Kematian (TTE Resmi)',
                 'storage_dir' => 'public/death_proofs',
                 'filename' => 'keterangan-kematian',
-                'permission' => 'poverty.print_proof',
+                'permission' => 'service.print_proof',
+            ],
+            'arrival' => [
+                'view' => 'documents.doc_arrival',
+                'reason' => 'Penerbitan Surat Pengantar Datang (TTE Resmi)',
+                'storage_dir' => 'public/arrival_proofs',
+                'filename' => 'pengantar-datang',
+                'permission' => 'service.print_proof',
             ],
             default => abort(404, 'Tipe dokumen tidak valid.'),
         };
@@ -353,9 +363,13 @@ class VerificationController extends Controller
                     'domicile_record' => $citizen->domicileRecords->first(),
                     'domicile_status' => $this->getServiceStatus(['domicile_record' => $citizen->domicileRecords->first(), 'is_domicile_expired' => $citizen->domicileRecords->first()?->valid_until ? Carbon::parse($citizen->domicileRecords->first()->valid_until)->isPast() : false], 'domicile'),
                     'move_status' => $this->getServiceStatus(['move_record' => $citizen->moveRecords->first(), 'is_move_expired' => $citizen->moveRecords->first()?->valid_until ? Carbon::parse($citizen->moveRecords->first()->valid_until)->isPast() : false], 'move'),
+                    'death_status' => $this->getServiceStatus(['death_record' => $citizen->deathRecords->first(), 'is_death_expired' => false], 'death'),
+                    'arrival_status' => $this->getServiceStatus(['arrival_record' => $citizen->arrivalRecords->first(), 'is_arrival_expired' => false], 'arrival'),
                     'poverty_rejection_reason' => $this->getRejectionReason($citizen->nik, ServiceType::POVERTY),
                     'domicile_rejection_reason' => $this->getRejectionReason($citizen->nik, ServiceType::DOMICILE),
                     'move_rejection_reason' => $this->getRejectionReason($citizen->nik, ServiceType::MOVE),
+                    'death_rejection_reason' => $this->getRejectionReason($citizen->nik, ServiceType::DEATH),
+                    'arrival_rejection_reason' => $this->getRejectionReason($citizen->nik, ServiceType::ARRIVAL),
                 ]),
             ],
         ]);
@@ -374,6 +388,8 @@ class VerificationController extends Controller
                 'povertyRecords' => fn ($q) => $q->latest(),
                 'domicileRecords' => fn ($q) => $q->latest(),
                 'moveRecords' => fn ($q) => $q->latest(),
+                'deathRecords' => fn ($q) => $q->latest(),
+                'arrivalRecords' => fn ($q) => $q->latest(),
             ])->where('nik', $nik)->first();
 
             if (! $citizen) {
@@ -383,15 +399,19 @@ class VerificationController extends Controller
             $record = $citizen->povertyRecords->first();
             $domicile = $citizen->domicileRecords->first();
             $move = $citizen->moveRecords->first();
+            $death = $citizen->deathRecords->first();
 
             return [
                 'citizen' => $citizen->toArray(),
                 'poverty_record' => $record ? $record->toArray() : null,
                 'domicile_record' => $domicile ? $domicile->toArray() : null,
                 'move_record' => $move ? $move->toArray() : null,
+                'death_record' => $death ? $death->toArray() : null,
+                'arrival_record' => $citizen->arrivalRecords->first() ? $citizen->arrivalRecords->first()->toArray() : null,
                 'is_poverty_expired' => $record ? Carbon::parse($record->valid_until)->isPast() : false,
                 'is_domicile_expired' => $domicile ? Carbon::parse($domicile->valid_until)->isPast() : false,
-                'is_move_expired' => $move ? Carbon::parse($move->valid_until)->isPast() : false,
+                'is_move_expired' => $move && $move->valid_until ? Carbon::parse($move->valid_until)->isPast() : false,
+                'is_death_expired' => false, // Death records do not expire typically
             ];
         });
 
@@ -413,21 +433,31 @@ class VerificationController extends Controller
         $povertyStatus = $this->getServiceStatus($data, 'poverty');
         $domicileStatus = $this->getServiceStatus($data, 'domicile');
         $moveStatus = $this->getServiceStatus($data, 'move');
+        $deathStatus = $this->getServiceStatus($data, 'death');
+        $arrivalStatus = $this->getServiceStatus($data, 'arrival');
 
         $status = [
             'poverty_status' => $povertyStatus,
             'poverty_message' => $this->getServiceStatusMessage($povertyStatus, 'poverty'),
-            'citizen' => $data['citizen'],
-            'poverty_record' => $this->formatRecordDates($data['poverty_record']),
-            'domicile_record' => $this->formatRecordDates($data['domicile_record']),
-            'move_record' => $this->formatRecordDates($data['move_record']),
+            'citizen' => $data['citizen'] ?? null,
+            'poverty_record' => $this->formatRecordDates($data['poverty_record'] ?? null),
+            'domicile_record' => $this->formatRecordDates($data['domicile_record'] ?? null),
+            'move_record' => $this->formatRecordDates($data['move_record'] ?? null),
+            'death_record' => $this->formatRecordDates($data['death_record'] ?? null),
+            'arrival_record' => $this->formatRecordDates($data['arrival_record'] ?? null),
             'domicile_status' => $domicileStatus,
             'domicile_message' => $this->getServiceStatusMessage($domicileStatus, 'domicile'),
             'move_status' => $moveStatus,
             'move_message' => $this->getServiceStatusMessage($moveStatus, 'move'),
+            'death_status' => $deathStatus,
+            'death_message' => $this->getServiceStatusMessage($deathStatus, 'death'),
+            'arrival_status' => $arrivalStatus,
+            'arrival_message' => $this->getServiceStatusMessage($arrivalStatus, 'arrival'),
             'poverty_rejection_reason' => $this->getRejectionReason($nik, ServiceType::POVERTY, $povertyStatus),
             'domicile_rejection_reason' => $this->getRejectionReason($nik, ServiceType::DOMICILE, $domicileStatus),
             'move_rejection_reason' => $this->getRejectionReason($nik, ServiceType::MOVE, $moveStatus),
+            'death_rejection_reason' => $this->getRejectionReason($nik, ServiceType::DEATH, $deathStatus),
+            'arrival_rejection_reason' => $this->getRejectionReason($nik, ServiceType::ARRIVAL, $arrivalStatus),
         ];
 
         if ($user->isPetugasFrontOffice()) {
@@ -476,7 +506,7 @@ class VerificationController extends Controller
             'user_id' => Auth::id(),
             'nik' => $nik,
             'method' => $method,
-            'result' => "SKTM: {$status['poverty_status']} | SKD: {$status['domicile_status']} | PINDAH: ".($status['move_status'] ?? 'N/A'),
+            'result' => "SKTM: {$status['poverty_status']} | SKD: {$status['domicile_status']} | PINDAH: ".($status['move_status'] ?? 'N/A').' | MATI: '.($status['death_status'] ?? 'N/A'),
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
             'timestamp' => now(),

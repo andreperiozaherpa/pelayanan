@@ -23,6 +23,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read int|null $service_requests_count
  * @property-read Collection<int, VerificationLog> $verificationLogs
  * @property-read int|null $verification_logs_count
+ * @property-read Collection<int, ArrivalRecord> $arrivalRecords
+ * @property-read int|null $arrival_records_count
  * @property-read Village $village
  *
  * @method static \Database\Factories\CitizenFactory factory($count = null, $state = [])
@@ -88,6 +90,16 @@ class Citizen extends Model
     public function moveRecords(): HasMany
     {
         return $this->hasMany(MoveRecord::class, 'citizen_nik', 'nik');
+    }
+
+    public function deathRecords(): HasMany
+    {
+        return $this->hasMany(DeathRecord::class, 'citizen_nik', 'nik');
+    }
+
+    public function arrivalRecords(): HasMany
+    {
+        return $this->hasMany(ArrivalRecord::class, 'citizen_nik', 'nik');
     }
 
     public function serviceRequests(): HasMany

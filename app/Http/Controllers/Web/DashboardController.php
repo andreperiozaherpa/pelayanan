@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\DeathRecord;
 use App\Models\DomicileRecord;
 use App\Models\MoveRecord;
 use App\Models\PovertyRecord;
@@ -42,11 +43,13 @@ class DashboardController extends Controller
         // Record distribution
         $activeCount = PovertyRecord::where('status', 'ACTIVE')->count() +
             DomicileRecord::where('status', 'ACTIVE')->count() +
-            MoveRecord::where('status', 'ACTIVE')->count();
+            MoveRecord::where('status', 'ACTIVE')->count() +
+            DeathRecord::where('status', 'ACTIVE')->count();
 
         $expiredCount = PovertyRecord::where('status', 'EXPIRED')->count() +
             DomicileRecord::where('status', 'EXPIRED')->count() +
-            MoveRecord::where('status', 'EXPIRED')->count();
+            MoveRecord::where('status', 'EXPIRED')->count() +
+            DeathRecord::where('status', 'EXPIRED')->count();
 
         $statusDistribution = [
             'active' => $activeCount,

@@ -47,16 +47,17 @@ Route::middleware('auth')->group(function () {
     // Services & Verification (Layanan & Verifikasi)
     Route::prefix('layanan')->name('services.')->group(function () {
         Route::get('/verifikasi', [VerificationController::class, 'index'])->name('verification');
+        Route::post('/verifikasi/check', [VerificationController::class, 'check'])->name('verification.check');
         Route::get('/permohonan', [ServiceController::class, 'index'])->name('requests.index');
+        Route::post('/permohonan/store', [ServiceController::class, 'store'])->name('requests.store');
         Route::post('/permohonan/{serviceRequest}/approve', [ServiceController::class, 'approve'])->name('requests.approve');
         Route::post('/permohonan/{serviceRequest}/reject', [ServiceController::class, 'reject'])->name('requests.reject');
         Route::get('/riwayat', [HistoryController::class, 'index'])->name('history');
+        Route::get('/lapor-datang/buat', [ServiceController::class, 'arrivalCreate'])->name('arrival.create');
+        Route::post('/lapor-datang', [ServiceController::class, 'arrivalStore'])->name('arrival.store');
     });
 
     Route::get('/proof/{nik}/{type}', [VerificationController::class, 'proof'])->where('nik', '[0-9]{16}')->name('verification.proof');
-
-    Route::post('/api/verify-check', [VerificationController::class, 'check'])->name('api.verification.check');
-    Route::post('/api/service-report', [ServiceController::class, 'store'])->name('service.store');
 
     Route::get('/reports/citizens', [ReportController::class, 'exportCitizens'])->name('reports.citizens');
     Route::get('/reports/audit', [ReportController::class, 'exportAuditLogs'])->name('reports.audit');

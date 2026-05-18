@@ -151,7 +151,8 @@
         <p class="doc-number">Nomor: 470 / {{ date('Y') }} / {{ rand(100, 999) }}</p>
 
         <p style="font-size: 13px; margin-bottom: 20px; text-align: justify;">
-            Yang bertanda tangan di bawah ini, Kepala Desa {{ $citizen->village->name ?? '..........................' }}, 
+            Yang bertanda tangan di bawah ini, Kepala Desa
+            {{ $citizen->village->name ?? '..........................' }},
             menerangkan dengan sebenarnya bahwa:
         </p>
 
@@ -178,7 +179,7 @@
             </tr>
             <tr>
                 <th>STATUS VERIFIKASI</th>
-                <td>: 
+                <td>:
                     <span class="status-badge {{ $record && $record->status === 'ACTIVE' ? 'active' : '' }}">
                         {{ $record && $record->status === 'ACTIVE' ? 'TERVERIFIKASI / AKTIF' : 'PENDING / TIDAK AKTIF' }}
                     </span>
@@ -187,8 +188,8 @@
         </table>
 
         <p style="font-size: 13px; text-align: justify; margin-top: 20px;">
-            Bahwa yang bersangkutan benar-benar penduduk yang berdomisili di wilayah Desa 
-            {{ $citizen->village->name ?? '..........................' }}. Demikian surat keterangan ini 
+            Bahwa yang bersangkutan benar-benar penduduk yang berdomisili di wilayah Desa
+            {{ $citizen->village->name ?? '..........................' }}. Demikian surat keterangan ini
             dibuat untuk dipergunakan sebagaimana mestinya.
         </p>
     </div>
@@ -196,9 +197,9 @@
     <div class="footer" style="display: block; text-align: right;">
         <div class="signature" style="display: inline-block; width: 220px; text-align: left;">
             <p>Dikeluarkan di: {{ $citizen->village->name ?? 'Desa' }}</p>
-            <p>Pada Tanggal: {{ now()->format('d F Y') }}</p>
+            <p>Pada Tanggal: {{ now()->translatedFormat('d F Y') }}</p>
             <p style="margin-top: 10px;">Kepala Desa {{ $citizen->village->name ?? 'Setempat' }}</p>
-            
+
             <div id="tte-signature-marker" class="box"
                 style="margin: 15px 0; position: relative; display: flex; justify-content: center; align-items: center; border: 1px dashed #cbd5e0; height: 110px; border-radius: 8px; background: #fafafa;">
                 <!-- Official TTE QR marker for digital signing coordinate detection -->
@@ -211,7 +212,7 @@
                     if (el) {
                         const bodyRect = document.body.getBoundingClientRect();
                         const boxRect = el.getBoundingClientRect();
-                        
+
                         // Scale calculation for A4 (210mm width)
                         const mmPerPx = 210 / document.documentElement.scrollWidth;
 
@@ -242,15 +243,18 @@
             </script>
 
             <p><strong>{{ $leader->name ?? '..........................' }}</strong></p>
-            @if(isset($leader->nip) && $leader->nip)
+            @if (isset($leader->nip) && $leader->nip)
                 <p>NIP. {{ $leader->nip }}</p>
             @endif
-            <p style="font-size: 8px; color: #718096; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2;">
-                Dokumen ini telah ditandatangani secara elektronik menggunakan sertifikat elektronik yang diterbitkan oleh sistem</p>
+            <p
+                style="font-size: 8px; color: #718096; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2;">
+                Dokumen ini telah ditandatangani secara elektronik menggunakan sertifikat elektronik yang diterbitkan
+                oleh sistem</p>
         </div>
     </div>
 
-    <p style="font-size: 9px; color: #a0aec0; margin-top: 60px; text-align: center; border-top: 1px solid #edf2f7; padding-top: 10px;">
+    <p
+        style="font-size: 9px; color: #a0aec0; margin-top: 60px; text-align: center; border-top: 1px solid #edf2f7; padding-top: 10px;">
         Keaslian dokumen ini dapat diverifikasi dengan memindai kode QR yang tertera pada area tanda tangan.<br>
         Sistem Verifikasi Digital - {{ date('Y') }}
     </p>

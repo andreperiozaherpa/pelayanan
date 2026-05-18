@@ -4,10 +4,8 @@
     sidebarOpen: localStorage.getItem('sidebarOpen') === 'false' ? false : true,
     mobileSidebar: false,
     userMenu: false
-}" x-init="
-    $watch('darkMode', val => localStorage.setItem('darkMode', val));
-    $watch('sidebarOpen', val => localStorage.setItem('sidebarOpen', val));
-"
+}" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val));
+$watch('sidebarOpen', val => localStorage.setItem('sidebarOpen', val));"
     :class="{ 'dark': darkMode }">
 
 <head>
@@ -45,19 +43,67 @@
             display: none !important;
         }
 
+        .swal2-popup {
+            border-radius: 2.5rem !important;
+            padding: 2.5rem !important;
+            font-family: var(--font-sans) !important;
+            border: 1px solid rgba(0, 0, 0, 0.05) !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1) !important;
+        }
+
         .dark .swal2-popup {
-            background: #1e293b !important;
+            background: #0f172a !important;
             color: #f1f5f9 !important;
-            border-radius: 1.5rem !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
         }
 
-        .light .swal2-popup {
-            background: #ffffff !important;
-            color: #2c3e50 !important;
-            border-radius: 1.5rem !important;
-            border: 1px solid rgba(0, 0, 0, 0.05) !important;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1) !important;
+        .swal2-title {
+            font-family: var(--font-heading) !important;
+            font-weight: 900 !important;
+            text-transform: uppercase !important;
+            letter-spacing: -0.02em !important;
+            color: inherit !important;
+        }
+
+        .swal2-html-container {
+            font-size: 0.875rem !important;
+            font-weight: 500 !important;
+            line-height: 1.6 !important;
+            color: #64748b !important;
+        }
+
+        .dark .swal2-html-container {
+            color: #94a3b8 !important;
+        }
+
+        .swal2-confirm, .swal2-cancel {
+            border-radius: 1.25rem !important;
+            font-weight: 800 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.1em !important;
+            padding: 1.1rem 2.5rem !important;
+            font-size: 10px !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        .swal2-confirm {
+            background-color: #33ac1b !important;
+            box-shadow: 0 10px 20px -5px rgba(51, 172, 27, 0.3) !important;
+        }
+
+        .swal2-confirm:hover {
+            transform: translateY(-2px) scale(1.02) !important;
+            box-shadow: 0 15px 25px -5px rgba(51, 172, 27, 0.4) !important;
+        }
+
+        .swal2-cancel {
+            background-color: #f1f5f9 !important;
+            color: #64748b !important;
+        }
+
+        .dark .swal2-cancel {
+            background-color: #1e293b !important;
+            color: #94a3b8 !important;
         }
 
         ::-webkit-scrollbar {
@@ -117,8 +163,8 @@
                     timer: 3000,
                     timerProgressBar: true,
                     customClass: {
-                        popup: 'rounded-[1.5rem] border-none shadow-2xl',
-                        confirmButton: 'bg-primary-acorn text-white rounded-xl px-8 py-3 font-bold transition'
+                        popup: 'rounded-[2.5rem] border-none shadow-2xl p-8',
+                        confirmButton: 'bg-primary-acorn text-white rounded-2xl px-10 py-4 font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105'
                     },
                     buttonsStyling: false
                 });

@@ -140,7 +140,7 @@
                                             {{ \Carbon\Carbon::parse($log['timestamp'])->format('H:i') }}
                                         </span>
                                         @if ($log['type'] === 'VERIFICATION' && strlen($log['target']) === 16)
-                                            @can('poverty.print_proof')
+                                            @can('service.print_proof')
                                                 <a href="{{ route('verification.proof', ['nik' => $log['target']]) }}" target="_blank"
                                                     class="p-2 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-xl hover:bg-primary-acorn hover:text-white transition shadow-sm border border-black/[0.03]">
                                                     <iconify-icon icon="lucide:printer" class="text-lg"></iconify-icon>

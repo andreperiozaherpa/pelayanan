@@ -68,7 +68,7 @@
                         <option value="">-- PILIH JENIS PELAYANAN --</option>
                         <option value="KETERANGAN KEMISKINAN">KETERANGAN KEMISKINAN (SKTM)</option>
                         <option value="PENGANTAR PINDAH">PENGANTAR PINDAH (KELUAR WILAYAH)</option>
-                        <option value="LAPOR DATANG">LAPOR DATANG (MASUK WILAYAH)</option>
+
                         <option value="KETERANGAN DOMISILI">KETERANGAN DOMISILI (SKD)</option>
                         <option value="SURAT KEMATIAN">SURAT KEMATIAN (PELAPORAN)</option>
                     </select>
@@ -85,6 +85,31 @@
                 <textarea x-model="report.destination_address"
                     class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border border-black/[0.03] dark:border-white/[0.03] rounded-2xl text-[13px] font-medium outline-none focus:ring-4 focus:ring-primary-acorn/10 focus:border-primary-acorn transition-all placeholder-slate-400 dark:placeholder-slate-500 min-h-[80px]"
                     placeholder="Tuliskan alamat lengkap tujuan pindah..."></textarea>
+            </div>
+
+            <!-- Death Details (Specific for Death) -->
+            <div class="space-y-4" x-show="report.service_type === 'SURAT KEMATIAN'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" x-cloak>
+                <div class="space-y-3">
+                    <label class="flex items-center gap-2 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">
+                        <iconify-icon icon="lucide:calendar-clock" class="text-primary-acorn"></iconify-icon>
+                        Tanggal Kematian
+                    </label>
+                    <input type="date" x-model="report.date_of_death" class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border border-black/[0.03] dark:border-white/[0.03] rounded-2xl text-[13px] font-medium outline-none focus:ring-4 focus:ring-primary-acorn/10 focus:border-primary-acorn transition-all">
+                </div>
+                <div class="space-y-3">
+                    <label class="flex items-center gap-2 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">
+                        <iconify-icon icon="lucide:map-pin" class="text-primary-acorn"></iconify-icon>
+                        Lokasi Kematian
+                    </label>
+                    <input type="text" x-model="report.place_of_death" class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border border-black/[0.03] dark:border-white/[0.03] rounded-2xl text-[13px] font-medium outline-none focus:ring-4 focus:ring-primary-acorn/10 focus:border-primary-acorn transition-all placeholder-slate-400" placeholder="Misal: RSUD Ryacudu, Kotabumi">
+                </div>
+                <div class="space-y-3">
+                    <label class="flex items-center gap-2 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-1">
+                        <iconify-icon icon="lucide:stethoscope" class="text-primary-acorn"></iconify-icon>
+                        Penyebab Kematian
+                    </label>
+                    <input type="text" x-model="report.cause_of_death" class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border border-black/[0.03] dark:border-white/[0.03] rounded-2xl text-[13px] font-medium outline-none focus:ring-4 focus:ring-primary-acorn/10 focus:border-primary-acorn transition-all placeholder-slate-400" placeholder="Misal: Sakit Tua / Kecelakaan">
+                </div>
             </div>
 
             <!-- Notes -->

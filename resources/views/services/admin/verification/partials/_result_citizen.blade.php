@@ -39,8 +39,9 @@
                                             :class="{
                                                 'bg-emerald-500 shadow-emerald-500/20': result
                                                     .poverty_status === 'ACTIVE',
-                                                'bg-rose-500 shadow-rose-500/20': result.poverty_status === 'EXPIRED',
-                                                'bg-rose-500 shadow-rose-500/20': result.poverty_status === 'REJECTED',
+                                                'bg-rose-500 shadow-rose-500/20': result
+                                                    .poverty_status === 'EXPIRED' || result
+                                                    .poverty_status === 'REJECTED',
                                                 'bg-amber-500 shadow-amber-500/20': result
                                                     .poverty_status === 'PENDING',
                                                 'bg-slate-500 shadow-slate-500/20': result
@@ -62,8 +63,9 @@
                                             :class="{
                                                 'bg-emerald-500 shadow-emerald-500/20': result
                                                     .domicile_status === 'ACTIVE',
-                                                'bg-rose-500 shadow-rose-500/20': result.domicile_status === 'EXPIRED',
-                                                'bg-rose-500 shadow-rose-500/20': result.domicile_status === 'REJECTED',
+                                                'bg-rose-500 shadow-rose-500/20': result
+                                                    .domicile_status === 'EXPIRED' || result
+                                                    .domicile_status === 'REJECTED',
                                                 'bg-amber-500 shadow-amber-500/20': result
                                                     .domicile_status === 'PENDING',
                                                 'bg-slate-500 shadow-slate-500/20': result
@@ -84,8 +86,8 @@
                                             :class="{
                                                 'bg-emerald-500 shadow-emerald-500/20': result
                                                     .move_status === 'ACTIVE',
-                                                'bg-rose-500 shadow-rose-500/20': result.move_status === 'EXPIRED',
-                                                'bg-rose-500 shadow-rose-500/20': result.move_status === 'REJECTED',
+                                                'bg-rose-500 shadow-rose-500/20': result.move_status === 'EXPIRED' ||
+                                                    result.move_status === 'REJECTED',
                                                 'bg-amber-500 shadow-amber-500/20': result
                                                     .move_status === 'PENDING',
                                                 'bg-slate-500 shadow-slate-500/20': result
@@ -100,6 +102,28 @@
                                                 x-text="'PINDAH: ' + result.move_status.replace('_', ' ')"></span>
                                         </div>
                                     </template>
+                                    <!-- DEATH Badge -->
+                                    <template x-if="result?.death_status">
+                                        <div x-cloak
+                                            :class="{
+                                                'bg-emerald-500 shadow-emerald-500/20': result
+                                                    .death_status === 'ACTIVE',
+                                                'bg-rose-500 shadow-rose-500/20': result.death_status === 'REJECTED',
+                                                'bg-amber-500 shadow-amber-500/20': result
+                                                    .death_status === 'PENDING',
+                                                'bg-slate-500 shadow-slate-500/20': result
+                                                    .death_status === 'UNREGISTERED'
+                                            }"
+                                            class="px-4 py-1.5 rounded-xl text-[8px] font-black text-white shadow-lg tracking-widest uppercase shrink-0 flex items-center gap-2">
+                                            <iconify-icon
+                                                :icon="result.death_status === 'ACTIVE' ? 'lucide:heart-off' : (result
+                                                    .death_status === 'PENDING' ? 'lucide:hourglass' :
+                                                    'lucide:alert-circle')"></iconify-icon>
+                                            <span class="font-black"
+                                                x-text="'KEMATIAN: ' + result.death_status.replace('_', ' ')"></span>
+                                        </div>
+                                    </template>
+
                                 </div>
 
                                 <div class="space-y-1">
@@ -145,6 +169,12 @@
                                     Kepindahan</p>
                                 <p class="text-sm font-black text-slate-700 dark:text-white uppercase leading-relaxed"
                                     x-text="result?.move_message"></p>
+                            </div>
+                            <div x-show="result?.death_message">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Status
+                                    Kematian</p>
+                                <p class="text-sm font-black text-slate-700 dark:text-white uppercase leading-relaxed"
+                                    x-text="result?.death_message"></p>
                             </div>
                             <div x-show="result?.move_record">
                                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Masa
@@ -201,8 +231,8 @@
 
                             <template x-if="result?.poverty_status === 'EXPIRED'">
                                 <div class="flex flex-col gap-4">
-                                    <div
-                                        class="flex items-center gap-4 p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/30 opacity-80">
+                                    <div @click="showDocAlert('EXPIRED')"
+                                        class="flex items-center gap-4 p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/30 opacity-80 cursor-pointer hover:bg-rose-100/50 transition-all">
                                         <div
                                             class="h-10 w-10 rounded-xl bg-rose-100 dark:bg-rose-800/50 text-rose-500 flex items-center justify-center text-xl shrink-0">
                                             <iconify-icon icon="lucide:file-warning"></iconify-icon>
@@ -225,8 +255,8 @@
                             </template>
 
                             <template x-if="result?.poverty_status === 'REJECTED'">
-                                <div
-                                    class="flex flex-col gap-4 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/30 shadow-sm shadow-rose-500/5">
+                                <div @click="showDocAlert('REJECTED')"
+                                    class="flex flex-col gap-4 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/30 shadow-sm shadow-rose-500/5 cursor-pointer hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-all">
                                     <div class="flex items-center gap-4">
                                         <div
                                             class="h-10 w-10 rounded-xl bg-rose-100 dark:bg-rose-500/20 text-rose-600 flex items-center justify-center text-xl shrink-0">
@@ -252,8 +282,8 @@
                             </template>
 
                             <template x-if="result?.poverty_status === 'PENDING'">
-                                <div
-                                    class="flex items-center gap-4 p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30 opacity-80">
+                                <div @click="showDocAlert('PENDING')"
+                                    class="flex items-center gap-4 p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30 opacity-80 cursor-pointer hover:bg-amber-100/50 transition-all">
                                     <div
                                         class="h-10 w-10 rounded-xl bg-amber-100 dark:bg-amber-800/50 text-amber-500 flex items-center justify-center text-xl shrink-0">
                                         <iconify-icon icon="lucide:hourglass"></iconify-icon>
@@ -269,8 +299,8 @@
                             </template>
 
                             <template x-if="result?.poverty_status === 'UNREGISTERED'">
-                                <div
-                                    class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/20 border border-black/[0.03] dark:border-white/[0.03] opacity-60 grayscale">
+                                <div @click="showDocAlert('UNREGISTERED')"
+                                    class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/20 border border-black/[0.03] dark:border-white/[0.03] opacity-60 grayscale cursor-pointer hover:grayscale-0 hover:opacity-100 hover:bg-white dark:hover:bg-slate-800 transition-all">
                                     <div
                                         class="h-10 w-10 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-400 flex items-center justify-center text-xl shrink-0">
                                         <iconify-icon icon="lucide:file-x-2"></iconify-icon>
@@ -284,7 +314,6 @@
                                     </div>
                                 </div>
                             </template>
-
 
                             <!-- Domicile Record Status Flow -->
                             <template x-if="result?.domicile_status === 'ACTIVE'">
@@ -307,8 +336,8 @@
                             </template>
 
                             <template x-if="result?.domicile_status === 'PENDING'">
-                                <div
-                                    class="flex items-center gap-4 p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30">
+                                <div @click="showDocAlert('PENDING')"
+                                    class="flex items-center gap-4 p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30 cursor-pointer hover:bg-amber-100/50 transition-all">
                                     <div
                                         class="h-10 w-10 rounded-xl bg-amber-100 dark:bg-amber-800/50 text-amber-500 flex items-center justify-center text-xl shrink-0">
                                         <iconify-icon icon="lucide:hourglass"></iconify-icon>
@@ -324,8 +353,8 @@
                             </template>
 
                             <template x-if="result?.domicile_status === 'EXPIRED'">
-                                <div
-                                    class="flex items-center gap-4 p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/30">
+                                <div @click="showDocAlert('EXPIRED')"
+                                    class="flex items-center gap-4 p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/30 cursor-pointer hover:bg-rose-100/50 transition-all">
                                     <div
                                         class="h-10 w-10 rounded-xl bg-rose-100 dark:bg-rose-800/50 text-rose-500 flex items-center justify-center text-xl shrink-0">
                                         <iconify-icon icon="lucide:file-warning"></iconify-icon>
@@ -339,9 +368,10 @@
                                     </div>
                                 </div>
                             </template>
+
                             <template x-if="result?.domicile_status === 'REJECTED'">
-                                <div
-                                    class="flex flex-col gap-4 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/30 shadow-sm shadow-rose-500/5">
+                                <div @click="showDocAlert('REJECTED')"
+                                    class="flex flex-col gap-4 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/30 shadow-sm shadow-rose-500/5 cursor-pointer hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-all">
                                     <div class="flex items-center gap-4">
                                         <div
                                             class="h-10 w-10 rounded-xl bg-rose-100 dark:bg-rose-500/20 text-rose-600 flex items-center justify-center text-xl shrink-0">
@@ -366,10 +396,9 @@
                                 </div>
                             </template>
 
-
                             <template x-if="result?.domicile_status === 'UNREGISTERED'">
-                                <div
-                                    class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/20 border border-black/[0.03] dark:border-white/[0.03] opacity-60 grayscale">
+                                <div @click="showDocAlert('UNREGISTERED')"
+                                    class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/20 border border-black/[0.03] dark:border-white/[0.03] opacity-60 grayscale cursor-pointer hover:grayscale-0 hover:opacity-100 hover:bg-white dark:hover:bg-slate-800 transition-all">
                                     <div
                                         class="h-10 w-10 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-400 flex items-center justify-center text-xl shrink-0">
                                         <iconify-icon icon="lucide:file-x-2"></iconify-icon>
@@ -405,8 +434,8 @@
                             </template>
 
                             <template x-if="result?.move_status === 'PENDING'">
-                                <div
-                                    class="flex items-center gap-4 p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30">
+                                <div @click="showDocAlert('PENDING')"
+                                    class="flex items-center gap-4 p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30 cursor-pointer hover:bg-amber-100/50 transition-all">
                                     <div
                                         class="h-10 w-10 rounded-xl bg-amber-100 dark:bg-amber-800/50 text-amber-500 flex items-center justify-center text-xl shrink-0">
                                         <iconify-icon icon="lucide:hourglass"></iconify-icon>
@@ -422,8 +451,8 @@
                             </template>
 
                             <template x-if="result?.move_status === 'EXPIRED'">
-                                <div
-                                    class="flex items-center gap-4 p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/30">
+                                <div @click="showDocAlert('EXPIRED')"
+                                    class="flex items-center gap-4 p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/30 cursor-pointer hover:bg-rose-100/50 transition-all">
                                     <div
                                         class="h-10 w-10 rounded-xl bg-rose-100 dark:bg-rose-800/50 text-rose-500 flex items-center justify-center text-xl shrink-0">
                                         <iconify-icon icon="lucide:file-warning"></iconify-icon>
@@ -439,8 +468,8 @@
                             </template>
 
                             <template x-if="result?.move_status === 'REJECTED'">
-                                <div
-                                    class="flex flex-col gap-4 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/30 shadow-sm shadow-rose-500/5">
+                                <div @click="showDocAlert('REJECTED')"
+                                    class="flex flex-col gap-4 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/30 shadow-sm shadow-rose-500/5 cursor-pointer hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-all">
                                     <div class="flex items-center gap-4">
                                         <div
                                             class="h-10 w-10 rounded-xl bg-rose-100 dark:bg-rose-500/20 text-rose-600 flex items-center justify-center text-xl shrink-0">
@@ -466,8 +495,8 @@
                             </template>
 
                             <template x-if="result?.move_status === 'UNREGISTERED'">
-                                <div
-                                    class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/20 border border-black/[0.03] dark:border-white/[0.03] opacity-60 grayscale">
+                                <div @click="showDocAlert('UNREGISTERED')"
+                                    class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/20 border border-black/[0.03] dark:border-white/[0.03] opacity-60 grayscale cursor-pointer hover:grayscale-0 hover:opacity-100 hover:bg-white dark:hover:bg-slate-800 transition-all">
                                     <div
                                         class="h-10 w-10 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-400 flex items-center justify-center text-xl shrink-0">
                                         <iconify-icon icon="lucide:file-x-2"></iconify-icon>
@@ -482,41 +511,88 @@
                                 </div>
                             </template>
 
-                            <!-- Arrival -->
-                            <a :href="'/proof/' + nik + '/arrival'" target="_blank"
-                                class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-black/[0.03] hover:border-primary-acorn/30 hover:bg-white dark:hover:bg-slate-800 transition-all group opacity-60 grayscale hover:grayscale-0 hover:opacity-100 shadow-sm">
-                                <div
-                                    class="h-10 w-10 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
-                                    <iconify-icon icon="lucide:user-plus"></iconify-icon>
-                                </div>
-                                <div class="min-w-0">
-                                    <p
-                                        class="text-[10px] font-black text-slate-800 dark:text-white uppercase truncate">
-                                        Lapor Datang</p>
-                                    <p class="text-[9px] text-slate-400 font-medium uppercase truncate">Penduduk Baru
-                                    </p>
-                                </div>
-                                <iconify-icon icon="lucide:chevron-right"
-                                    class="ml-auto text-slate-300"></iconify-icon>
-                            </a>
 
-                            <!-- Death -->
-                            <a :href="'/proof/' + nik + '/death'" target="_blank"
-                                class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-black/[0.03] hover:border-primary-acorn/30 hover:bg-white dark:hover:bg-slate-800 transition-all group opacity-60 grayscale hover:grayscale-0 hover:opacity-100 shadow-sm">
-                                <div
-                                    class="h-10 w-10 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-600 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
-                                    <iconify-icon icon="lucide:heart-off"></iconify-icon>
+
+                            <!-- Death Record Status Flow -->
+                            <template x-if="result?.death_status === 'ACTIVE'">
+                                <a :href="'/proof/' + nik + '/death'" target="_blank"
+                                    class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-black/[0.03] hover:border-primary-acorn/30 hover:bg-white dark:hover:bg-slate-800 transition-all group shadow-sm">
+                                    <div
+                                        class="h-10 w-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
+                                        <iconify-icon icon="lucide:shield-check"></iconify-icon>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p
+                                            class="text-[10px] font-black text-slate-800 dark:text-white uppercase truncate">
+                                            Bukti Surat Keterangan Kematian</p>
+                                        <p class="text-[9px] text-emerald-500 font-bold uppercase truncate">
+                                            Terverifikasi Aktif</p>
+                                    </div>
+                                    <iconify-icon icon="lucide:chevron-right"
+                                        class="ml-auto text-slate-300 group-hover:text-primary-acorn transition-colors"></iconify-icon>
+                                </a>
+                            </template>
+
+                            <template x-if="result?.death_status === 'PENDING'">
+                                <div @click="showDocAlert('PENDING')"
+                                    class="flex items-center gap-4 p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30 cursor-pointer hover:bg-amber-100/50 transition-all">
+                                    <div
+                                        class="h-10 w-10 rounded-xl bg-amber-100 dark:bg-amber-800/50 text-amber-500 flex items-center justify-center text-xl shrink-0">
+                                        <iconify-icon icon="lucide:hourglass"></iconify-icon>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p
+                                            class="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase truncate">
+                                            Bukti Surat Keterangan Kematian</p>
+                                        <p class="text-[9px] text-amber-500 font-bold uppercase truncate">
+                                            Menunggu Verifikasi</p>
+                                    </div>
                                 </div>
-                                <div class="min-w-0">
-                                    <p
-                                        class="text-[10px] font-black text-slate-800 dark:text-white uppercase truncate">
-                                        Surat Kematian</p>
-                                    <p class="text-[9px] text-slate-400 font-medium uppercase truncate">Pelaporan Warga
-                                    </p>
+                            </template>
+
+                            <template x-if="result?.death_status === 'REJECTED'">
+                                <div @click="showDocAlert('REJECTED')"
+                                    class="flex flex-col gap-4 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/30 shadow-sm shadow-rose-500/5 cursor-pointer hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-all">
+                                    <div class="flex items-center gap-4">
+                                        <div
+                                            class="h-10 w-10 rounded-xl bg-rose-100 dark:bg-rose-500/20 text-rose-600 flex items-center justify-center text-xl shrink-0">
+                                            <iconify-icon icon="lucide:file-x"></iconify-icon>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <p
+                                                class="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase truncate">
+                                                Bukti Surat Keterangan Kematian</p>
+                                            <p class="text-[9px] text-rose-600 font-bold uppercase truncate">
+                                                Verifikasi Ditolak</p>
+                                        </div>
+                                    </div>
+                                    <div x-show="result?.death_rejection_reason"
+                                        class="mt-2 p-3 rounded-xl bg-white/50 dark:bg-rose-900/40 border border-rose-100 dark:border-rose-800/50">
+                                        <p
+                                            class="text-[10px] font-black text-rose-800 dark:text-rose-300 uppercase tracking-widest mb-1">
+                                            Alasan Penolakan:</p>
+                                        <p class="text-[11px] text-rose-700 dark:text-rose-400 font-medium italic leading-relaxed"
+                                            x-text="result.death_rejection_reason"></p>
+                                    </div>
                                 </div>
-                                <iconify-icon icon="lucide:chevron-right"
-                                    class="ml-auto text-slate-300"></iconify-icon>
-                            </a>
+                            </template>
+
+                            <template x-if="result?.death_status === 'UNREGISTERED'">
+                                <div @click="showDocAlert('UNREGISTERED')"
+                                    class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/20 border border-black/[0.03] dark:border-white/[0.03] opacity-60 grayscale cursor-pointer hover:grayscale-0 hover:opacity-100 hover:bg-white dark:hover:bg-slate-800 transition-all">
+                                    <div
+                                        class="h-10 w-10 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-400 flex items-center justify-center text-xl shrink-0">
+                                        <iconify-icon icon="lucide:file-x-2"></iconify-icon>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p
+                                            class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase truncate">
+                                            Surat Kematian</p>
+                                        <p class="text-[9px] text-slate-400 font-medium uppercase truncate">
+                                            Belum Ada Pelaporan</p>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -526,7 +602,7 @@
 
         <!-- Actions Bar (Report Service) -->
         <div class="flex flex-wrap justify-center gap-4"
-            x-show="((result?.poverty_status && result.poverty_status !== 'CITIZEN_NOT_FOUND') || (result?.domicile_status && result.domicile_status !== 'CITIZEN_NOT_FOUND')) && !reported">
+            x-show="((result?.poverty_status && result.poverty_status !== 'CITIZEN_NOT_FOUND') || (result?.domicile_status && result.domicile_status !== 'CITIZEN_NOT_FOUND')) && !reported && result?.death_status !== 'ACTIVE'">
             @can('service.report')
                 <button @click="showReportModal = true"
                     class="bg-slate-900 hover:bg-slate-800 text-white px-10 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl transition-all hover:-translate-y-1 active:scale-95 flex items-center gap-3">

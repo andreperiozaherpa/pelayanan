@@ -12,8 +12,8 @@ class RBACSeeder extends Seeder
     {
         // Define Permissions
         $permissions = [
-            ['name' => 'Verify Poverty Status', 'slug' => 'poverty.verify'],
-            ['name' => 'Print Verification Proof', 'slug' => 'poverty.print_proof'],
+            ['name' => 'Verify Service Status', 'slug' => 'service.verify'],
+            ['name' => 'Print Verification Proof', 'slug' => 'service.print_proof'],
             ['name' => 'Report Service Given', 'slug' => 'service.report'],
             ['name' => 'Management Citizens', 'slug' => 'citizens.manage'],
             ['name' => 'View Audit Logs', 'slug' => 'audit.view'],
@@ -31,9 +31,9 @@ class RBACSeeder extends Seeder
 
         // Define Roles & Assign Permissions
         $roles = [
-            'SuperAdmin' => ['poverty.verify', 'poverty.print_proof', 'service.report', 'citizens.manage', 'audit.view', 'system.manage', 'users.manage', 'roles.manage', 'villages.manage', 'districts.manage', 'reports.export'],
-            'OperatorDesa' => ['poverty.verify'],
-            'PetugasFrontOffice' => ['poverty.verify', 'poverty.print_proof', 'service.report'],
+            'SuperAdmin' => ['service.verify', 'service.print_proof', 'service.report', 'citizens.manage', 'audit.view', 'system.manage', 'users.manage', 'roles.manage', 'villages.manage', 'districts.manage', 'reports.export'],
+            'OperatorDesa' => ['service.verify'],
+            'PetugasFrontOffice' => ['service.verify', 'service.print_proof', 'service.report'],
             'Auditor' => ['audit.view', 'reports.export'],
         ];
 

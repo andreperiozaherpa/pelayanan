@@ -32,9 +32,11 @@
                 <div
                     class="premium-card px-6 py-4 flex items-center gap-5 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl border-rose-500/10">
                     <div class="text-right">
-                        <p class="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Total Antrean</p>
+                        <p class="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">
+                            {{ $tab === 'pending' ? 'Total Antrean' : 'Total Kedatangan' }}
+                        </p>
                         <p class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tight">
-                            {{ $requests->total() }} Permohonan</p>
+                            {{ $tab === 'pending' ? $pendingCount : $arrivalsCount }} Data</p>
                     </div>
                     <div
                         class="w-12 h-12 rounded-2xl bg-primary-acorn/10 text-primary-acorn flex items-center justify-center border border-primary-acorn/10 shadow-inner">
@@ -44,156 +46,272 @@
             </div>
         </div>
 
-        <!-- Requests Table -->
+        <!-- Tab Switcher -->
+        <div
+            class="flex items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/50 rounded-2xl w-fit border border-black/[0.03] dark:border-white/[0.03]">
+            <a href="{{ route('services.requests.index', ['tab' => 'pending']) }}"
+                class="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 {{ $tab === 'pending' ? 'bg-white dark:bg-slate-700 text-primary-acorn shadow-sm border border-black/[0.03]' : 'text-slate-400 hover:text-slate-600' }}">
+                <span>Antrean Verifikasi</span>
+                @if ($pendingCount > 0)
+                    <span
+                        class="px-1.5 py-0.5 rounded-md bg-rose-500 text-white text-[8px] leading-none">{{ $pendingCount }}</span>
+                @endif
+            </a>
+            <a href="{{ route('services.requests.index', ['tab' => 'arrivals']) }}"
+                class="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 {{ $tab === 'arrivals' ? 'bg-white dark:bg-slate-700 text-primary-acorn shadow-sm border border-black/[0.03]' : 'text-slate-400 hover:text-slate-600' }}">
+                <span>Data Kedatangan Warga</span>
+                @if ($arrivalsCount > 0)
+                    <span
+                        class="px-1.5 py-0.5 rounded-md bg-emerald-500 text-white text-[8px] leading-none">{{ $arrivalsCount }}</span>
+                @endif
+            </a>
+        </div>
+
         <div class="premium-card overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr
-                            class="bg-slate-50/50 dark:bg-slate-900/50 border-b border-black/[0.03] dark:border-white/[0.03]">
-                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Warga /
-                                Pemohon</th>
-                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Jenis
-                                Layanan</th>
-                            @if (Auth::user()->isSuperAdmin())
-                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Desa
-                                </th>
-                            @endif
-                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Catatan FO
-                            </th>
-                            <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Waktu /
-                                Urgensi</th>
-                            <th
-                                class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
-                                Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-black/[0.03] dark:divide-white/[0.03]">
-                        @forelse($requests as $req)
-                            @php
-                                $isToday = $req->created_at->isToday();
-                                $hoursDiff = $req->created_at->diffInHours(now());
-                                $isOverdue = !$isToday;
-                                $isUrgent = $isToday && $hoursDiff >= 2;
-                            @endphp
+            @if ($tab === 'pending')
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
                             <tr
-                                class="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-all group {{ $isOverdue ? 'bg-rose-50/30 dark:bg-rose-950/10' : '' }}">
-                                <td class="px-8 py-6">
-                                    <div class="flex items-center gap-4">
-                                        <div
-                                            class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:scale-110 transition-transform">
-                                            <iconify-icon icon="lucide:user" class="text-lg"></iconify-icon>
-                                        </div>
-                                        <div>
-                                            <p
-                                                class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tight">
-                                                {{ $req->citizen->nama_lengkap }}</p>
-                                            <p class="text-[10px] font-bold text-slate-400 tracking-wider mt-1">
-                                                {{ $req->citizen_nik }}</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-8 py-6">
-                                    <span
-                                        class="px-3 py-1 bg-primary-acorn/10 text-primary-acorn text-[9px] font-black uppercase tracking-wider rounded-lg border border-primary-acorn/10">
-                                        {{ $req->service_type }}
-                                    </span>
-                                </td>
+                                class="bg-slate-50/50 dark:bg-slate-900/50 border-b border-black/[0.03] dark:border-white/[0.03]">
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Warga
+                                    /
+                                    Pemohon</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Jenis
+                                    Layanan</th>
                                 @if (Auth::user()->isSuperAdmin())
+                                    <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                        Desa
+                                    </th>
+                                @endif
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    Catatan FO
+                                </th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Waktu
+                                    /
+                                    Urgensi</th>
+                                <th
+                                    class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
+                                    Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-black/[0.03] dark:divide-white/[0.03]">
+                            @forelse($requests as $req)
+                                @php
+                                    $isToday = $req->created_at->isToday();
+                                    $hoursDiff = $req->created_at->diffInHours(now());
+                                    $isOverdue = !$isToday;
+                                    $isUrgent = $isToday && $hoursDiff >= 2;
+                                @endphp
+                                <tr
+                                    class="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-all group {{ $isOverdue ? 'bg-rose-50/30 dark:bg-rose-950/10' : '' }}">
                                     <td class="px-8 py-6">
-                                        <p
-                                            class="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider">
-                                            {{ $req->citizen->village->name ?? '-' }}
+                                        <div class="flex items-center gap-4">
+                                            <div
+                                                class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:scale-110 transition-transform">
+                                                <iconify-icon icon="lucide:user" class="text-lg"></iconify-icon>
+                                            </div>
+                                            <div>
+                                                <p
+                                                    class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tight">
+                                                    {{ $req->citizen->nama_lengkap }}</p>
+                                                <p class="text-[10px] font-bold text-slate-400 tracking-wider mt-1">
+                                                    {{ $req->citizen_nik }}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <span
+                                            class="px-3 py-1 bg-primary-acorn/10 text-primary-acorn text-[9px] font-black uppercase tracking-wider rounded-lg border border-primary-acorn/10">
+                                            {{ $req->service_type }}
+                                        </span>
+                                    </td>
+                                    @if (Auth::user()->isSuperAdmin())
+                                        <td class="px-8 py-6">
+                                            <p
+                                                class="text-[10px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                                                {{ $req->citizen->village->name ?? '-' }}
+                                            </p>
+                                        </td>
+                                    @endif
+                                    <td class="px-8 py-6">
+                                        <p class="text-[11px] text-slate-500 font-medium italic">
+                                            "{{ $req->notes ?? '-' }}"
                                         </p>
                                     </td>
-                                @endif
-                                <td class="px-8 py-6">
-                                    <p class="text-[11px] text-slate-500 font-medium italic">
-                                        "{{ $req->notes ?? '-' }}"
-                                    </p>
-                                </td>
-                                <td class="px-8 py-6">
-                                    <div class="flex flex-col">
-                                        <p class="text-[10px] font-bold text-slate-400 uppercase tabular-nums">
-                                            {{ $req->created_at->translatedFormat('d M Y') }}
-                                        </p>
-                                        <div class="flex items-center gap-2 mt-1">
-                                            <p class="text-[9px] text-slate-400 opacity-50 uppercase">
-                                                {{ $req->created_at->format('H:i') }}</p>
+                                    <td class="px-8 py-6">
+                                        <div class="flex flex-col">
+                                            <p class="text-[10px] font-bold text-slate-400 uppercase tabular-nums">
+                                                {{ $req->created_at->translatedFormat('d M Y') }}
+                                            </p>
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <p class="text-[9px] text-slate-400 opacity-50 uppercase">
+                                                    {{ $req->created_at->format('H:i') }}</p>
 
-                                            @if ($isOverdue)
-                                                <span
-                                                    class="flex items-center gap-1 px-1.5 py-0.5 bg-rose-600 text-white text-[7px] font-black uppercase tracking-widest rounded shadow-sm animate-pulse">
-                                                    <iconify-icon icon="lucide:alert-triangle"
-                                                        class="text-[8px]"></iconify-icon>
-                                                    Sangat Terlambat
-                                                </span>
-                                            @elseif($isUrgent)
-                                                <span
-                                                    class="flex items-center gap-1 px-1.5 py-0.5 bg-amber-500/20 text-amber-600 text-[7px] font-black uppercase tracking-widest rounded border border-amber-500/20">
-                                                    <iconify-icon icon="lucide:clock-3" class="text-[8px]"></iconify-icon>
-                                                    Butuh Segera
-                                                </span>
+                                                @if ($isOverdue)
+                                                    <span
+                                                        class="flex items-center gap-1 px-1.5 py-0.5 bg-rose-600 text-white text-[7px] font-black uppercase tracking-widest rounded shadow-sm animate-pulse">
+                                                        <iconify-icon icon="lucide:alert-triangle"
+                                                            class="text-[8px]"></iconify-icon>
+                                                        Sangat Terlambat
+                                                    </span>
+                                                @elseif($isUrgent)
+                                                    <span
+                                                        class="flex items-center gap-1 px-1.5 py-0.5 bg-amber-500/20 text-amber-600 text-[7px] font-black uppercase tracking-widest rounded border border-amber-500/20">
+                                                        <iconify-icon icon="lucide:clock-3"
+                                                            class="text-[8px]"></iconify-icon>
+                                                        Butuh Segera
+                                                    </span>
+                                                @else
+                                                    <span
+                                                        class="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-500/10 text-emerald-500 text-[7px] font-black uppercase tracking-widest rounded border border-emerald-500/10">
+                                                        Baru
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <p
+                                                class="text-[8px] font-black {{ $isOverdue ? 'text-rose-500' : ($isUrgent ? 'text-amber-500' : 'text-slate-400') }} uppercase tracking-tighter mt-1 opacity-70">
+                                                @if ($isOverdue)
+                                                    Sudah Melewati {{ $req->created_at->diffInDays(now()) }} Hari
+                                                @else
+                                                    Menunggu {{ $hoursDiff }} Jam
+                                                @endif
+                                            </p>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6 text-right">
+                                        <div class="flex items-center justify-end gap-3">
+                                            @if (!Auth::user()->isSuperAdmin())
+                                                <button
+                                                    @click.stop="openApproveModal({{ $req->id }}, {{ json_encode($req->citizen->nama_lengkap) }}, '{{ $req->service_type->name }}', {{ json_encode($req->notes) }})"
+                                                    class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md hover:shadow-emerald-500/20 hover:-translate-y-0.5 transition-all active:scale-95 inline-flex items-center gap-2">
+                                                    Setujui
+                                                    <iconify-icon icon="lucide:check-circle"
+                                                        class="text-base"></iconify-icon>
+                                                </button>
+                                                <button
+                                                    @click.stop="openRejectModal({{ $req->id }}, {{ json_encode($req->citizen->nama_lengkap) }})"
+                                                    class="p-2.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-all">
+                                                    <iconify-icon icon="lucide:x-circle" class="text-xl"></iconify-icon>
+                                                </button>
                                             @else
                                                 <span
-                                                    class="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-500/10 text-emerald-500 text-[7px] font-black uppercase tracking-widest rounded border border-emerald-500/10">
-                                                    Baru
-                                                </span>
+                                                    class="text-[9px] font-bold text-slate-400 uppercase italic tracking-widest opacity-50">Hanya
+                                                    Pemantauan</span>
                                             @endif
                                         </div>
-                                        <p
-                                            class="text-[8px] font-black {{ $isOverdue ? 'text-rose-500' : ($isUrgent ? 'text-amber-500' : 'text-slate-400') }} uppercase tracking-tighter mt-1 opacity-70">
-                                            @if ($isOverdue)
-                                                Sudah Melewati {{ $req->created_at->diffInDays(now()) }} Hari
-                                            @else
-                                                Menunggu {{ $hoursDiff }} Jam
-                                            @endif
-                                        </p>
-                                    </div>
-                                </td>
-                                <td class="px-8 py-6 text-right">
-                                    <div class="flex items-center justify-end gap-3">
-                                        @if (!Auth::user()->isSuperAdmin())
-                                            <button
-                                                @click.stop="openApproveModal({{ $req->id }}, {{ json_encode($req->citizen->nama_lengkap) }}, '{{ $req->service_type->name }}', {{ json_encode($req->notes) }})"
-                                                class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md hover:shadow-emerald-500/20 hover:-translate-y-0.5 transition-all active:scale-95 inline-flex items-center gap-2">
-                                                Setujui
-                                                <iconify-icon icon="lucide:check-circle" class="text-base"></iconify-icon>
-                                            </button>
-                                            <button
-                                                @click.stop="openRejectModal({{ $req->id }}, {{ json_encode($req->citizen->nama_lengkap) }})"
-                                                class="p-2.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-all">
-                                                <iconify-icon icon="lucide:x-circle" class="text-xl"></iconify-icon>
-                                            </button>
-                                        @else
-                                            <span
-                                                class="text-[9px] font-bold text-slate-400 uppercase italic tracking-widest opacity-50">Hanya
-                                                Pemantauan</span>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="{{ Auth::user()->isSuperAdmin() ? 6 : 5 }}" class="px-8 py-20 text-center">
-                                    <div class="flex flex-col items-center justify-center opacity-40">
-                                        <iconify-icon icon="lucide:inbox"
-                                            class="text-5xl text-slate-300 mb-4"></iconify-icon>
-                                        <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Tidak ada
-                                            antrean permohonan saat ini</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            @if ($requests->hasPages())
-                <div
-                    class="px-8 py-6 bg-slate-50/50 dark:bg-slate-900/50 border-t border-black/[0.03] dark:border-white/[0.03]">
-                    {{ $requests->links() }}
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="{{ Auth::user()->isSuperAdmin() ? 6 : 5 }}"
+                                        class="px-8 py-20 text-center">
+                                        <div class="flex flex-col items-center justify-center opacity-40">
+                                            <iconify-icon icon="lucide:inbox"
+                                                class="text-5xl text-slate-300 mb-4"></iconify-icon>
+                                            <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">Tidak
+                                                ada
+                                                antrean permohonan saat ini</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
+
+                @if ($requests->hasPages())
+                    <div
+                        class="px-8 py-6 bg-slate-50/50 dark:bg-slate-900/50 border-t border-black/[0.03] dark:border-white/[0.03]">
+                        {{ $requests->links() }}
+                    </div>
+                @endif
+            @else
+                <!-- Arrivals Tab Content -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr
+                                class="bg-slate-50/50 dark:bg-slate-900/50 border-b border-black/[0.03] dark:border-white/[0.03]">
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Warga
+                                    Datang</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Alamat
+                                    Asal</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tgl
+                                    Datang</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    Dicatat Oleh</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    Catatan</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-black/[0.03] dark:divide-white/[0.03]">
+                            @forelse($arrivals as $arrival)
+                                <tr class="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-all group">
+                                    <td class="px-8 py-6">
+                                        <div class="flex items-center gap-4">
+                                            <div
+                                                class="w-10 h-10 rounded-xl bg-primary-acorn/10 text-primary-acorn flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                <iconify-icon icon="lucide:user-plus" class="text-lg"></iconify-icon>
+                                            </div>
+                                            <div>
+                                                <p
+                                                    class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-tight">
+                                                    {{ $arrival->citizen->nama_lengkap }}
+                                                </p>
+                                                <p class="text-[10px] font-bold text-slate-400 tracking-wider mt-1">
+                                                    {{ $arrival->citizen_nik }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <p class="text-[10px] text-slate-500 font-bold uppercase leading-relaxed max-w-xs">
+                                            {{ $arrival->previous_address }}
+                                        </p>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <p
+                                            class="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+                                            {{ $arrival->arrival_date->translatedFormat('d M Y') }}
+                                        </p>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <div class="flex items-center gap-2">
+                                            <iconify-icon icon="lucide:user-cog" class="text-slate-400"></iconify-icon>
+                                            <p class="text-[10px] font-black text-slate-500 uppercase">
+                                                {{ $arrival->recorder->name }}
+                                            </p>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-6">
+                                        <p class="text-[11px] text-slate-400 italic">
+                                            {{ $arrival->notes ?? '-' }}
+                                        </p>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-8 py-20 text-center">
+                                        <div class="flex flex-col items-center justify-center opacity-40">
+                                            <iconify-icon icon="lucide:info"
+                                                class="text-5xl text-slate-300 mb-4"></iconify-icon>
+                                            <p class="text-[11px] font-black text-slate-400 uppercase tracking-widest">
+                                                Belum ada catatan kedatangan warga</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                @if ($arrivals->hasPages())
+                    <div
+                        class="px-8 py-6 bg-slate-50/50 dark:bg-slate-900/50 border-t border-black/[0.03] dark:border-white/[0.03]">
+                        {{ $arrivals->links() }}
+                    </div>
+                @endif
             @endif
         </div>
 
@@ -281,7 +399,7 @@
                             </div>
                         </div>
 
-                        <div class="space-y-3">
+                        <div class="space-y-3" x-show="selectedRequest.type !== 'DEATH'">
                             <label
                                 class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
                                 <iconify-icon icon="lucide:calendar" class="text-primary-acorn"></iconify-icon>
@@ -404,25 +522,28 @@
 
                         // Default valid until based on type
                         // Poverty: 6 months, Domicile: 3 months, Move: 1 month
-                        const d = new Date();
-                        if (type === 'POVERTY') {
-                            d.setMonth(d.getMonth() + 6);
-                        } else if (type === 'MOVE') {
-                            d.setMonth(d.getMonth() + 1);
+                        if (type !== 'DEATH') {
+                            const d = new Date();
+                            if (type === 'POVERTY') {
+                                d.setMonth(d.getMonth() + 6);
+                            } else if (type === 'MOVE') {
+                                d.setMonth(d.getMonth() + 1);
+                            } else {
+                                d.setMonth(d.getMonth() + 3);
+                            }
+                            this.form.valid_until = d.toISOString().split('T')[0];
                         } else {
-                            d.setMonth(d.getMonth() + 3);
+                            this.form.valid_until = '';
                         }
-                        this.form.valid_until = d.toISOString().split('T')[0];
                         this.showApproveModal = true;
                     },
 
                     async submitApproval() {
                         // Validation logic
-                        if (!this.form.valid_until) {
+                        if (this.selectedRequest.type !== 'DEATH' && !this.form.valid_until) {
                             this.showWarning('TANGGAL WAJIB DIISI', 'Harap tentukan masa berlaku dokumen.');
                             return;
                         }
-                        ns
 
                         if (this.selectedRequest.type === 'POVERTY' && !this.form.income_range) {
                             this.showWarning('DATA TIDAK LENGKAP', 'Harap pilih rentang penghasilan.');
@@ -464,12 +585,7 @@
                                     icon: 'success',
                                     title: 'BERHASIL!',
                                     text: json.message,
-                                    confirmButtonText: 'OK',
-                                    customClass: {
-                                        popup: 'rounded-[1.5rem] border-none shadow-2xl',
-                                        confirmButton: 'bg-primary-acorn text-white rounded-xl px-8 py-3 font-bold'
-                                    },
-                                    buttonsStyling: false
+                                    confirmButtonText: 'OK'
                                 }).then(() => {
                                     window.location.reload();
                                 });
@@ -477,7 +593,17 @@
                                 throw new Error(json.message || 'Gagal menyetujui permohonan.');
                             }
                         } catch (e) {
-                            Swal.fire('Error', e.message, 'error');
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'PROSES GAGAL',
+                                text: e.message,
+                                confirmButtonText: 'Tutup',
+                                customClass: {
+                                    popup: 'rounded-[2.5rem] border-none shadow-2xl p-8',
+                                    confirmButton: 'bg-rose-500 text-white rounded-2xl px-10 py-4 font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105'
+                                },
+                                buttonsStyling: false
+                            });
                         } finally {
                             this.loading = false;
                         }
@@ -488,11 +614,7 @@
                             icon: 'warning',
                             title: title,
                             text: text,
-                            customClass: {
-                                popup: 'rounded-[1.5rem] border-none shadow-2xl',
-                                confirmButton: 'bg-amber-500 text-white rounded-xl px-8 py-3 font-bold'
-                            },
-                            buttonsStyling: false
+                            confirmButtonText: 'PAHAM'
                         });
                     },
 
@@ -533,11 +655,7 @@
                                     icon: 'success',
                                     title: 'DITOLAK',
                                     text: 'Permohonan telah berhasil ditolak.',
-                                    customClass: {
-                                        popup: 'rounded-[1.5rem] border-none shadow-2xl',
-                                        confirmButton: 'bg-rose-500 text-white rounded-xl px-8 py-3 font-bold'
-                                    },
-                                    buttonsStyling: false
+                                    confirmButtonText: 'OK'
                                 }).then(() => {
                                     window.location.reload();
                                 });
@@ -545,7 +663,17 @@
                                 throw new Error(json.message || 'Gagal menolak permohonan.');
                             }
                         } catch (e) {
-                            Swal.fire('Error', e.message, 'error');
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'PROSES GAGAL',
+                                text: e.message,
+                                confirmButtonText: 'Tutup',
+                                customClass: {
+                                    popup: 'rounded-[2.5rem] border-none shadow-2xl p-8',
+                                    confirmButton: 'bg-rose-500 text-white rounded-2xl px-10 py-4 font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105'
+                                },
+                                buttonsStyling: false
+                            });
                         } finally {
                             this.loading = false;
                         }

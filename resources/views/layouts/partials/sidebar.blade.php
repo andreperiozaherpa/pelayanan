@@ -38,9 +38,9 @@
                         </a>
                         @endcan
 
-                        @can('poverty.verify')
+                        @can('service.verify')
                             <a href="{{ route('services.verification') }}"
-                                class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('services.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                                class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('services.verification') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
                                 <iconify-icon icon="lucide:clipboard-list" class="text-xl"></iconify-icon>
                             </a>
                         @endcan
@@ -77,6 +77,11 @@
                                 </div>
                                 <x-nav-link href="{{ route('services.verification') }}" :active="request()->routeIs('services.verification')"
                                     icon="lucide:scan-line">Cek Data & Dokumen</x-nav-link>
+
+                                @can('service.report')
+                                    <x-nav-link href="{{ route('services.arrival.create') }}" :active="request()->routeIs('services.arrival.create')"
+                                        icon="lucide:user-plus">Lapor Datang Warga</x-nav-link>
+                                @endcan
                                 
                                 @can('service.manage')
                                     <div class="px-4 py-3 mt-4">
@@ -84,13 +89,50 @@
                                     </div>
                                     
                                     <x-nav-link href="{{ route('services.requests.index') }}" :active="request()->routeIs('services.requests.index') && !request()->has('type')"
-                                        icon="lucide:inbox">Semua Antrean</x-nav-link>
+                                        icon="lucide:inbox">
+                                        <div class="flex items-center justify-between w-full">
+                                            <span>Semua Antrean</span>
+                                            @if(($pendingBadges['all'] ?? 0) > 0)
+                                                <span class="bg-primary-acorn text-white text-[9px] font-black px-2 py-0.5 rounded-full">{{ $pendingBadges['all'] }}</span>
+                                            @endif
+                                        </div>
+                                    </x-nav-link>
                                     <x-nav-link href="{{ route('services.requests.index', ['type' => 'KETERANGAN KEMISKINAN']) }}" :active="request()->query('type') === 'KETERANGAN KEMISKINAN'"
-                                        icon="lucide:coins">Surat Miskin</x-nav-link>
+                                        icon="lucide:coins">
+                                        <div class="flex items-center justify-between w-full">
+                                            <span>Surat Miskin</span>
+                                            @if(($pendingBadges['KETERANGAN KEMISKINAN'] ?? 0) > 0)
+                                                <span class="bg-orange-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{{ $pendingBadges['KETERANGAN KEMISKINAN'] }}</span>
+                                            @endif
+                                        </div>
+                                    </x-nav-link>
                                     <x-nav-link href="{{ route('services.requests.index', ['type' => 'PENGANTAR PINDAH']) }}" :active="request()->query('type') === 'PENGANTAR PINDAH'"
-                                        icon="lucide:truck">Pengantar Pindah</x-nav-link>
+                                        icon="lucide:truck">
+                                        <div class="flex items-center justify-between w-full">
+                                            <span>Pengantar Pindah</span>
+                                            @if(($pendingBadges['PENGANTAR PINDAH'] ?? 0) > 0)
+                                                <span class="bg-blue-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{{ $pendingBadges['PENGANTAR PINDAH'] }}</span>
+                                            @endif
+                                        </div>
+                                    </x-nav-link>
                                     <x-nav-link href="{{ route('services.requests.index', ['type' => 'KETERANGAN DOMISILI']) }}" :active="request()->query('type') === 'KETERANGAN DOMISILI'"
-                                        icon="lucide:home">Domisili</x-nav-link>
+                                        icon="lucide:home">
+                                        <div class="flex items-center justify-between w-full">
+                                            <span>Domisili</span>
+                                            @if(($pendingBadges['KETERANGAN DOMISILI'] ?? 0) > 0)
+                                                <span class="bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{{ $pendingBadges['KETERANGAN DOMISILI'] }}</span>
+                                            @endif
+                                        </div>
+                                    </x-nav-link>
+                                    <x-nav-link href="{{ route('services.requests.index', ['type' => 'SURAT KEMATIAN']) }}" :active="request()->query('type') === 'SURAT KEMATIAN'"
+                                        icon="lucide:file-heart">
+                                        <div class="flex items-center justify-between w-full">
+                                            <span>Surat Kematian</span>
+                                            @if(($pendingBadges['SURAT KEMATIAN'] ?? 0) > 0)
+                                                <span class="bg-rose-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{{ $pendingBadges['SURAT KEMATIAN'] }}</span>
+                                            @endif
+                                        </div>
+                                    </x-nav-link>
                                 @endcan
                                 
                                 <div class="px-4 py-3 mt-4">

@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Surat Pengantar Pindah - {{ $citizen->nik }}</title>
+    <title>Surat Keterangan Kematian - {{ $citizen->nik }}</title>
 
     <style>
         @page {
@@ -147,8 +147,8 @@
     </div>
 
     <div class="content">
-        <h2>SURAT PENGANTAR PINDAH</h2>
-        <p class="doc-number">Nomor: 475 / {{ date('Y') }} / {{ rand(100, 999) }}</p>
+        <h2>SURAT KETERANGAN KEMATIAN</h2>
+        <p class="doc-number">Nomor: 474.3 / {{ date('Y') }} / {{ rand(100, 999) }}</p>
 
         <p style="font-size: 13px; margin-bottom: 20px; text-align: justify;">
             Yang bertanda tangan di bawah ini, Kepala Desa
@@ -170,32 +170,43 @@
                 <td>: {{ $citizen->tempat_lahir ?? '-' }}, {{ $citizen->tgl_lahir->format('d F Y') }}</td>
             </tr>
             <tr>
-                <th>ALAMAT ASAL</th>
+                <th>ALAMAT TERAKHIR</th>
                 <td>: {{ $citizen->alamat_desa }}</td>
             </tr>
+        </table>
+
+        <p style="font-size: 13px; margin-bottom: 20px; text-align: justify;">
+            Orang tersebut di atas telah meninggal dunia pada:
+        </p>
+
+        <table>
             <tr>
-                <th>ALAMAT TUJUAN</th>
-                <td>: {{ $record->destination_address ?? '-' }}</td>
+                <th>TANGGAL KEMATIAN</th>
+                <td>:
+                    <strong>{{ $record && $record->date_of_death ? $record->date_of_death->format('d F Y') : '-' }}</strong>
+                </td>
             </tr>
             <tr>
-                <th>ALASAN PINDAH</th>
-                <td>: {{ $record->reason ?? '-' }}</td>
+                <th>TEMPAT KEMATIAN</th>
+                <td>: {{ $record->place_of_death ?? '-' }}</td>
+            </tr>
+            <tr>
+                <th>PENYEBAB KEMATIAN</th>
+                <td>: {{ $record->cause_of_death ?? '-' }}</td>
             </tr>
             <tr>
                 <th>STATUS VERIFIKASI</th>
                 <td>:
                     <span class="status-badge {{ $record && $record->status === 'ACTIVE' ? 'active' : '' }}">
-                        {{ $record && $record->status === 'ACTIVE' ? 'TERVERIFIKASI / AKTIF' : 'PENDING / TIDAK AKTIF' }}
+                        {{ $record && $record->status === 'ACTIVE' ? 'TERVERIFIKASI / SAH' : 'PENDING / PROSES' }}
                     </span>
                 </td>
             </tr>
         </table>
 
         <p style="font-size: 13px; text-align: justify; margin-top: 20px;">
-            Bahwa yang bersangkutan benar-benar penduduk yang berdomisili di wilayah Desa
-            {{ $citizen->village->name ?? '..........................' }} dan bermaksud untuk melakukan pindah domisili
-            ke alamat tujuan yang tertera di atas. Demikian surat pengantar ini dibuat untuk dipergunakan sebagaimana
-            mestinya.
+            Demikian surat keterangan ini dibuat dengan sebenarnya dan untuk dapat dipergunakan sebagaimana mestinya,
+            seperti untuk pengurusan ahli waris, asuransi, dan dokumen administrasi lainnya.
         </p>
     </div>
 
