@@ -28,7 +28,16 @@ In practice, you can almost always omit `path` — just open Claude in the proje
 - Framework definitions can include `setup` commands (one-off bootstrap steps like migrations, storage links) shown in `lerd setup`; Laravel has built-in storage:link/migrate/db:seed
 - **Custom containers**: non-PHP sites (Node.js, Python, Go, etc.) can define a `Containerfile.lerd` and a `container:` section in `.lerd.yaml` with a port. Lerd builds a per-project image (`lerd-custom-<sitename>:local`), runs it as `lerd-custom-<sitename>`, and nginx reverse-proxies to it. Workers exec into the custom container. Services are accessible by name (`lerd-mysql`, `lerd-redis`, etc.) on the shared `lerd` Podman network.
 - Git worktrees automatically get a `<branch>.<site>.test` subdomain; `vendor/`, `node_modules/`, and `.env` are symlinked/copied from the main checkout
-- DNS resolves `*.test` to `127.0.0.1`
+- DNS resolves `*.test` to `127.0.0.1` via the lerd-dns dnsmasq container
+
+## DNS modes
+
+Lerd supports two DNS modes set at install time and recorded in `~/.config/lerd/config.yaml` under the `dns` key:
+
+- **Managed (default)**: `dns.enabled: true`, `dns.tld: test`. The lerd-dns container runs, mkcert installs a trusted CA, sites use `*.test` and HTTPS via `site_tls` is available.
+- **Disabled**: `dns.enabled: false`, `dns.tld: localhost`. No dnsmasq, no mkcert CA, no system resolver tweak. Sites use `*.localhost` (RFC 6761 hardwired to `127.0.0.1`). HTTPS is unavailable, `site_tls` returns an error.
+
+Always read `status()` before assuming a TLD. The response carries `dns.tld` (the active TLD) and `dns.enabled` (false in disabled mode). Construct site URLs from `dns.tld` rather than hardcoding `.test`, and skip suggesting `site_tls` when `dns.enabled` is false.
 
 ## Available MCP Tools
 

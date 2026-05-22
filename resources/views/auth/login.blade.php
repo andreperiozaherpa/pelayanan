@@ -39,12 +39,8 @@
     <div class="w-full max-w-md">
         <!-- Logo/Header -->
         <div class="text-center mb-10">
-            <div
-                class="inline-flex w-16 h-16 bg-[#3498db] rounded-2xl items-center justify-center shadow-xl shadow-[#3498db]/20 mb-6">
-                <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04 inter M12 21.355r 0 0 0 0-1.618-3.041z" />
-                </svg>
+            <div class="inline-flex w-16 h-16 mb-6">
+                <img src="{{ asset('assets/images/logo-tubaba.png') }}" alt="Logo Tubaba" class="w-full h-full object-contain">
             </div>
             <h1 class="text-xl font-black text-slate-800 tracking-tight uppercase">Sistem Verifikasi<br>Pelayanan
                 Dokumen</h1>

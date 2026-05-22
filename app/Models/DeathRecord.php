@@ -17,6 +17,7 @@ class DeathRecord extends Model
         'cause_of_death',
         'place_of_death',
         'signed_pdf_path',
+        'letter_number',
         'verified_by',
         'issued_at',
         'source',

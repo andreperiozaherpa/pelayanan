@@ -308,7 +308,10 @@ class ServiceController extends Controller
             abort(403, 'Persetujuan hanya dapat dilakukan oleh otoritas desa setempat. Super Admin hanya memiliki akses pemantauan.');
         }
 
-        $validationRules = [];
+        $validationRules = [
+            'signed_pdf_path' => 'nullable|string|max:2048',
+            'letter_number' => 'nullable|string|max:255',
+        ];
 
         if ($serviceRequest->service_type !== ServiceType::DEATH) {
             $validationRules['valid_until'] = 'required|date|after:today';
@@ -333,42 +336,63 @@ class ServiceController extends Controller
             $serviceRequest->update(['status' => 'APPROVED']);
 
             if ($serviceRequest->service_type === ServiceType::POVERTY) {
+                $povertyData = [
+                    'status' => 'ACTIVE',
+                    'income_range' => $request->income_range,
+                    'valid_from' => now(),
+                    'valid_until' => $request->valid_until,
+                    'verified_by' => Auth::user()->id,
+                    'source' => 'VILLAGE_VERIFICATION',
+                ];
+                if ($request->filled('signed_pdf_path')) {
+                    $povertyData['signed_pdf_path'] = $request->signed_pdf_path;
+                }
+                if ($request->filled('letter_number')) {
+                    $povertyData['letter_number'] = $request->letter_number;
+                }
                 PovertyRecord::updateOrCreate(
                     ['citizen_nik' => $serviceRequest->citizen_nik],
-                    [
-                        'status' => 'ACTIVE',
-                        'income_range' => $request->income_range,
-                        'valid_from' => now(),
-                        'valid_until' => $request->valid_until,
-                        'verified_by' => Auth::user()->id,
-                        'source' => 'VILLAGE_VERIFICATION',
-                    ]
+                    $povertyData
                 );
                 Cache::forget("citizen_services_{$serviceRequest->citizen_nik}");
             } elseif ($serviceRequest->service_type === ServiceType::DOMICILE) {
+                $domicileData = [
+                    'status' => 'ACTIVE',
+                    'purpose' => $request->purpose,
+                    'valid_from' => now(),
+                    'valid_until' => $request->valid_until,
+                    'verified_by' => Auth::user()->id,
+                    'source' => 'VILLAGE_VERIFICATION',
+                ];
+                if ($request->filled('signed_pdf_path')) {
+                    $domicileData['signed_pdf_path'] = $request->signed_pdf_path;
+                }
+                if ($request->filled('letter_number')) {
+                    $domicileData['letter_number'] = $request->letter_number;
+                }
                 DomicileRecord::updateOrCreate(
                     ['citizen_nik' => $serviceRequest->citizen_nik],
-                    [
-                        'status' => 'ACTIVE',
-                        'purpose' => $request->purpose,
-                        'valid_from' => now(),
-                        'valid_until' => $request->valid_until,
-                        'verified_by' => Auth::user()->id,
-                        'source' => 'VILLAGE_VERIFICATION',
-                    ]
+                    $domicileData
                 );
                 Cache::forget("citizen_services_{$serviceRequest->citizen_nik}");
             } elseif ($serviceRequest->service_type === ServiceType::MOVE) {
+                $moveData = [
+                    'status' => 'ACTIVE',
+                    'destination_address' => $request->destination_address,
+                    'reason' => $request->reason,
+                    'valid_until' => $request->valid_until,
+                    'verified_by' => Auth::user()->id,
+                    'issued_at' => now(),
+                ];
+                if ($request->filled('signed_pdf_path')) {
+                    $moveData['signed_pdf_path'] = $request->signed_pdf_path;
+                }
+                if ($request->filled('letter_number')) {
+                    $moveData['letter_number'] = $request->letter_number;
+                }
                 MoveRecord::updateOrCreate(
                     ['citizen_nik' => $serviceRequest->citizen_nik],
-                    [
-                        'status' => 'ACTIVE',
-                        'destination_address' => $request->destination_address,
-                        'reason' => $request->reason,
-                        'valid_until' => $request->valid_until,
-                        'verified_by' => Auth::user()->id,
-                        'issued_at' => now(),
-                    ]
+                    $moveData
                 );
                 DomicileRecord::where('citizen_nik', $serviceRequest->citizen_nik)
                     ->update(['status' => 'EXPIRED']);
@@ -380,13 +404,20 @@ class ServiceController extends Controller
 
                 Cache::forget("citizen_services_{$serviceRequest->citizen_nik}");
             } elseif ($serviceRequest->service_type === ServiceType::DEATH) {
+                $deathData = [
+                    'status' => 'ACTIVE',
+                    'verified_by' => Auth::user()->id,
+                    'issued_at' => now(),
+                ];
+                if ($request->filled('signed_pdf_path')) {
+                    $deathData['signed_pdf_path'] = $request->signed_pdf_path;
+                }
+                if ($request->filled('letter_number')) {
+                    $deathData['letter_number'] = $request->letter_number;
+                }
                 DeathRecord::updateOrCreate(
                     ['citizen_nik' => $serviceRequest->citizen_nik],
-                    [
-                        'status' => 'ACTIVE',
-                        'verified_by' => Auth::user()->id,
-                        'issued_at' => now(),
-                    ]
+                    $deathData
                 );
 
                 // Set all other services to EXPIRED for this citizen

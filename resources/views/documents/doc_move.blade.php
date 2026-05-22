@@ -9,124 +9,130 @@
     <style>
         @page {
             size: A4;
-            margin: 0;
+            margin: 1.5cm 2cm 1.5cm 2cm;
         }
 
         body {
-            font-family: 'Inter', system-ui, sans-serif;
-            color: #1a202c;
+            font-family: 'Times New Roman', Times, serif;
+            color: #000;
             background: white;
             margin: 0;
-            padding: 2cm;
+            line-height: 1.6;
+            font-size: 12pt;
+            box-sizing: border-box;
+        }
+
+        .line-double {
+            border-top: 3px solid #000;
+            border-bottom: 1px solid #000;
+            height: 2px;
+            margin-top: 8px;
+            margin-bottom: 25px;
+        }
+
+        .title-block {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .title-block h4 {
+            margin: 0;
+            font-size: 14pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-decoration: underline;
+            letter-spacing: 0.5px;
+        }
+
+        .title-block p {
+            margin: 5px 0 0 0;
+            font-size: 11pt;
+        }
+
+        .opening-text {
+            text-align: justify;
+            margin-bottom: 20px;
             line-height: 1.6;
         }
 
-        .header {
-            text-align: center;
-            border-bottom: 2.5px double #1a202c;
-            padding-bottom: 15px;
-            margin-bottom: 40px;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 20px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: 800;
-        }
-
-        .header p {
-            margin: 5px 0 0;
-            font-size: 11px;
-            color: #4a5568;
-            font-weight: 500;
-        }
-
-        .content {
-            margin-bottom: 40px;
-        }
-
-        .content h2 {
-            font-size: 16px;
-            text-align: center;
-            text-decoration: underline;
-            margin-bottom: 5px;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        .content p.doc-number {
-            text-align: center;
-            font-size: 12px;
-            margin-bottom: 30px;
-            color: #4a5568;
-        }
-
-        table {
+        .data-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
             margin-bottom: 20px;
+            margin-left: 15px;
         }
 
-        th,
-        td {
-            padding: 8px 0;
+        .data-table td {
+            padding: 4px 0;
             vertical-align: top;
+            font-size: 11pt;
         }
 
-        th {
-            width: 180px;
+        .data-table td.num {
+            width: 25px;
             text-align: left;
-            color: #1a202c;
-            font-weight: 500;
         }
 
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 11px;
-            background: #edf2f7;
-            border: 1px solid #e2e8f0;
+        .data-table td.label {
+            width: 200px;
+            text-align: left;
         }
 
-        .active {
-            color: #2f855a;
-            background: #f0fff4;
-            border-color: #c6f6d5;
-        }
-
-        .footer {
-            margin-top: 50px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-        }
-
-        .signature {
+        .data-table td.colon {
+            width: 15px;
             text-align: center;
-            font-size: 12px;
         }
 
-        .signature .box {
-            height: 60px;
+        .closing-text {
+            text-align: justify;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .signature-block {
+            width: 250px;
+            text-align: center;
+            float: right;
+        }
+
+        .signature-block p {
+            margin: 0;
+            font-size: 11pt;
+            line-height: 1.3;
+        }
+
+        .signature-box {
+            height: 105px;
+            margin: 10px auto;
+            border: 1px dashed #ccc;
+            width: 180px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #fafafa;
+            border-radius: 6px;
         }
 
         .no-print {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: #3182ce;
+            background: #1e293b;
             color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
+            padding: 10px 20px;
+            border-radius: 9999px;
             text-decoration: none;
             font-size: 12px;
             font-weight: bold;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+            font-family: sans-serif;
+            z-index: 999;
+        }
+
+        .no-print:hover {
+            transform: translateY(-2px);
+            background: #0f172a;
         }
 
         @media print {
@@ -138,131 +144,131 @@
 </head>
 
 <body>
-    <a href="javascript:window.print()" class="no-print">Cetak Sekarang</a>
+    <a href="javascript:window.print()" class="no-print">Cetak Dokumen</a>
 
-    <div class="header">
-        <h1>Pemerintah Kabupaten/Kota</h1>
-        <p>Kecamatan .......................... Desa {{ $citizen->village->name ?? '..........................' }}</p>
-        <p style="font-size: 10px; color: #718096;">Alamat: {{ $citizen->village->address ?? 'Jl. Raya Desa No. 1' }}</p>
+    @php
+        $regency = $citizen->village->district->regency_name ?? 'Tulang Bawang Barat';
+        $isTubaba = str_contains(strtolower($regency), 'tulang bawang barat');
+
+        $villageType = $isTubaba ? 'TIYUH' : 'DESA';
+        $leaderType = $isTubaba ? 'Kepalo Tiyuh' : 'Kepala Desa';
+
+        $regencyName = strtoupper(str_replace(['kabupaten ', 'kab '], '', strtolower($regency)));
+        $districtName = strtoupper(str_replace('kecamatan ', '', strtolower($citizen->village->district->name ?? '')));
+        $villageName = strtoupper(str_replace(['desa ', 'tiyuh '], '', strtolower($citizen->village->name ?? '')));
+
+        $birthDateStr = $citizen->tgl_lahir ? $citizen->tgl_lahir->translatedFormat('d F Y') : '-';
+        $rt = $citizen->householdCard->rt ?? '001';
+        $rw = $citizen->householdCard->rw ?? '006';
+    @endphp
+
+    <!-- Kop Surat -->
+    <table class="kop-table" style="width: 100%; border-collapse: collapse; margin-bottom: 5px;">
+        <tr>
+            <td style="width: 80px; vertical-align: middle; text-align: left; padding: 0;">
+                @if (file_exists(public_path('assets/images/logo-tubaba.png')))
+                    <img src="data:image/png;base64,{{ base64_encode(file_get_contents(public_path('assets/images/logo-tubaba.png'))) }}"
+                        style="width: 70px; height: auto;" />
+                @endif
+            </td>
+            <td style="text-align: center; vertical-align: middle; padding: 0 0 0 10px;">
+                <div style="font-size: 14pt; font-weight: bold; line-height: 1.2;">PEMERINTAH KABUPATEN
+                    {{ $regencyName }}</div>
+                <div style="font-size: 13pt; font-weight: bold; line-height: 1.2;">KECAMATAN {{ $districtName }}</div>
+                <div style="font-size: 16pt; font-weight: bold; line-height: 1.3;">{{ $villageType }}
+                    {{ $villageName }}</div>
+                <div
+                    style="font-size: 8.5pt; font-weight: normal; margin-top: 3px; font-family: Arial, sans-serif; font-style: italic;">
+                    Jl. Raya {{ $citizen->village->name }} Email:
+                    {{ strtolower(str_replace(' ', '', $villageName ?? '')) }}@tubaba.go.id
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="line-double"></div>
+
+    <div class="title-block">
+        <h4>SURAT PENGANTAR PINDAH</h4>
+        <p>Nomor: {{ $record->letter_number ?? '___________________' }}</p>
     </div>
 
-    <div class="content">
-        <h2>SURAT PENGANTAR PINDAH</h2>
-        <p class="doc-number">Nomor: 475 / {{ date('Y') }} / {{ rand(100, 999) }}</p>
-
-        <p style="font-size: 13px; margin-bottom: 20px; text-align: justify;">
-            Yang bertanda tangan di bawah ini, Kepala Desa
-            {{ $citizen->village->name ?? '..........................' }},
-            menerangkan dengan sebenarnya bahwa:
-        </p>
-
-        <table>
-            <tr>
-                <th>NAMA LENGKAP</th>
-                <td>: <strong>{{ $citizen->nama_lengkap }}</strong></td>
-            </tr>
-            <tr>
-                <th>NOMOR INDUK KEPENDUDUK</th>
-                <td>: {{ $citizen->nik }}</td>
-            </tr>
-            <tr>
-                <th>TEMPAT, TGL LAHIR</th>
-                <td>: {{ $citizen->tempat_lahir ?? '-' }}, {{ $citizen->tgl_lahir->format('d F Y') }}</td>
-            </tr>
-            <tr>
-                <th>ALAMAT ASAL</th>
-                <td>: {{ $citizen->alamat_desa }}</td>
-            </tr>
-            <tr>
-                <th>ALAMAT TUJUAN</th>
-                <td>: {{ $record->destination_address ?? '-' }}</td>
-            </tr>
-            <tr>
-                <th>ALASAN PINDAH</th>
-                <td>: {{ $record->reason ?? '-' }}</td>
-            </tr>
-            <tr>
-                <th>STATUS VERIFIKASI</th>
-                <td>:
-                    <span class="status-badge {{ $record && $record->status === 'ACTIVE' ? 'active' : '' }}">
-                        {{ $record && $record->status === 'ACTIVE' ? 'TERVERIFIKASI / AKTIF' : 'PENDING / TIDAK AKTIF' }}
-                    </span>
-                </td>
-            </tr>
-        </table>
-
-        <p style="font-size: 13px; text-align: justify; margin-top: 20px;">
-            Bahwa yang bersangkutan benar-benar penduduk yang berdomisili di wilayah Desa
-            {{ $citizen->village->name ?? '..........................' }} dan bermaksud untuk melakukan pindah domisili
-            ke alamat tujuan yang tertera di atas. Demikian surat pengantar ini dibuat untuk dipergunakan sebagaimana
-            mestinya.
-        </p>
+    <div class="opening-text">
+        Yang bertanda tangan di bawah ini {{ $leaderType }} {{ $citizen->village->name ?? '' }},
+        Kecamatan {{ $citizen->village->district->name ?? '' }},
+        Kabupaten {{ $citizen->village->district->regency_name ?? '' }}, Provinsi Lampung
+        menerangkan dengan sebenarnya bahwa:
     </div>
 
-    <div class="footer" style="display: block; text-align: right;">
-        <div class="signature" style="display: inline-block; width: 220px; text-align: left;">
-            <p>Dikeluarkan di: {{ $citizen->village->name ?? 'Desa' }}</p>
-            <p>Pada Tanggal: {{ now()->translatedFormat('d F Y') }}</p>
-            <p style="margin-top: 10px;">Kepala Desa {{ $citizen->village->name ?? 'Setempat' }}</p>
+    <table class="data-table">
+        <tr>
+            <td class="num">1.</td>
+            <td class="label">Nama Lengkap</td>
+            <td class="colon">:</td>
+            <td><strong>{{ strtoupper($citizen->nama_lengkap) }}</strong></td>
+        </tr>
+        <tr>
+            <td class="num">2.</td>
+            <td class="label">NIK / No. KTP</td>
+            <td class="colon">:</td>
+            <td>{{ $citizen->nik }}</td>
+        </tr>
+        <tr>
+            <td class="num">3.</td>
+            <td class="label">Tanggal Lahir</td>
+            <td class="colon">:</td>
+            <td>{{ $birthDateStr }}</td>
+        </tr>
+        <tr>
+            <td class="num">4.</td>
+            <td class="label">Alamat Asal</td>
+            <td class="colon">:</td>
+            <td>RT {{ $rt }} / RW {{ $rw }}, {{ $villageType }} {{ $citizen->village->name }},
+                Kecamatan {{ $citizen->village->district->name }}, Kabupaten
+                {{ $citizen->village->district->regency_name }}</td>
+        </tr>
+        <tr>
+            <td class="num">5.</td>
+            <td class="label">Alamat Tujuan</td>
+            <td class="colon">:</td>
+            <td>{{ $record->destination_address ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td class="num">6.</td>
+            <td class="label">Alasan Pindah</td>
+            <td class="colon">:</td>
+            <td>{{ $record->reason ?? '-' }}</td>
+        </tr>
+    </table>
 
-            <div id="tte-signature-marker" class="box"
-                style="margin: 15px 0; position: relative; display: flex; justify-content: center; align-items: center; border: 1px dashed #cbd5e0; height: 110px; border-radius: 8px; background: #fafafa;">
-                <!-- Official TTE QR marker for digital signing coordinate detection -->
-                <span style="color: transparent; position: relative; font-size: 1px;">$TTE_MARKER</span>
-            </div>
-
-            <script>
-                (function() {
-                    const el = document.getElementById('tte-signature-marker');
-                    if (el) {
-                        const bodyRect = document.body.getBoundingClientRect();
-                        const boxRect = el.getBoundingClientRect();
-
-                        // Scale calculation for A4 (210mm width)
-                        const mmPerPx = 210 / document.documentElement.scrollWidth;
-
-                        // Absolute dimensions and positions in mm
-                        const boxWidthMm = boxRect.width * mmPerPx;
-                        const boxHeightMm = boxRect.height * mmPerPx;
-                        const boxTopMm = (boxRect.top - bodyRect.top) * mmPerPx;
-                        const boxLeftMm = (boxRect.left - bodyRect.left) * mmPerPx;
-
-                        // Center point calculation
-                        const boxCenterX = boxLeftMm + (boxWidthMm / 2);
-                        const boxCenterY = boxTopMm + (boxHeightMm / 2);
-
-                        // QR Size: 80% of the smallest dimension
-                        const qrSize = Math.min(boxWidthMm, boxHeightMm) * 0.8;
-
-                        // Final coordinates relative to the page (A4 height 297mm)
-                        const page = Math.floor(boxCenterY / 297) + 1;
-                        const xMm = boxCenterX - (qrSize / 2);
-                        const yOnPage = (boxCenterY % 297) - (qrSize / 2) + 1.0; // Small offset for visual balance
-
-                        document.body.setAttribute('data-tte-page', page);
-                        document.body.setAttribute('data-tte-x', xMm.toFixed(2));
-                        document.body.setAttribute('data-tte-y', yOnPage.toFixed(2));
-                        document.body.setAttribute('data-tte-w', qrSize.toFixed(2));
-                    }
-                })();
-            </script>
-
-            <p><strong>{{ $leader->name ?? '..........................' }}</strong></p>
-            @if (isset($leader->nip) && $leader->nip)
-                <p>NIP. {{ $leader->nip }}</p>
-            @endif
-            <p
-                style="font-size: 8px; color: #718096; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2;">
-                Dokumen ini telah ditandatangani secara elektronik menggunakan sertifikat elektronik yang diterbitkan
-                oleh sistem</p>
-        </div>
+    <div class="closing-text">
+        Bahwa yang bersangkutan benar-benar penduduk yang berdomisili di wilayah {{ $villageType }}
+        {{ $citizen->village->name ?? '' }} dan bermaksud untuk melakukan pindah domisili ke alamat tujuan yang tertera
+        di atas.
+        Demikian surat pengantar ini dibuat dengan sebenarnya, untuk dapat dipergunakan sebagaimana mestinya.
     </div>
 
-    <p
-        style="font-size: 9px; color: #a0aec0; margin-top: 60px; text-align: center; border-top: 1px solid #edf2f7; padding-top: 10px;">
-        Keaslian dokumen ini dapat diverifikasi dengan memindai kode QR yang tertera pada area tanda tangan.<br>
-        Sistem Verifikasi Digital - {{ date('Y') }}
-    </p>
+    <table class="footer-table" style="width: 100%; margin-top: 30px;">
+        <tr>
+            <td></td>
+            <td style="width: 250px; text-align: center; vertical-align: top;">
+                <div class="signature-block">
+                    <p>{{ $citizen->village->name ?? '' }}, {{ now()->translatedFormat('d F Y') }}</p>
+                    <p>{{ $leaderType }} {{ $citizen->village->name ?? '' }}</p>
+
+                    <div id="tte-signature-marker" class="signature-box">
+                        <span style="color: transparent; font-size: 1px;">TTEMARKERS</span>
+                    </div>
+
+                    <p><strong><u>{{ $leader->name ?? '..........................' }}</u></strong></p>
+                    @if (isset($leader->nip) && $leader->nip)
+                        <p style="font-size: 10pt; color: #555; text-align: center; margin-top: 3px;">NIP.
+                            {{ $leader->nip }}</p>
+                    @endif
+                </div>
+            </td>
+        </tr>
+    </table>
 </body>
 
 </html>

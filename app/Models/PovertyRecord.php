@@ -47,6 +47,7 @@ class PovertyRecord extends Model
         'citizen_nik',
         'status',
         'signed_pdf_path',
+        'letter_number',
         'income_range',
         'valid_from',
         'valid_until',

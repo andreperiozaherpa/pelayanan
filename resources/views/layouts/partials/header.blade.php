@@ -10,9 +10,8 @@
     <div class="w-auto flex items-center px-2 transition-all duration-300 overflow-hidden shrink-0"
          :class="{ 'lg:w-[280px] lg:px-4': sidebarOpen, 'lg:w-[60px] lg:px-0 lg:justify-center': !sidebarOpen }">
         <div class="flex items-center gap-3">
-            <div
-                class="w-10 h-10 bg-primary-acorn rounded-lg flex items-center justify-center shadow-lg shadow-primary-acorn/20 text-white shrink-0">
-                <iconify-icon icon="lucide:leaf" class="text-xl"></iconify-icon>
+            <div class="w-10 h-10 shrink-0">
+                <img src="{{ asset('assets/images/logo-tubaba.png') }}" alt="Logo Tubaba" class="w-full h-full object-contain">
             </div>
             <div class="hidden sm:block whitespace-nowrap" x-show="sidebarOpen" x-transition.opacity.duration.300ms>
                 <h1

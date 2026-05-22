@@ -13,14 +13,14 @@ return new class extends Migration
         // 1. Create Permissions
         $permissions = [
             [
-                'name' => 'Manage Service Requests',
+                'name' => 'Kelola Permohonan Layanan',
                 'slug' => 'service.manage',
                 'description' => 'Akses untuk mengelola (setuju/tolak) permintaan layanan dari desa.',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'name' => 'Report Service Usage',
+                'name' => 'Lapor Penggunaan Layanan',
                 'slug' => 'service.report',
                 'description' => 'Akses untuk melaporkan penggunaan layanan atau meminta verifikasi.',
                 'created_at' => now(),

@@ -22,7 +22,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 // Protected Dashboard Routes
 Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard.index');
-    Route::get('/desa', [DashboardController::class, 'desa'])->name('dashboard.desa');
+    Route::get('/desa', [DashboardController::class, 'desa'])->name('dashboard.desa')->middleware('role:operatordesa');
 
     // Web UI: Citizen & Poverty Management for Operator Desa & Super Admin
     Route::resource('citizens', CitizenController::class)

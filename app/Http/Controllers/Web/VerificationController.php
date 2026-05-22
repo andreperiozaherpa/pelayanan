@@ -9,6 +9,7 @@ use App\Models\Citizen;
 use App\Models\HouseholdCard;
 use App\Models\ServiceRequest;
 use App\Models\VerificationLog;
+use App\Services\Tte\PdfCoordinatFinder;
 use App\Services\Tte\ProfessionalSignaturePdf as SignaturePdf;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -75,7 +76,7 @@ class VerificationController extends Controller
         Gate::authorize($config['permission']);
 
         // Check if view template exists
-        if (! view()->exists($config['view'])) {
+        if (! \Illuminate\Support\Facades\View::exists($config['view'])) {
             abort(404, "Template dokumen untuk tipe '{$type}' belum tersedia.");
         }
 
@@ -99,6 +100,11 @@ class VerificationController extends Controller
         } elseif ($type === 'arrival') {
             $citizen->load(['arrivalRecords' => fn ($q) => $q->latest()]);
             $record = $citizen->arrivalRecords->first();
+        }
+
+        // If signed_pdf_path is already an external URL/link, redirect directly to it
+        if ($record && $record->signed_pdf_path && (str_contains($record->signed_pdf_path, 'http://') || str_contains($record->signed_pdf_path, 'https://'))) {
+            return redirect()->away($record->signed_pdf_path);
         }
 
         // Generate a validation URL
@@ -152,57 +158,111 @@ class VerificationController extends Controller
 
         $html = view($config['view'], compact('citizen', 'record', 'validationUrl', 'serialNumber', 'leader'))->render();
 
-        // 2. Detect coordinates of the placeholder via DOM attributes
-        $renderedHtml = Browsershot::html($html)
-            ->setNodeBinary(config('services.browsershot.node_binary'))
-            ->setNpmBinary(config('services.browsershot.npm_binary'))
-            ->setChromePath(config('services.browsershot.chrome_path'))
-            ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox'])
-            ->waitUntilNetworkIdle()
-            ->bodyHtml();
+        // 2. Prepare Chromium engine (Browsershot)
+        // CRITICAL: We MUST set windowSize to exactly the printable width (642px)
+        // so that right-aligned/centered elements in the DOM don't expand into the margins during JS evaluate()!
+        $dpi = 96.0;
+        $mmPerPx = 25.4 / $dpi; // ~0.2645833
 
-        $coords = [];
-        if (preg_match('/data-tte-page="([^"]+)"/', $renderedHtml, $matchPage)) {
-            $coords['page'] = (int) $matchPage[1];
-        }
-        if (preg_match('/data-tte-x="([^"]+)"/', $renderedHtml, $matchX)) {
-            $coords['x'] = (float) $matchX[1];
-        }
-        if (preg_match('/data-tte-y="([^"]+)"/', $renderedHtml, $matchY)) {
-            $coords['y'] = (float) $matchY[1];
-        }
-        if (preg_match('/data-tte-w="([^"]+)"/', $renderedHtml, $matchW)) {
-            $coords['w'] = (float) $matchW[1];
-        }
+        $marginTopMm = 15.0;
+        $marginBottomMm = 15.0;
+        $marginLeftMm = 20.0;
+        $marginRightMm = 20.0;
 
-        $pdf = Browsershot::html($html)
+        // CRITICAL: Chromium's PDF printing engine adds an implicit safety padding of 1.0mm
+        // at the top and bottom of each page to prevent clipping.
+        // Therefore, the actual vertical slicing height is 297.0 - 15.0 - 15.0 - 2.0 = 265.0mm.
+        // Subtracting this 2.0mm safety gap eliminates the cumulative page-shifting error on multi-page PDFs!
+        $printableWidthPx = round((210.0 - $marginLeftMm - $marginRightMm) / $mmPerPx); // ~642px
+        $printableHeightPx = round((297.0 - $marginTopMm - $marginBottomMm - 2.0) / $mmPerPx); // ~1002px
+
+        $browsershot = Browsershot::html($html)
             ->setNodeBinary(config('services.browsershot.node_binary'))
             ->setNpmBinary(config('services.browsershot.npm_binary'))
             ->setChromePath(config('services.browsershot.chrome_path'))
             ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox'])
             ->provideHtmlViaOpenPage()
+            ->windowSize($printableWidthPx, 1122)
+            ->emulateMedia('print')
+            ->waitUntilNetworkIdle()
+            ->delay(1000)
             ->format('A4')
-            ->margins(0, 0, 0, 0)
-            ->pdf();
+            ->margins($marginTopMm, $marginRightMm, $marginBottomMm, $marginLeftMm);
 
-        // 3. Digital Signing
+        // 3. Generate the A4 PDF first (this is the absolute source of truth)
+        $pdf = $browsershot->pdf();
         $tempPdfPath = storage_path('app/private/temp_'.uniqid().'.pdf');
         file_put_contents($tempPdfPath, $pdf);
 
+        // 4. Detect Coordinates flawlessly page-by-page using Smalot PDFParser!
+        // This parses the actual generated PDF and searches for the centered TTEMARKERS text.
+        $pageNumber = 1;
+        $centerX = null;
+        $centerY = null;
+        $boxW = 37.0; // Fallback 140px in mm
+        $boxH = 21.1; // Fallback 80px in mm
+
+        $coordinates = PdfCoordinatFinder::find(
+            $tempPdfPath,
+            'TTEMARKERS'
+        );
+        if ($coordinates) {
+            $pageNumber = $coordinates['page'];
+            $xPt = $coordinates['x'];
+            $yPt = $coordinates['y'];
+
+            // Convert points (from bottom-left) to mm (from top-left) for FPDI
+            $pageWidthPt = 595.28;
+            $pageHeightPt = 841.89;
+            $a4WidthMm = 210.0;
+            $a4HeightMm = 297.0;
+
+            $centerX_mm = ($xPt / $pageWidthPt) * $a4WidthMm;
+            $centerY_mm = (($pageHeightPt - $yPt) / $pageHeightPt) * $a4HeightMm;
+
+            // Apply offset for visual signature placement (15mm above the marker)
+            $centerY_mm -= 0;
+
+            $centerX = $centerX_mm;
+            $centerY = $centerY_mm;
+
+            Log::info('TTE coordinate detected using Smalot PDFParser', [
+                'page' => $pageNumber,
+                'x_pt' => $xPt,
+                'y_pt' => $yPt,
+                'centerX_mm' => $centerX_mm,
+                'centerY_mm' => $centerY_mm,
+            ]);
+        }
+
         try {
+
             $signerPdf = new SignaturePdf(
                 $tempPdfPath,
                 $manageCert,
                 SignaturePdf::MODE_RESOURCE
             );
 
-            $posX = $coords['x'] ?? 105;
-            $posY = $coords['y'] ?? 22;
-            $width = $coords['w'] ?? 30;
-            $pageNumber = $coords['page'] ?? -1;
+            if ($centerX === null || $centerY === null) {
+                Log::warning('TTE coordinate detection failed — using fallback position.', [
+                    'nik' => $nik,
+                    'type' => $type,
+                ]);
+            }
 
-            // Set Visual Signature (QR Code) with dynamic page
-            $signerPdf->setImage($qrPath, $posX, $posY, $width, 0, $pageNumber);
+            // QR size = 80% of the shorter box dimension so it fits neatly inside
+            $qrSizeMm = ($boxW !== null && $boxH !== null)
+                ? round(min($boxW, $boxH) * 0.80, 2)
+                : 20.0;
+
+            // Position: top-left of QR = center of box minus half the QR size
+            // Since we are parsing the physical paginated PDF directly using Smalot,
+            // $centerX and $centerY are the exact center coordinates of the signature box.
+            $posX = ($centerX ?? 115.0) - ($qrSizeMm / 2);
+            $posY = ($centerY ?? 32.0) - ($qrSizeMm / 2);
+
+            // Set Visual Signature (QR Code) centered inside the signature-box
+            $signerPdf->setImage($qrPath, $posX, $posY, $qrSizeMm, 0, $pageNumber);
 
             $signerName = $leader->name.($leader->nip ? " (NIP. {$leader->nip})" : '');
 
@@ -226,10 +286,10 @@ class VerificationController extends Controller
             abort(500, 'Gagal membubuhkan tanda tangan elektronik: '.$e->getMessage());
         } finally {
             if (file_exists($tempPdfPath)) {
-                unlink($tempPdfPath);
+                // unlink($tempPdfPath);
             }
             if (file_exists($qrPath)) {
-                unlink($qrPath);
+                // unlink($qrPath);
             }
         }
 

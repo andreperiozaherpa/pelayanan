@@ -14,6 +14,7 @@ class DomicileRecord extends Model
         'citizen_nik',
         'status',
         'signed_pdf_path',
+        'letter_number',
         'purpose',
         'valid_from',
         'valid_until',

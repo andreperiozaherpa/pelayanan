@@ -317,12 +317,12 @@
 
         <!-- Approval Modal -->
         <div x-show="showApproveModal"
-            class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm"
+            class="fixed inset-0 z-[100] flex items-start justify-center p-6 bg-slate-900/60 backdrop-blur-sm overflow-y-auto pt-10 sm:pt-20"
             x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" x-cloak>
 
-            <div class="bg-white dark:bg-slate-900 w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/10"
+            <div class="bg-white dark:bg-slate-900 w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/10 my-8"
                 @click.outside="showApproveModal = false" x-transition:enter="transition ease-out duration-300"
                 x-transition:enter-start="opacity-0 scale-95 translate-y-10"
                 x-transition:enter-end="opacity-100 scale-100 translate-y-0">
@@ -411,6 +411,30 @@
                                 berlaku setelah tanggal ini.</p>
                         </div>
 
+                        <!-- Nomor Surat (Optional) -->
+                        <div class="space-y-3">
+                            <label
+                                class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                                <iconify-icon icon="lucide:hash" class="text-primary-acorn"></iconify-icon>
+                                Nomor Surat (Opsional)
+                            </label>
+                            <input type="text" x-model="form.letter_number" placeholder="CONTOH: 470 / 025 / 2026"
+                                class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 border border-black/[0.03] rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-primary-acorn/10 focus:border-primary-acorn transition-all tracking-wider placeholder:opacity-30 uppercase">
+                            <p class="text-[9px] text-slate-400 font-bold uppercase ml-1 italic">* Masukkan nomor surat resmi jika ada.</p>
+                        </div>
+
+                        <!-- Signed PDF Link (Optional) -->
+                        <div class="space-y-3">
+                            <label
+                                class="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                                <iconify-icon icon="lucide:link" class="text-primary-acorn"></iconify-icon>
+                                Link PDF TTE (Opsional)
+                            </label>
+                            <input type="text" x-model="form.signed_pdf_path" placeholder="CONTOH: https://domain.com/path/to/signed.pdf"
+                                class="w-full px-6 py-4 bg-slate-50 dark:bg-slate-800 border border-black/[0.03] rounded-2xl text-[11px] font-black outline-none focus:ring-4 focus:ring-primary-acorn/10 focus:border-primary-acorn transition-all tracking-wider placeholder:opacity-30">
+                            <p class="text-[9px] text-slate-400 font-bold uppercase ml-1 italic">* Tautan file PDF hasil tanda tangan digital (opsional).</p>
+                        </div>
+
                         <button @click="submitApproval()"
                             class="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.2em] shadow-xl hover:shadow-primary-acorn/20 hover:-translate-y-1 transition-all active:scale-95 disabled:opacity-50 disabled:translate-y-0 disabled:shadow-none flex items-center justify-center gap-3">
                             <iconify-icon x-show="!loading" icon="lucide:check-circle" class="text-lg"></iconify-icon>
@@ -425,12 +449,12 @@
 
         <!-- Rejection Modal -->
         <div x-show="showRejectModal"
-            class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm"
+            class="fixed inset-0 z-[100] flex items-start justify-center p-6 bg-slate-900/60 backdrop-blur-sm overflow-y-auto pt-10 sm:pt-20"
             x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" x-cloak>
 
-            <div class="bg-white dark:bg-slate-900 w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/10"
+            <div class="bg-white dark:bg-slate-900 w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/10 my-8"
                 @click.outside="showRejectModal = false" x-transition:enter="transition ease-out duration-300"
                 x-transition:enter-start="opacity-0 scale-95 translate-y-10"
                 x-transition:enter-end="opacity-100 scale-100 translate-y-0">
@@ -498,7 +522,9 @@
                         destination_address: '',
                         reason_move: '',
                         valid_until: '',
-                        reason: ''
+                        reason: '',
+                        signed_pdf_path: '',
+                        letter_number: ''
                     },
 
                     openApproveModal(id, name, type, notes) {
@@ -509,6 +535,8 @@
                         };
                         this.form.income_range = '';
                         this.form.purpose = type === 'DOMICILE' ? notes : '';
+                        this.form.signed_pdf_path = '';
+                        this.form.letter_number = '';
 
                         // Parse multiline notes for MOVE
                         if (type === 'MOVE' && notes && notes.includes('TUJUAN: ')) {

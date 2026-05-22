@@ -16,6 +16,7 @@ class MoveRecord extends Model
         'destination_address',
         'reason',
         'signed_pdf_path',
+        'letter_number',
         'valid_until',
         'verified_by',
         'issued_at',

@@ -68,8 +68,10 @@
                                 </div>
                                 <x-nav-link href="{{ route('dashboard.index') }}" :active="request()->routeIs('dashboard.index')"
                                     icon="lucide:layout-dashboard">Default</x-nav-link>
-                                <x-nav-link href="{{ route('dashboard.desa') }}" :active="request()->routeIs('dashboard.desa')"
-                                    icon="lucide:building-2">Dashboard Desa</x-nav-link>
+                                @if (Auth::user()->isOperatorDesa())
+                                    <x-nav-link href="{{ route('dashboard.desa') }}" :active="request()->routeIs('dashboard.desa')"
+                                        icon="lucide:building-2">Dashboard Desa</x-nav-link>
+                                @endif
                             @elseif(request()->routeIs('services.*'))
                                 <div class="px-4 py-4">
                                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Layanan

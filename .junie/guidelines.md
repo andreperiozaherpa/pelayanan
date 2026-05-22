@@ -16,6 +16,14 @@ This project runs on **lerd**, a Podman-based Laravel development environment. T
 - **Custom containers**: non-PHP sites (Node.js, Python, Go, etc.) can define a `Containerfile.lerd` and a `container:` section in `.lerd.yaml` with a port; lerd builds a per-project image, runs it as `lerd-custom-<sitename>`, and nginx reverse-proxies to it; the project directory is volume-mounted at its host path with `--workdir` set automatically — do NOT add `WORKDIR` or `COPY` to the Containerfile; workers exec into the custom container; services are accessible by name on the shared `lerd` Podman network; **hot-reload file watchers must use polling on macOS** (inotify does not fire across Podman Machine's virtiofs mount) — nodemon: `--legacy-watch`, Vite: `server.watch.usePolling: true`, webpack: `watchOptions: { poll: 1000 }`
 - Git worktrees automatically get a `<branch>.<site>.test` subdomain; `vendor/`, `node_modules/`, and `.env` are symlinked/copied from the main checkout
 
+### DNS modes
+
+Lerd has two install-time DNS modes recorded in `~/.config/lerd/config.yaml`:
+- **Managed (default)**: `dns.enabled: true`, `dns.tld: test`. Sites at `*.test` via lerd-dns + mkcert; `site_tls` works.
+- **Disabled**: `dns.enabled: false`, `dns.tld: localhost`. Sites at `*.localhost` via RFC 6761; no mkcert CA, `site_tls` is unavailable.
+
+Read `status()` for `dns.tld` and `dns.enabled` instead of assuming `.test`; do not propose `site_tls` when `dns.enabled` is false.
+
 ### Available MCP tools
 
 | Tool | What it does |
