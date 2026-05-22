@@ -107,8 +107,8 @@ class VerificationController extends Controller
             return redirect()->away($record->signed_pdf_path);
         }
 
-        // Generate a validation URL
-        $validationUrl = route('services.verification', ['q' => $nik]);
+        // Generate URL publik untuk pengecekan keabsahan surat (dapat diakses tanpa login)
+        $validationUrl = route('public.verify', ['q' => $nik, 'type' => $type]);
 
         // Fetch Active Village Leader and Certificate first to sync data
         $village = $citizen->village()->with(['activeLeader.user.certificates' => function ($q) {
@@ -154,7 +154,7 @@ class VerificationController extends Controller
         $qr->size(300)
             ->margin(1)
             ->errorCorrection('H')
-            ->generate($validationUrl.'?sn='.$serialNumber, $qrPath);
+            ->generate($validationUrl.'&sn='.$serialNumber, $qrPath);
 
         $html = view($config['view'], compact('citizen', 'record', 'validationUrl', 'serialNumber', 'leader'))->render();
 

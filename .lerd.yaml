@@ -17,3 +17,4 @@ services:
 workers:
     - queue
     - schedule
+    - vite

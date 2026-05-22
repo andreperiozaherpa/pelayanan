@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\DistrictController;
 use App\Http\Controllers\Web\HistoryController;
 use App\Http\Controllers\Web\LoginController;
+use App\Http\Controllers\Web\PublicVerificationController;
 use App\Http\Controllers\Web\ReportController;
 use App\Http\Controllers\Web\RoleController;
 use App\Http\Controllers\Web\ServiceController;
@@ -13,6 +14,9 @@ use App\Http\Controllers\Web\UserController;
 use App\Http\Controllers\Web\VerificationController;
 use App\Http\Controllers\Web\VillageController;
 use Illuminate\Support\Facades\Route;
+
+// Public Routes (tanpa autentikasi)
+Route::get('/cek-surat', [PublicVerificationController::class, 'show'])->name('public.verify');
 
 // Auth Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
