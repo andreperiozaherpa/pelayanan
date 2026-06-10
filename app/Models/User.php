@@ -22,6 +22,8 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $password
  * @property int $role_id
  * @property int|null $desa_id
+ * @property int|null $district_id
+ * @property int|null $opd_id
  * @property bool $is_active
  * @property string|null $remember_token
  * @property Carbon|null $created_at
@@ -64,6 +66,7 @@ class User extends Authenticatable
         'role_id',
         'desa_id',
         'district_id',
+        'opd_id',
         'is_active',
         'last_login_at',
     ];
@@ -93,6 +96,11 @@ class User extends Authenticatable
     public function district(): BelongsTo
     {
         return $this->belongsTo(District::class);
+    }
+
+    public function opd(): BelongsTo
+    {
+        return $this->belongsTo(Opd::class);
     }
 
     public function activeVillageLeader(): HasOne
@@ -133,6 +141,11 @@ class User extends Authenticatable
     public function isAuditor(): bool
     {
         return $this->role && $this->role->slug === 'auditor';
+    }
+
+    public function isOperatorOpd(): bool
+    {
+        return $this->role && $this->role->slug === 'operatoropd';
     }
 
     public function certificates(): HasMany

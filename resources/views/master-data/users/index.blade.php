@@ -50,6 +50,9 @@
                     @if($user->village)
                         <p class="text-[9px] text-slate-400 font-bold uppercase mt-1 tracking-widest">📍 {{ $user->village->name }}</p>
                     @endif
+                    @if($user->opd)
+                        <p class="text-[9px] text-slate-400 font-bold uppercase mt-1 tracking-widest">🏢 {{ $user->opd->name }}</p>
+                    @endif
                 </td>
                 <td class="py-4 px-6">
                     @if($user->is_active)

@@ -21,7 +21,8 @@ $watch('sidebarOpen', val => localStorage.setItem('sidebarOpen', val));"
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Sistem Verifikasi Pelayanan Dokumen') }} - @yield('title', 'Layanan Utama')</title>
+    <title>{{ config('app.name', 'SIBERUGO MPP') }} - @yield('title', 'Layanan Utama')</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/logo-mpp.png') }}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -76,7 +77,8 @@ $watch('sidebarOpen', val => localStorage.setItem('sidebarOpen', val));"
             color: #94a3b8 !important;
         }
 
-        .swal2-confirm, .swal2-cancel {
+        .swal2-confirm,
+        .swal2-cancel {
             border-radius: 1.25rem !important;
             font-weight: 800 !important;
             text-transform: uppercase !important;

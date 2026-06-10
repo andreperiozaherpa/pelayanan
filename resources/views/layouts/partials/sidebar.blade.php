@@ -45,12 +45,30 @@
                             </a>
                         @endcan
 
-                        @if (Auth::user()->hasAnyPermission(['users.manage', 'roles.manage', 'villages.manage', 'districts.manage']))
+                        @if (Auth::user()->hasAnyPermission(['users.manage', 'roles.manage', 'villages.manage', 'districts.manage', 'opds.manage']))
                             <a href="{{ route('users.index') }}"
-                                class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('users.*') || request()->routeIs('roles.*') || request()->routeIs('districts.*') || request()->routeIs('villages.*') || request()->routeIs('admin.certificates.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                                class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('users.*') || request()->routeIs('roles.*') || request()->routeIs('districts.*') || request()->routeIs('villages.*') || request()->routeIs('opds.*') || request()->routeIs('admin.certificates.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
+                                title="Pengaturan Sistem">
                                 <iconify-icon icon="lucide:settings-2" class="text-xl"></iconify-icon>
                             </a>
+                        @endif
+
+                        @can('maps.manage')
+                            <a href="{{ route('map-regions.index') }}"
+                                class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('map-regions.*') || request()->routeIs('map-zones.*') || request()->routeIs('map-locations.*') || request()->routeIs('map-zone-types.*') || request()->routeIs('map-location-categories.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
+                                title="SIBERUGO GIS">
+                                <iconify-icon icon="lucide:map" class="text-xl"></iconify-icon>
+                            </a>
                         @endcan
+
+                        @if (Auth::user()->hasAnyPermission(['cms.articles.view', 'cms.pages.view', 'cms.banners.view', 'cms.faqs.view', 'cms.testimonials.view', 'cms.teams.view', 'cms.settings.view']))
+                            <a href="{{ route('cms-articles.index') }}"
+                                class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('cms-articles.*') || request()->routeIs('cms-categories.*') || request()->routeIs('cms-pages.*') || request()->routeIs('cms-banners.*') || request()->routeIs('cms-faqs.*') || request()->routeIs('cms-testimonials.*') || request()->routeIs('cms-teams.*') || request()->routeIs('cms-settings.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
+                                title="CMS Website">
+                                <iconify-icon icon="lucide:layout-template" class="text-xl"></iconify-icon>
+                            </a>
+                        @endif
+
                         <button
                             class="mt-auto flex items-center justify-center w-12 h-12 rounded-xl text-slate-400 hover:bg-white/50 dark:hover:bg-slate-800 transition-all duration-300">
                             <iconify-icon icon="lucide:code-2" class="text-xl"></iconify-icon>
@@ -155,6 +173,7 @@
                                     request()->routeIs('roles.*') ||
                                     request()->routeIs('districts.*') ||
                                     request()->routeIs('villages.*') ||
+                                    request()->routeIs('opds.*') ||
                                     request()->routeIs('admin.certificates.*'))
                                 <div class="px-4 py-4">
                                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Settings
@@ -176,10 +195,69 @@
                                     <x-nav-link href="{{ route('villages.index') }}" :active="request()->routeIs('villages.*')"
                                         icon="lucide:home">Villages</x-nav-link>
                                 @endcan
+                                @can('opds.manage')
+                                    <x-nav-link href="{{ route('opds.index') }}" :active="request()->routeIs('opds.*')"
+                                        icon="lucide:building-2">OPD</x-nav-link>
+                                @endcan
                                 @if (Auth::user()->isSuperAdmin())
                                     <x-nav-link href="{{ route('admin.certificates.index') }}" :active="request()->routeIs('admin.certificates.*')"
                                         icon="lucide:badge-check">Sertifikat TTE</x-nav-link>
                                 @endif
+                            @elseif(request()->routeIs('map-regions.*') ||
+                                    request()->routeIs('map-zones.*') ||
+                                    request()->routeIs('map-locations.*') ||
+                                    request()->routeIs('map-zone-types.*') ||
+                                    request()->routeIs('map-location-categories.*'))
+                                <div class="px-4 py-4">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">SIBERUGO GIS
+                                    </p>
+                                </div>
+                                @can('maps.manage')
+                                    <x-nav-link href="{{ route('map-regions.index') }}" :active="request()->routeIs('map-regions.*')"
+                                        icon="lucide:map">Batas Wilayah</x-nav-link>
+                                    <x-nav-link href="{{ route('map-zones.index') }}" :active="request()->routeIs('map-zones.*')"
+                                        icon="lucide:layers">Zonasi Fungsi</x-nav-link>
+                                    <x-nav-link href="{{ route('map-locations.index') }}" :active="request()->routeIs('map-locations.*')"
+                                        icon="lucide:map-pin">Titik Lokasi (POI)</x-nav-link>
+                                    <x-nav-link href="{{ route('map-zone-types.index') }}" :active="request()->routeIs('map-zone-types.*')"
+                                        icon="lucide:palette">Tipe Zonasi</x-nav-link>
+                                    <x-nav-link href="{{ route('map-location-categories.index') }}" :active="request()->routeIs('map-location-categories.*')"
+                                        icon="lucide:tags">Kategori POI</x-nav-link>
+                                @endcan
+                            @elseif(request()->routeIs('cms-articles.*') || request()->routeIs('cms-categories.*') || request()->routeIs('cms-pages.*') || request()->routeIs('cms-banners.*') || request()->routeIs('cms-faqs.*') || request()->routeIs('cms-testimonials.*') || request()->routeIs('cms-teams.*') || request()->routeIs('cms-settings.*'))
+                                <div class="px-4 py-4">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">CMS Website</p>
+                                </div>
+                                @can('cms.articles.view')
+                                    <x-nav-link href="{{ route('cms-articles.index') }}" :active="request()->routeIs('cms-articles.*')"
+                                        icon="lucide:file-text">Artikel / Blog</x-nav-link>
+                                    <x-nav-link href="{{ route('cms-categories.index') }}" :active="request()->routeIs('cms-categories.*')"
+                                        icon="lucide:folder-open">Kategori Artikel</x-nav-link>
+                                @endcan
+                                @can('cms.pages.view')
+                                    <x-nav-link href="{{ route('cms-pages.index') }}" :active="request()->routeIs('cms-pages.*')"
+                                        icon="lucide:layout">Halaman Statis</x-nav-link>
+                                @endcan
+                                @can('cms.banners.view')
+                                    <x-nav-link href="{{ route('cms-banners.index') }}" :active="request()->routeIs('cms-banners.*')"
+                                        icon="lucide:image">Banner Slider</x-nav-link>
+                                @endcan
+                                @can('cms.faqs.view')
+                                    <x-nav-link href="{{ route('cms-faqs.index') }}" :active="request()->routeIs('cms-faqs.*')"
+                                        icon="lucide:help-circle">FAQ</x-nav-link>
+                                @endcan
+                                @can('cms.testimonials.view')
+                                    <x-nav-link href="{{ route('cms-testimonials.index') }}" :active="request()->routeIs('cms-testimonials.*')"
+                                        icon="lucide:message-square">Testimoni</x-nav-link>
+                                @endcan
+                                @can('cms.teams.view')
+                                    <x-nav-link href="{{ route('cms-teams.index') }}" :active="request()->routeIs('cms-teams.*')"
+                                        icon="lucide:users">Tim Perusahaan</x-nav-link>
+                                @endcan
+                                @can('cms.settings.view')
+                                    <x-nav-link href="{{ route('cms-settings.index') }}" :active="request()->routeIs('cms-settings.*')"
+                                        icon="lucide:settings">Pengaturan Website</x-nav-link>
+                                @endcan
                             @endif
                         </nav>
                     </div>

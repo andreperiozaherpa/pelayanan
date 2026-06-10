@@ -2,8 +2,21 @@
 
 namespace App\Providers;
 
+use App\Models\CmsArticle;
+use App\Models\CmsBanner;
+use App\Models\CmsFaq;
+use App\Models\CmsPage;
+use App\Models\CmsPortfolio;
+use App\Models\CmsService;
+use App\Models\CmsSetting;
+use App\Models\CmsStatistic;
+use App\Models\CmsTeam;
+use App\Models\CmsTestimonial;
+use App\Models\CmsWebsiteSection;
+use App\Models\CmsWhyChooseUs;
 use App\Models\ServiceRequest;
 use App\Models\User;
+use App\Observers\LandingPageCacheObserver;
 use App\Services\AuditService;
 use Auth;
 use Illuminate\Support\Facades\Gate;
@@ -27,6 +40,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register landing page cache invalidation observers
+        $cmsModels = [
+            CmsArticle::class, CmsBanner::class, CmsFaq::class, CmsPage::class,
+            CmsPortfolio::class, CmsService::class, CmsSetting::class,
+            CmsStatistic::class, CmsTeam::class, CmsTestimonial::class,
+            CmsWebsiteSection::class, CmsWhyChooseUs::class,
+        ];
+
+        foreach ($cmsModels as $model) {
+            $model::observe(LandingPageCacheObserver::class);
+        }
+
         // Global Gate Bridge (RBAC)
         Gate::before(function (User $user, string $ability) {
             if ($user->isSuperAdmin()) {

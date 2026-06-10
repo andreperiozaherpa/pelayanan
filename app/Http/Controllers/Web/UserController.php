@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Web\StoreUserRequest;
 use App\Http\Requests\Web\UpdateUserRequest;
 use App\Http\Resources\Web\UserResource;
+use App\Models\Opd;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Village;
@@ -21,7 +22,7 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::with(['role', 'village']);
+        $query = User::with(['role', 'village', 'opd']);
 
         if ($request->has('search')) {
             $query->where('name', 'like', '%'.$request->search.'%')
@@ -34,6 +35,7 @@ class UserController extends Controller
             'users' => $users,
             'roles' => Role::all(),
             'villages' => Village::all(),
+            'opds' => Opd::orderBy('name')->get(),
         ]);
     }
 
@@ -45,6 +47,7 @@ class UserController extends Controller
         return view('master-data.users.create', [
             'roles' => Role::all(),
             'villages' => Village::all(),
+            'opds' => Opd::orderBy('name')->get(),
         ]);
     }
 
@@ -81,6 +84,7 @@ class UserController extends Controller
             'user' => $user,
             'roles' => Role::all(),
             'villages' => Village::all(),
+            'opds' => Opd::orderBy('name')->get(),
         ]);
     }
 

@@ -59,7 +59,7 @@ test('poverty status results are cached in redis', function () {
         'valid_until' => now()->addYear(),
     ]);
 
-    $cacheKey = 'poverty_status_9999999999999999';
+    $cacheKey = 'citizen_services_9999999999999999';
 
     // First call: Should populate cache
     $this->actingAs($petugas, 'sanctum')

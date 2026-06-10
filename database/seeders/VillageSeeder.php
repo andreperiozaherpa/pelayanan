@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\District;
 use App\Models\DistrictLeader;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\Village;
 use App\Models\VillageLeader;
@@ -15,6 +16,7 @@ class VillageSeeder extends Seeder
 {
     public function run(): void
     {
+        $operatorDesaRoleId = Role::where('slug', 'operatordesa')->value('id');
         $districts = [
             'Kecamatan Makmur' => ['code' => '320101', 'regency_name' => 'Kabupaten Sukses'],
             'Kecamatan Jaya' => ['code' => '320102', 'regency_name' => 'Kabupaten Sukses'],
@@ -53,7 +55,7 @@ class VillageSeeder extends Seeder
                 [
                     'name' => $kadesName,
                     'password' => Hash::make('password'),
-                    'role_id' => 2, // operatordesa
+                    'role_id' => $operatorDesaRoleId,
                     'desa_id' => $villageModel->id,
                     'is_active' => true,
                 ]
@@ -82,7 +84,7 @@ class VillageSeeder extends Seeder
                 [
                     'name' => $camatName,
                     'password' => Hash::make('password'),
-                    'role_id' => 2, // using operatordesa for now or adjust as needed
+                    'role_id' => $operatorDesaRoleId,
                     'district_id' => $district->id,
                     'is_active' => true,
                 ]

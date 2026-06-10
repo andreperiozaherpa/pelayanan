@@ -63,6 +63,16 @@ class RBACSeeder extends Seeder
                 'description' => 'Akses untuk mengelola data kecamatan termasuk tambah, ubah, dan hapus.',
             ],
             [
+                'name' => 'Kelola Data OPD',
+                'slug' => 'opds.manage',
+                'description' => 'Akses untuk mengelola data Organisasi Perangkat Daerah termasuk tambah, ubah, dan hapus.',
+            ],
+            [
+                'name' => 'Kelola Data Peta SIBERUGO',
+                'slug' => 'maps.manage',
+                'description' => 'Akses untuk mengelola data peta spasial, region, zona, dan titik lokasi SIBERUGO.',
+            ],
+            [
                 'name' => 'Ekspor Laporan',
                 'slug' => 'reports.export',
                 'description' => 'Akses untuk mengekspor laporan data dalam format yang tersedia (Excel, PDF, dll).',
@@ -75,8 +85,9 @@ class RBACSeeder extends Seeder
 
         // Define Roles & Assign Permissions
         $roles = [
-            'SuperAdmin' => ['service.verify', 'service.print_proof', 'service.report', 'citizens.manage', 'audit.view', 'system.manage', 'users.manage', 'roles.manage', 'villages.manage', 'districts.manage', 'reports.export'],
+            'SuperAdmin' => ['service.verify', 'service.print_proof', 'service.report', 'citizens.manage', 'audit.view', 'system.manage', 'users.manage', 'roles.manage', 'villages.manage', 'districts.manage', 'opds.manage', 'maps.manage', 'reports.export'],
             'OperatorDesa' => ['service.verify'],
+            'OperatorOpd' => ['service.verify', 'service.print_proof', 'service.report'],
             'PetugasFrontOffice' => ['service.verify', 'service.print_proof', 'service.report'],
             'Auditor' => ['audit.view', 'reports.export'],
         ];

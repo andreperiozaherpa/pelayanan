@@ -41,4 +41,8 @@ return [
         'chrome_path' => env('BROWSERSHOT_CHROME_PATH', '/usr/bin/chromium'),
     ],
 
+    'google' => [
+        'maps_api_key' => env('GOOGLE_MAPS_API_KEY'),
+    ],
+
 ];

@@ -45,6 +45,15 @@ class UpdateUserRequest extends FormRequest
                 'nullable',
                 'exists:villages,id',
             ],
+            'opd_id' => [
+                Rule::requiredIf(function () {
+                    $role = Role::find($this->role_id);
+
+                    return $role && $role->slug === 'operatoropd';
+                }),
+                'nullable',
+                'exists:opds,id',
+            ],
             'is_active' => ['boolean'],
         ];
     }
@@ -56,6 +65,7 @@ class UpdateUserRequest extends FormRequest
     {
         return [
             'desa_id.required_if' => 'Wilayah Desa wajib dipilih untuk role Operator Desa.',
+            'opd_id.required_if' => 'OPD wajib dipilih untuk role Operator OPD.',
         ];
     }
 }

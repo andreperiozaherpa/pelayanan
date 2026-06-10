@@ -64,6 +64,20 @@
                             @endforeach
                         </select>
                     </div>
+
+                    <!-- OPD (Conditional) -->
+                    <div class="space-y-2" x-show="document.querySelector(`option[value='${role}']`)?.dataset.slug === 'operatoropd'" x-cloak x-transition>
+                        <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">OPD / Unit Kerja</label>
+                        <select name="opd_id"
+                            class="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-900/50 border border-black/[0.03] dark:border-white/[0.03] rounded-2xl focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn text-[11px] font-bold transition-all dark:text-white appearance-none uppercase tracking-wider">
+                            <option value="">PILIH OPD...</option>
+                            @foreach($opds as $opd)
+                                <option value="{{ $opd->id }}" {{ old('opd_id', $user->opd_id) == $opd->id ? 'selected' : '' }}>
+                                    {{ strtoupper($opd->name) }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Password Info -->
