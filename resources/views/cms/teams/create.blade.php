@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Tambah Anggota Tim Baru')
+@section('title', 'Tambah Pejabat/Staf Baru')
 
 @section('content')
 <div class="space-y-6">
@@ -12,8 +12,8 @@
             </svg>
         </a>
         <div>
-            <h1 class="text-xl font-black text-slate-800 dark:text-white tracking-tight uppercase">Tambah Anggota Tim</h1>
-            <p class="text-xs text-slate-500 font-medium tracking-tight">Tambah anggota tim management baru untuk dipublikasikan pada website.</p>
+            <h1 class="text-xl font-black text-slate-800 dark:text-white tracking-tight uppercase">Tambah Pejabat / Staf</h1>
+            <p class="text-xs text-slate-500 font-medium tracking-tight">Tambah pimpinan, pejabat, atau staf baru untuk struktur organisasi.</p>
         </div>
     </div>
 
@@ -27,7 +27,7 @@
                     <div class="space-y-6">
                         <!-- Name -->
                         <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Nama Anggota Tim</label>
+                            <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Nama Pejabat / Staf</label>
                             <input type="text" name="name" value="{{ old('name') }}" required
                                 class="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-900/50 border border-black/[0.03] dark:border-white/[0.03] rounded-2xl focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn text-[11px] font-bold transition-all dark:text-white"
                                 placeholder="Contoh: Budi Santoso, S.Kom" />
@@ -77,9 +77,9 @@
                             @include('cms.partials.dropzone-upload', [
                                 'id' => 'image',
                                 'name' => 'image',
-                                'label' => 'Foto Anggota Tim',
+                                'label' => 'Foto Pejabat / Staf',
                                 'value' => old('image'),
-                                'placeholder' => 'Klik atau seret foto anggota tim ke sini',
+                                'placeholder' => 'Klik atau seret foto pejabat/staf ke sini',
                                 'folder' => 'teams'
                             ])
                             @error('image')
@@ -94,7 +94,7 @@
                         Batal
                     </a>
                     <button type="submit" class="bg-primary-acorn hover:bg-primary-acorn/90 text-white px-8 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary-acorn/20 transition-all hover:-translate-y-0.5">
-                        Simpan Anggota
+                        Simpan Data
                     </button>
                 </div>
             </form>

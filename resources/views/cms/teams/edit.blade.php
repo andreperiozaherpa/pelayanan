@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Anggota Tim')
+@section('title', 'Edit Pejabat / Staf')
 
 @section('content')
 <div class="space-y-6">
@@ -12,8 +12,8 @@
             </svg>
         </a>
         <div>
-            <h1 class="text-xl font-black text-slate-800 dark:text-white tracking-tight uppercase">Edit Anggota Tim</h1>
-            <p class="text-xs text-slate-500 font-medium tracking-tight">Perbarui informasi anggota tim "{{ $cmsTeam->name }}".</p>
+            <h1 class="text-xl font-black text-slate-800 dark:text-white tracking-tight uppercase">Edit Pejabat / Staf</h1>
+            <p class="text-xs text-slate-500 font-medium tracking-tight">Perbarui informasi pejabat/staf "{{ $cmsTeam->name }}".</p>
         </div>
     </div>
 
@@ -28,7 +28,7 @@
                     <div class="space-y-6">
                         <!-- Name -->
                         <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Nama Anggota Tim</label>
+                            <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Nama Pejabat / Staf</label>
                             <input type="text" name="name" value="{{ old('name', $cmsTeam->name) }}" required
                                 class="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-900/50 border border-black/[0.03] dark:border-white/[0.03] rounded-2xl focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn text-[11px] font-bold transition-all dark:text-white"
                                 placeholder="Contoh: Budi Santoso, S.Kom" />
@@ -78,9 +78,9 @@
                             @include('cms.partials.dropzone-upload', [
                                 'id' => 'image',
                                 'name' => 'image',
-                                'label' => 'Ganti Foto Anggota Tim',
-                                'value' => old('image', $cmsTeam->photo),
-                                'placeholder' => 'Klik atau seret foto anggota tim ke sini',
+                                'label' => 'Ganti Foto',
+                                'value' => old('image', $cmsTeam->image),
+                                'placeholder' => 'Klik atau seret foto ke sini',
                                 'folder' => 'teams'
                             ])
                             @error('image')
@@ -95,7 +95,7 @@
                         Batal
                     </a>
                     <button type="submit" class="bg-primary-acorn hover:bg-primary-acorn/90 text-white px-8 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary-acorn/20 transition-all hover:-translate-y-0.5">
-                        Perbarui Anggota
+                        Perbarui Data
                     </button>
                 </div>
             </form>

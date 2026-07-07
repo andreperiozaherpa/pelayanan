@@ -22,7 +22,7 @@ $watch('sidebarOpen', val => localStorage.setItem('sidebarOpen', val));"
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'SIBERUGO MPP') }} - @yield('title', 'Layanan Utama')</title>
-    <link rel="icon" type="image/png" href="{{ asset('assets/images/logo-mpp.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/logo-tubaba.png') }}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

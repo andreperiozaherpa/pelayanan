@@ -6,8 +6,10 @@ use App\Http\Controllers\Web\CitizenController;
 use App\Http\Controllers\Web\CmsArticleController;
 use App\Http\Controllers\Web\CmsBannerController;
 use App\Http\Controllers\Web\CmsCategoryController;
+use App\Http\Controllers\Web\CmsComplaintController;
 use App\Http\Controllers\Web\CmsFaqController;
 use App\Http\Controllers\Web\CmsMediaController;
+use App\Http\Controllers\Web\CmsMenuController;
 use App\Http\Controllers\Web\CmsPageController;
 use App\Http\Controllers\Web\CmsSettingController;
 use App\Http\Controllers\Web\CmsTeamController;
@@ -40,11 +42,7 @@ Route::get('/cek-surat', [PublicVerificationController::class, 'show'])->name('p
 Route::get('/', [LandingPageController::class, 'index'])->name('landing.index');
 Route::get('/siberugo', [SiberugoController::class, 'index'])->name('siberugo.index');
 Route::get('/siberugo/peta', [SiberugoController::class, 'map'])->name('siberugo.map');
-
-// Dynamic Page Routes
-Route::get('/{section}/{slug}', [LandingPageController::class, 'showPage'])
-    ->whereIn('section', ['profil', 'pelayanan', 'informasi', 'investasi', 'ppid', 'kontak'])
-    ->name('landing.page');
+Route::post('/kontak/pengaduan', [LandingPageController::class, 'submitComplaint'])->name('landing.complaint.submit');
 
 // Public Map API Endpoints
 Route::prefix('api/map')->name('api.map.')->group(function () {
@@ -117,6 +115,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('cms-categories', CmsCategoryController::class);
     Route::resource('cms-articles', CmsArticleController::class);
     Route::resource('cms-pages', CmsPageController::class);
+    Route::resource('cms-menus', CmsMenuController::class);
     Route::resource('cms-banners', CmsBannerController::class);
     Route::resource('cms-faqs', CmsFaqController::class);
     Route::resource('cms-testimonials', CmsTestimonialController::class);
@@ -124,4 +123,8 @@ Route::middleware('auth')->group(function () {
     Route::get('cms-settings', [CmsSettingController::class, 'index'])->name('cms-settings.index');
     Route::put('cms-settings', [CmsSettingController::class, 'update'])->name('cms-settings.update');
     Route::post('cms-media/upload', [CmsMediaController::class, 'upload'])->name('cms-media.upload');
+    Route::resource('cms-complaints', CmsComplaintController::class)->only(['index', 'show', 'update', 'destroy']);
 });
+
+// Dynamic Page Routes (placed at the bottom to avoid route conflicts)
+Route::get('/{section}/{slug}', [LandingPageController::class, 'showPage'])->name('landing.page');

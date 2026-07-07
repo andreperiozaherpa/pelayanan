@@ -41,28 +41,64 @@
                 </div>
 
                 <!-- Permissions Selection -->
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between mb-2">
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between border-b border-black/[0.05] dark:border-white/[0.05] pb-3">
                         <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Daftar Izin Akses (Permissions)</label>
-                        <button type="button" onclick="const checks = document.querySelectorAll('input[type=checkbox]'); const allChecked = Array.from(checks).every(c => c.checked); checks.forEach(c => c.checked = !allChecked)"
+                        <button type="button" onclick="const checks = document.querySelectorAll('input[name=\'permissions[]\']'); const allChecked = Array.from(checks).every(c => c.checked); checks.forEach(c => c.checked = !allChecked)"
                             class="text-[10px] font-black text-primary-acorn uppercase tracking-widest hover:opacity-80 transition">
                             Pilih Semua / Batal
                         </button>
                     </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        @foreach($permissions as $permission)
-                        <label class="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-900/30 border border-black/[0.03] dark:border-white/[0.03] rounded-2xl hover:border-primary-acorn/50 transition-all cursor-pointer group">
-                            <div class="relative inline-flex items-center">
-                                <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" 
-                                    class="w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-primary-acorn focus:ring-primary-acorn/20 bg-white dark:bg-slate-900 transition-all"
-                                    {{ is_array(old('permissions')) && in_array($permission->id, old('permissions')) ? 'checked' : '' }}>
+
+                    <div class="space-y-2">
+                        @foreach($groupedPermissions as $groupName => $groupPermissions)
+                            <div class="p-4 bg-slate-50/50 dark:bg-slate-900/10 border border-black/[0.02] dark:border-white/[0.02] rounded-2xl transition-all"
+                                 x-data="{
+                                     open: false,
+                                     toggleGroup() {
+                                         const checks = this.$el.querySelectorAll('input[type=checkbox]');
+                                         const allChecked = Array.from(checks).every(c => c.checked);
+                                         checks.forEach(c => c.checked = !allChecked);
+                                     }
+                                 }">
+                                <div class="flex items-center justify-between">
+                                    <button type="button" @click="open = !open" 
+                                        class="flex items-center gap-2 text-[11px] font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider hover:opacity-80 transition focus:outline-none">
+                                        <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                        {{ $groupName }}
+                                    </button>
+                                    <button type="button" @click="toggleGroup()"
+                                        class="text-[9px] font-bold text-primary-acorn uppercase tracking-widest hover:opacity-80 transition">
+                                        Pilih / Batal Modul
+                                    </button>
+                                </div>
+                                <div x-show="open" class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-3 border-t border-black/[0.03] dark:border-white/[0.03] mt-3">
+                                    @foreach($groupPermissions as $permission)
+                                        <label class="flex items-center gap-3 p-3 bg-white dark:bg-slate-900/30 border border-black/[0.03] dark:border-white/[0.03] rounded-xl hover:border-primary-acorn/50 transition-all cursor-pointer group">
+                                            <div class="relative inline-flex items-center">
+                                                <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" 
+                                                    class="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-700 text-primary-acorn focus:ring-primary-acorn/20 bg-white dark:bg-slate-900 transition-all"
+                                                    {{ is_array(old('permissions')) && in_array($permission->id, old('permissions')) ? 'checked' : '' }}>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs font-black text-slate-800 dark:text-white group-hover:text-primary-acorn transition-colors uppercase tracking-tight">
+                                                    {{ $permission->name }}
+                                                </p>
+                                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                                                    {{ $permission->slug }}
+                                                </p>
+                                                @if ($permission->description)
+                                                    <p class="text-[9px] font-medium text-slate-500 dark:text-slate-400 mt-1 leading-relaxed normal-case tracking-normal">
+                                                        {{ $permission->description }}
+                                                    </p>
+                                                @endif
+                                            </div>
+                                        </label>
+                                    @endforeach
+                                </div>
                             </div>
-                            <div>
-                                <p class="text-xs font-black text-slate-800 dark:text-white group-hover:text-primary-acorn transition-colors uppercase tracking-tight">{{ $permission->name }}</p>
-                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ $permission->slug }}</p>
-                            </div>
-                        </label>
                         @endforeach
                     </div>
                     @error('permissions')

@@ -31,10 +31,22 @@
                         <label
                             class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Judul
                             Halaman</label>
-                        <input type="text" name="title" value="{{ old('title') }}" required
+                        <input type="text" name="title" id="page-title" value="{{ old('title') }}" required
                             class="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-900/50 border border-black/[0.03] dark:border-white/[0.03] rounded-2xl focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn text-[12px] font-black transition-all dark:text-white"
                             placeholder="Contoh: Tentang Kami (About Us)" />
                         @error('title')
+                            <p class="text-[10px] text-rose-500 font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Slug -->
+                    <div class="space-y-2">
+                        <label
+                            class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Slug / URL Identifier</label>
+                        <input type="text" name="slug" id="page-slug" value="{{ old('slug') }}"
+                            class="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-900/50 border border-black/[0.03] dark:border-white/[0.03] rounded-2xl focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn text-[12px] font-mono transition-all dark:text-white"
+                            placeholder="Contoh: tentang-kami (kosongkan untuk generate otomatis)" />
+                        @error('slug')
                             <p class="text-[10px] text-rose-500 font-bold mt-1 uppercase tracking-tight">{{ $message }}</p>
                         @enderror
                     </div>
@@ -350,6 +362,26 @@
                             console.error(xhr, status, error);
                             alert('Gagal mengunggah gambar: ' + (xhr.responseJSON?.message || error));
                         }
+                    });
+                }
+                // Auto Slugify
+                const titleInput = document.getElementById('page-title');
+                const slugInput = document.getElementById('page-slug');
+                let slugEdited = false;
+
+                if (titleInput && slugInput) {
+                    titleInput.addEventListener('input', function() {
+                        if (!slugEdited) {
+                            slugInput.value = this.value
+                                .toLowerCase()
+                                .replace(/[^\w\s-]/g, '')
+                                .replace(/[\s_]+/g, '-')
+                                .replace(/^-+|-+$/g, '');
+                        }
+                    });
+
+                    slugInput.addEventListener('input', function() {
+                        slugEdited = true;
                     });
                 }
             });

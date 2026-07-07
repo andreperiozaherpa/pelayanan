@@ -8,7 +8,7 @@
                 <p class="text-[#7b323b] font-bold text-xs uppercase tracking-widest mb-3">Kabar Terkini</p>
                 <h2 class="text-3xl md:text-4xl font-black text-[#5d1e25]">Berita & Pengumuman</h2>
             </div>
-            <a href="{{ route('landing.index') }}#blog"
+            <a href="{{ route('landing.page', ['section' => 'informasi', 'slug' => 'berita']) }}"
                class="inline-flex items-center gap-2 text-[#7b323b] hover:text-[#5d1e25] font-bold hover:gap-4 transition-all duration-300 text-sm flex-shrink-0">
                 Lihat Semua Artikel
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -22,7 +22,13 @@
                 <article class="group bg-white/40 backdrop-blur-md rounded-3xl overflow-hidden border border-white/40 shadow-sm hover:shadow-xl hover:bg-white/60 transition-all duration-300 hover:-translate-y-1">
                     @if ($article->featured_image)
                         <div class="aspect-video overflow-hidden">
-                            <img src="{{ asset('storage/' . $article->featured_image) }}"
+                            @php
+                                $imageUrl = $article->featured_image;
+                                if (!str_starts_with($imageUrl, 'http://') && !str_starts_with($imageUrl, 'https://')) {
+                                    $imageUrl = str_starts_with($imageUrl, 'storage/') ? asset($imageUrl) : asset('storage/' . $imageUrl);
+                                }
+                            @endphp
+                            <img src="{{ $imageUrl }}"
                                  alt="{{ $article->title }}"
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                  loading="lazy">
@@ -41,7 +47,9 @@
                         @endif
 
                         <h3 class="font-bold text-[#5d1e25] mb-2 leading-snug line-clamp-2 group-hover:text-[#7b323b] transition-colors">
-                            {{ $article->title }}
+                            <a href="{{ route('landing.page', ['section' => 'informasi', 'slug' => $article->slug]) }}">
+                                {{ $article->title }}
+                            </a>
                         </h3>
 
                         @if ($article->excerpt)

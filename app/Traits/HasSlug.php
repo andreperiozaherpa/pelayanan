@@ -10,14 +10,18 @@ trait HasSlug
     {
         static::creating(function ($model) {
             $slugSource = $model->getSlugSourceColumn();
-            if (empty($model->slug) && ! empty($model->$slugSource)) {
+            if (! empty($model->slug)) {
+                $model->slug = static::generateUniqueSlug($model->slug);
+            } elseif (! empty($model->$slugSource)) {
                 $model->slug = static::generateUniqueSlug($model->$slugSource);
             }
         });
 
         static::updating(function ($model) {
             $slugSource = $model->getSlugSourceColumn();
-            if ($model->isDirty($slugSource)) {
+            if ($model->isDirty('slug') && ! empty($model->slug)) {
+                $model->slug = static::generateUniqueSlug($model->slug, $model->id);
+            } elseif ($model->isDirty($slugSource)) {
                 $model->slug = static::generateUniqueSlug($model->$slugSource, $model->id);
             }
         });

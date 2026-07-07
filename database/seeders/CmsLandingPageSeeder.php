@@ -85,8 +85,9 @@ class CmsLandingPageSeeder extends Seeder
             ['icon' => 'lucide:smile', 'label' => 'Tingkat Kepuasan', 'value' => 96, 'order' => 4, 'is_active' => true],
         ];
 
+        CmsStatistic::truncate();
         foreach ($statistics as $stat) {
-            CmsStatistic::updateOrCreate(['label' => $stat['label']], $stat);
+            CmsStatistic::create($stat);
         }
 
         // 4. Services

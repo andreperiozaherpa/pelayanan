@@ -19,7 +19,7 @@ class CmsPageController extends Controller
     {
         Gate::authorize('cms.pages.view');
 
-        $pages = CmsPage::latest()->paginate(10);
+        $pages = CmsPage::with('menu')->latest()->paginate(10);
 
         return view('cms.pages.index', compact('pages'));
     }

@@ -8,6 +8,7 @@ use App\Models\CmsPage;
 use App\Models\CmsService;
 use App\Models\CmsSetting;
 use App\Models\CmsStatistic;
+use App\Models\CmsTeam;
 use App\Models\CmsTestimonial;
 use App\Models\CmsWebsiteSection;
 use App\Models\Role;
@@ -187,4 +188,105 @@ test('dynamic profile page renders successfully', function () {
 test('dynamic page returns 404 for non-existent slug', function () {
     $response = $this->get('/profil/non-existent-slug');
     $response->assertStatus(404);
+});
+
+test('dynamic struktur organisasi page renders successfully', function () {
+    $role = Role::create(['name' => 'Editor', 'slug' => 'editor']);
+    $user = User::factory()->create(['role_id' => $role->id]);
+
+    $member = CmsTeam::create([
+        'name' => 'Pejabat Struktur Organisasi Utama',
+        'position' => 'Kepala Bidang Layanan',
+        'order' => 1,
+        'is_active' => true,
+    ]);
+
+    $response = $this->get('/profil/struktur-organisasi');
+    $response->assertStatus(200);
+    $response->assertSee('Struktur Organisasi & Pimpinan');
+    $response->assertSee('Pejabat Struktur Organisasi Utama');
+    $response->assertSee('Kepala Bidang Layanan');
+});
+
+test('seeded pages load successfully', function () {
+    $this->artisan('db:seed', ['--class' => 'DpmptspLandingPageSeeder']);
+
+    $pages = [
+        '/informasi/berita',
+        '/informasi/pengumuman',
+        '/investasi/potensi',
+        '/investasi/data',
+        '/investasi/peluang',
+        '/investasi/statistik',
+        '/ppid/berkala',
+        '/ppid/serta-merta',
+        '/ppid/setiap-saat',
+        '/ppid/permohonan',
+        '/kontak/kami',
+        '/kontak/lokasi',
+        '/kontak/pengaduan',
+    ];
+
+    foreach ($pages as $url) {
+        $response = $this->get($url);
+        $response->assertStatus(200);
+    }
+});
+
+test('article category listing page works and supports search', function () {
+    $category = CmsCategory::create(['name' => 'Berita Utama', 'slug' => 'berita']);
+    $role = Role::first() ?? Role::create(['name' => 'Editor', 'slug' => 'editor']);
+    $user = User::factory()->create(['role_id' => $role->id]);
+
+    $article1 = CmsArticle::create([
+        'title' => 'Pengembangan Sistem OSS Baru',
+        'slug' => 'pengembangan-sistem-oss-baru',
+        'category_id' => $category->id,
+        'author_id' => $user->id,
+        'content' => 'Sistem OSS baru akan diluncurkan.',
+        'status' => 'published',
+        'published_at' => now(),
+    ]);
+
+    $article2 = CmsArticle::create([
+        'title' => 'Rapat Koordinasi Penanaman Modal',
+        'slug' => 'rapat-koordinasi-penanaman-modal',
+        'category_id' => $category->id,
+        'author_id' => $user->id,
+        'content' => 'Rapat diadakan di aula utama.',
+        'status' => 'published',
+        'published_at' => now(),
+    ]);
+
+    $response = $this->get('/informasi/berita');
+    $response->assertStatus(200);
+    $response->assertSee('Pengembangan Sistem OSS Baru');
+    $response->assertSee('Rapat Koordinasi Penanaman Modal');
+
+    // Search query
+    $responseSearch = $this->get('/informasi/berita?q=OSS');
+    $responseSearch->assertStatus(200);
+    $responseSearch->assertSee('Pengembangan Sistem OSS Baru');
+    $responseSearch->assertDontSee('Rapat Koordinasi Penanaman Modal');
+});
+
+test('article detail page loads successfully', function () {
+    $category = CmsCategory::create(['name' => 'Berita Utama', 'slug' => 'berita']);
+    $role = Role::first() ?? Role::create(['name' => 'Editor', 'slug' => 'editor']);
+    $user = User::factory()->create(['role_id' => $role->id]);
+
+    $article = CmsArticle::create([
+        'title' => 'Detail Informasi Pelayanan',
+        'slug' => 'detail-informasi-pelayanan',
+        'category_id' => $category->id,
+        'author_id' => $user->id,
+        'content' => '<p>Konten detail pelayanan kami secara lengkap.</p>',
+        'status' => 'published',
+        'published_at' => now(),
+    ]);
+
+    $response = $this->get('/informasi/detail-informasi-pelayanan');
+    $response->assertStatus(200);
+    $response->assertSee('Detail Informasi Pelayanan');
+    $response->assertSee('Konten detail pelayanan kami secara lengkap.');
 });

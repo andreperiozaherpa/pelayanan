@@ -23,9 +23,19 @@ class CmsArticleController extends Controller
     {
         Gate::authorize('cms.articles.view');
 
+        $search = request('search');
+
         $articles = CmsArticle::with(['category', 'author'])
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                        ->orWhere('excerpt', 'like', "%{$search}%")
+                        ->orWhere('content', 'like', "%{$search}%");
+                });
+            })
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         return view('cms.articles.index', compact('articles'));
     }

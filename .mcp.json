@@ -6,7 +6,7 @@
             ],
             "command": "lerd",
             "env": {
-                "LERD_SITE_PATH": "/home/andre/Development/Laravel/pelayanan"
+                "LERD_SITE_PATH": "/home/lenovo/Dev/Laravel/pelayanan"
             }
         }
     }

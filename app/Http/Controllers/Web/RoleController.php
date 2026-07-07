@@ -27,9 +27,9 @@ class RoleController extends Controller
      */
     public function create()
     {
-        $permissions = Permission::orderBy('name')->get();
+        $groupedPermissions = $this->getGroupedPermissions();
 
-        return view('master-data.roles.create', compact('permissions'));
+        return view('master-data.roles.create', compact('groupedPermissions'));
     }
 
     /**
@@ -61,10 +61,10 @@ class RoleController extends Controller
      */
     public function edit(Role $role)
     {
-        $permissions = Permission::orderBy('name')->get();
+        $groupedPermissions = $this->getGroupedPermissions();
         $rolePermissions = $role->permissions()->pluck('id')->toArray();
 
-        return view('master-data.roles.edit', compact('role', 'permissions', 'rolePermissions'));
+        return view('master-data.roles.edit', compact('role', 'groupedPermissions', 'rolePermissions'));
     }
 
     /**
@@ -109,5 +109,82 @@ class RoleController extends Controller
         Audit::log('DELETE_ROLE', $role, null, $oldValue);
 
         return redirect()->route('roles.index')->with('success', "Role {$role->name} telah dihapus.");
+    }
+
+    /**
+     * Get and group permissions by their module context.
+     */
+    private function getGroupedPermissions()
+    {
+        return Permission::all()->groupBy(function ($permission) {
+            $slug = $permission->slug;
+            if (str_starts_with($slug, 'cms.')) {
+                $parts = explode('.', $slug);
+                $module = $parts[1] ?? 'umum';
+                $moduleNames = [
+                    'articles' => 'CMS: Artikel',
+                    'pages' => 'CMS: Halaman',
+                    'banners' => 'CMS: Banner',
+                    'faqs' => 'CMS: FAQ',
+                    'testimonials' => 'CMS: Testimoni',
+                    'teams' => 'CMS: Struktur Organisasi',
+                    'settings' => 'CMS: Pengaturan',
+                    'media' => 'CMS: Media',
+                    'menus' => 'CMS: Menu Navigasi',
+                    'complaints' => 'CMS: Pengaduan Masyarakat',
+                ];
+
+                return $moduleNames[$module] ?? 'CMS: '.ucfirst($module);
+            }
+            if (str_starts_with($slug, 'service.')) {
+                return 'Pelayanan & Dokumen';
+            }
+            if (str_ends_with($slug, '.manage')) {
+                $parts = explode('.', $slug);
+                $module = $parts[0] ?? 'umum';
+                $moduleNames = [
+                    'citizens' => 'Pengelolaan Data Warga',
+                    'users' => 'Pengguna & Otorisasi',
+                    'roles' => 'Pengguna & Otorisasi',
+                    'villages' => 'Pengelolaan Wilayah',
+                    'districts' => 'Pengelolaan Wilayah',
+                    'opds' => 'Pengelolaan OPD',
+                    'maps' => 'Pengelolaan Peta SIBERUGO',
+                ];
+
+                return $moduleNames[$module] ?? 'Pengelolaan '.ucfirst($module);
+            }
+
+            $otherNames = [
+                'audit.view' => 'Audit Log & Sistem',
+                'system.manage' => 'Audit Log & Sistem',
+                'reports.export' => 'Laporan & Ekspor',
+            ];
+
+            return $otherNames[$slug] ?? 'Lainnya';
+        })->sortBy(function ($items, $key) {
+            $order = [
+                'Pelayanan & Dokumen' => 1,
+                'Pengelolaan Data Warga' => 2,
+                'Pengelolaan Wilayah' => 3,
+                'Pengelolaan OPD' => 4,
+                'Pengelolaan Peta SIBERUGO' => 5,
+                'Pengguna & Otorisasi' => 6,
+                'Audit Log & Sistem' => 7,
+                'Laporan & Ekspor' => 8,
+                'CMS: Menu Navigasi' => 9,
+                'CMS: Pengaduan Masyarakat' => 10,
+                'CMS: Artikel' => 11,
+                'CMS: Halaman' => 12,
+                'CMS: Banner' => 13,
+                'CMS: FAQ' => 14,
+                'CMS: Testimoni' => 15,
+                'CMS: Struktur Organisasi' => 16,
+                'CMS: Media' => 17,
+                'CMS: Pengaturan' => 18,
+            ];
+
+            return $order[$key] ?? 99;
+        });
     }
 }

@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\CmsArticle;
 use App\Models\CmsBanner;
 use App\Models\CmsFaq;
+use App\Models\CmsMenu;
 use App\Models\CmsPage;
 use App\Models\CmsPortfolio;
 use App\Models\CmsService;
@@ -43,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
         // Register landing page cache invalidation observers
         $cmsModels = [
             CmsArticle::class, CmsBanner::class, CmsFaq::class, CmsPage::class,
+            CmsMenu::class,
             CmsPortfolio::class, CmsService::class, CmsSetting::class,
             CmsStatistic::class, CmsTeam::class, CmsTestimonial::class,
             CmsWebsiteSection::class, CmsWhyChooseUs::class,

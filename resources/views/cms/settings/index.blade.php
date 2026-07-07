@@ -110,6 +110,37 @@
                         'placeholder' => 'Klik atau seret berkas favicon ke sini',
                         'folder' => 'settings'
                     ])
+
+                    <hr class="border-black/[0.05] dark:border-white/[0.05] my-6">
+
+                    <div>
+                        <h3 class="text-[10px] font-black text-slate-800 dark:text-white uppercase tracking-widest">Profil Kepala Dinas (Hero Section)</h3>
+                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tight mt-0.5">Konfigurasikan foto, nama, dan jabatan Kepala Dinas yang tampil di bagian Hero.</p>
+                    </div>
+
+                    <!-- Head of Office Photo -->
+                    @include('cms.partials.dropzone-upload', [
+                        'id' => 'head_office_photo',
+                        'name' => 'settings[head_office_photo]',
+                        'label' => 'Foto Kepala Dinas',
+                        'value' => old('settings.head_office_photo', $settings->get('general', collect())->firstWhere('key', 'head_office_photo')?->value ?? ''),
+                        'placeholder' => 'Klik atau seret foto Kepala Dinas ke sini',
+                        'folder' => 'settings'
+                    ])
+
+                    <!-- Head of Office Name -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Nama Kepala Dinas</label>
+                        <input type="text" name="settings[head_office_name]" value="{{ old('settings.head_office_name', $settings->get('general', collect())->firstWhere('key', 'head_office_name')?->value ?? '') }}"
+                            class="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-900/50 border border-black/[0.03] dark:border-white/[0.03] rounded-2xl focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn text-[11px] font-bold transition-all dark:text-white" />
+                    </div>
+
+                    <!-- Head of Office Title -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Jabatan Kepala Dinas</label>
+                        <input type="text" name="settings[head_office_title]" value="{{ old('settings.head_office_title', $settings->get('general', collect())->firstWhere('key', 'head_office_title')?->value ?? '') }}"
+                            class="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-900/50 border border-black/[0.03] dark:border-white/[0.03] rounded-2xl focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn text-[11px] font-bold transition-all dark:text-white" />
+                    </div>
                 </div>
             </div>
 

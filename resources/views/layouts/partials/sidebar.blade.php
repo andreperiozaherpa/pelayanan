@@ -61,9 +61,9 @@
                             </a>
                         @endcan
 
-                        @if (Auth::user()->hasAnyPermission(['cms.articles.view', 'cms.pages.view', 'cms.banners.view', 'cms.faqs.view', 'cms.testimonials.view', 'cms.teams.view', 'cms.settings.view']))
+                        @if (Auth::user()->hasAnyPermission(['cms.articles.view', 'cms.pages.view', 'cms.banners.view', 'cms.faqs.view', 'cms.testimonials.view', 'cms.teams.view', 'cms.settings.view', 'cms.complaints.view']))
                             <a href="{{ route('cms-articles.index') }}"
-                                class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('cms-articles.*') || request()->routeIs('cms-categories.*') || request()->routeIs('cms-pages.*') || request()->routeIs('cms-banners.*') || request()->routeIs('cms-faqs.*') || request()->routeIs('cms-testimonials.*') || request()->routeIs('cms-teams.*') || request()->routeIs('cms-settings.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
+                                class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('cms-articles.*') || request()->routeIs('cms-categories.*') || request()->routeIs('cms-pages.*') || request()->routeIs('cms-banners.*') || request()->routeIs('cms-faqs.*') || request()->routeIs('cms-testimonials.*') || request()->routeIs('cms-teams.*') || request()->routeIs('cms-settings.*') || request()->routeIs('cms-complaints.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
                                 title="CMS Website">
                                 <iconify-icon icon="lucide:layout-template" class="text-xl"></iconify-icon>
                             </a>
@@ -224,7 +224,7 @@
                                     <x-nav-link href="{{ route('map-location-categories.index') }}" :active="request()->routeIs('map-location-categories.*')"
                                         icon="lucide:tags">Kategori POI</x-nav-link>
                                 @endcan
-                            @elseif(request()->routeIs('cms-articles.*') || request()->routeIs('cms-categories.*') || request()->routeIs('cms-pages.*') || request()->routeIs('cms-banners.*') || request()->routeIs('cms-faqs.*') || request()->routeIs('cms-testimonials.*') || request()->routeIs('cms-teams.*') || request()->routeIs('cms-settings.*'))
+                            @elseif(request()->routeIs('cms-articles.*') || request()->routeIs('cms-categories.*') || request()->routeIs('cms-pages.*') || request()->routeIs('cms-menus.*') || request()->routeIs('cms-banners.*') || request()->routeIs('cms-faqs.*') || request()->routeIs('cms-testimonials.*') || request()->routeIs('cms-teams.*') || request()->routeIs('cms-settings.*') || request()->routeIs('cms-complaints.*'))
                                 <div class="px-4 py-4">
                                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">CMS Website</p>
                                 </div>
@@ -237,6 +237,10 @@
                                 @can('cms.pages.view')
                                     <x-nav-link href="{{ route('cms-pages.index') }}" :active="request()->routeIs('cms-pages.*')"
                                         icon="lucide:layout">Halaman Statis</x-nav-link>
+                                @endcan
+                                @can('cms.menus.view')
+                                    <x-nav-link href="{{ route('cms-menus.index') }}" :active="request()->routeIs('cms-menus.*')"
+                                        icon="lucide:menu">Menu Navigasi</x-nav-link>
                                 @endcan
                                 @can('cms.banners.view')
                                     <x-nav-link href="{{ route('cms-banners.index') }}" :active="request()->routeIs('cms-banners.*')"
@@ -252,7 +256,11 @@
                                 @endcan
                                 @can('cms.teams.view')
                                     <x-nav-link href="{{ route('cms-teams.index') }}" :active="request()->routeIs('cms-teams.*')"
-                                        icon="lucide:users">Tim Perusahaan</x-nav-link>
+                                        icon="lucide:users">Struktur Organisasi</x-nav-link>
+                                @endcan
+                                @can('cms.complaints.view')
+                                    <x-nav-link href="{{ route('cms-complaints.index') }}" :active="request()->routeIs('cms-complaints.*')"
+                                        icon="lucide:message-square-warning">Pengaduan Masyarakat</x-nav-link>
                                 @endcan
                                 @can('cms.settings.view')
                                     <x-nav-link href="{{ route('cms-settings.index') }}" :active="request()->routeIs('cms-settings.*')"

@@ -449,6 +449,9 @@ test('authorized user can view and update settings', function () {
     // Seed a couple of settings first
     CmsSetting::create(['group' => 'general', 'key' => 'site_name', 'value' => 'Old Name', 'type' => 'string']);
     CmsSetting::create(['group' => 'social', 'key' => 'social_facebook', 'value' => 'Old FB', 'type' => 'string']);
+    CmsSetting::updateOrCreate(['key' => 'head_office_name'], ['group' => 'general', 'value' => 'Drs. H. Syahrul, M.IP.', 'type' => 'string']);
+    CmsSetting::updateOrCreate(['key' => 'head_office_title'], ['group' => 'general', 'value' => 'Kepala Dinas DPMPTSP', 'type' => 'string']);
+    CmsSetting::updateOrCreate(['key' => 'head_office_photo'], ['group' => 'general', 'value' => '', 'type' => 'string']);
 
     // List Settings
     $this->get(route('cms-settings.index'))->assertStatus(200);
@@ -458,6 +461,9 @@ test('authorized user can view and update settings', function () {
         'settings' => [
             'site_name' => 'New Site Name',
             'social_facebook' => 'https://facebook.com/new',
+            'head_office_name' => 'Drs. H. Syahrul Baru, M.IP.',
+            'head_office_title' => 'Plt. Kepala Dinas DPMPTSP',
+            'head_office_photo' => 'settings/kadin_new.jpg',
             'new_key_dynamic' => 'dynamic value',
         ],
     ]);
@@ -466,6 +472,9 @@ test('authorized user can view and update settings', function () {
 
     $this->assertDatabaseHas('cms_settings', ['key' => 'site_name', 'value' => 'New Site Name']);
     $this->assertDatabaseHas('cms_settings', ['key' => 'social_facebook', 'value' => 'https://facebook.com/new']);
+    $this->assertDatabaseHas('cms_settings', ['key' => 'head_office_name', 'value' => 'Drs. H. Syahrul Baru, M.IP.']);
+    $this->assertDatabaseHas('cms_settings', ['key' => 'head_office_title', 'value' => 'Plt. Kepala Dinas DPMPTSP']);
+    $this->assertDatabaseHas('cms_settings', ['key' => 'head_office_photo', 'value' => 'settings/kadin_new.jpg']);
 
     // Dynamic settings fall back to group 'general'
     $this->assertDatabaseHas('cms_settings', ['key' => 'new_key_dynamic', 'value' => 'dynamic value', 'group' => 'general']);

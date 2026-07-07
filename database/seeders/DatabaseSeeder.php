@@ -94,5 +94,6 @@ class DatabaseSeeder extends Seeder
         // 5. Seeding CMS settings
         $this->call(CmsSettingSeeder::class);
         $this->call(DpmptspLandingPageSeeder::class);
+        $this->call(CmsSeoSeeder::class);
     }
 }

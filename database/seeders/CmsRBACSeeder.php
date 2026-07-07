@@ -129,24 +129,24 @@ class CmsRBACSeeder extends Seeder
 
             // Teams
             [
-                'name' => 'Lihat Tim CMS',
+                'name' => 'Lihat Struktur Organisasi CMS',
                 'slug' => 'cms.teams.view',
-                'description' => 'Akses untuk melihat tim perusahaan.',
+                'description' => 'Akses untuk melihat struktur organisasi.',
             ],
             [
-                'name' => 'Buat Tim CMS',
+                'name' => 'Buat Struktur Organisasi CMS',
                 'slug' => 'cms.teams.create',
-                'description' => 'Akses untuk membuat tim baru.',
+                'description' => 'Akses untuk membuat struktur organisasi baru.',
             ],
             [
-                'name' => 'Ubah Tim CMS',
+                'name' => 'Ubah Struktur Organisasi CMS',
                 'slug' => 'cms.teams.edit',
-                'description' => 'Akses untuk mengubah data tim.',
+                'description' => 'Akses untuk mengubah data struktur organisasi.',
             ],
             [
-                'name' => 'Hapus Tim CMS',
+                'name' => 'Hapus Struktur Organisasi CMS',
                 'slug' => 'cms.teams.delete',
-                'description' => 'Akses untuk menghapus data tim.',
+                'description' => 'Akses untuk menghapus data struktur organisasi.',
             ],
 
             // Settings
@@ -167,6 +167,44 @@ class CmsRBACSeeder extends Seeder
                 'slug' => 'cms.media.manage',
                 'description' => 'Akses untuk mengunggah dan mengelola berkas media gambar/dokumen.',
             ],
+
+            // Menus
+            [
+                'name' => 'Lihat Menu CMS',
+                'slug' => 'cms.menus.view',
+                'description' => 'Akses untuk melihat menu navigasi.',
+            ],
+            [
+                'name' => 'Buat Menu CMS',
+                'slug' => 'cms.menus.create',
+                'description' => 'Akses untuk membuat menu navigasi baru.',
+            ],
+            [
+                'name' => 'Ubah Menu CMS',
+                'slug' => 'cms.menus.edit',
+                'description' => 'Akses untuk mengubah menu navigasi.',
+            ],
+            [
+                'name' => 'Hapus Menu CMS',
+                'slug' => 'cms.menus.delete',
+                'description' => 'Akses untuk menghapus menu navigasi.',
+            ],
+            // Complaints
+            [
+                'name' => 'Lihat Pengaduan CMS',
+                'slug' => 'cms.complaints.view',
+                'description' => 'Akses untuk melihat pengaduan masyarakat.',
+            ],
+            [
+                'name' => 'Balas Pengaduan CMS',
+                'slug' => 'cms.complaints.reply',
+                'description' => 'Akses untuk merespons/membalas pengaduan masyarakat.',
+            ],
+            [
+                'name' => 'Hapus Pengaduan CMS',
+                'slug' => 'cms.complaints.delete',
+                'description' => 'Akses untuk menghapus pengaduan masyarakat.',
+            ],
         ];
 
         foreach ($permissions as $p) {
@@ -177,17 +215,20 @@ class CmsRBACSeeder extends Seeder
         $cmsManagerPerms = [
             'cms.articles.view', 'cms.articles.create', 'cms.articles.edit', 'cms.articles.delete', 'cms.articles.publish',
             'cms.pages.view', 'cms.pages.create', 'cms.pages.edit', 'cms.pages.delete',
+            'cms.menus.view', 'cms.menus.create', 'cms.menus.edit', 'cms.menus.delete',
             'cms.banners.view', 'cms.banners.create', 'cms.banners.edit', 'cms.banners.delete',
             'cms.faqs.view', 'cms.faqs.create', 'cms.faqs.edit', 'cms.faqs.delete',
             'cms.testimonials.view', 'cms.testimonials.create', 'cms.testimonials.edit', 'cms.testimonials.delete',
             'cms.teams.view', 'cms.teams.create', 'cms.teams.edit', 'cms.teams.delete',
             'cms.settings.view', 'cms.settings.edit',
             'cms.media.manage',
+            'cms.complaints.view', 'cms.complaints.reply', 'cms.complaints.delete',
         ];
 
         $cmsEditorPerms = [
             'cms.articles.view', 'cms.articles.create', 'cms.articles.edit',
             'cms.pages.view', 'cms.pages.create', 'cms.pages.edit',
+            'cms.menus.view', 'cms.menus.create', 'cms.menus.edit',
             'cms.banners.view', 'cms.banners.create', 'cms.banners.edit',
             'cms.faqs.view', 'cms.faqs.create', 'cms.faqs.edit',
             'cms.media.manage',

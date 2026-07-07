@@ -38,6 +38,24 @@ class CmsSettingSeeder extends Seeder
                 'value' => '',
                 'type' => 'string',
             ],
+            [
+                'group' => 'general',
+                'key' => 'head_office_name',
+                'value' => 'Drs. H. Syahrul, M.IP.',
+                'type' => 'string',
+            ],
+            [
+                'group' => 'general',
+                'key' => 'head_office_title',
+                'value' => 'Kepala Dinas DPMPTSP',
+                'type' => 'string',
+            ],
+            [
+                'group' => 'general',
+                'key' => 'head_office_photo',
+                'value' => '',
+                'type' => 'string',
+            ],
 
             // Contact
             [

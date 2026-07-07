@@ -17,6 +17,7 @@ use App\Models\CmsTeam;
 use App\Models\CmsTestimonial;
 use App\Models\CmsWebsiteSection;
 use App\Models\CmsWhyChooseUs;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
@@ -33,6 +34,9 @@ class DpmptspLandingPageSeeder extends Seeder
             ['group' => 'general', 'key' => 'site_tagline', 'value' => 'Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu', 'type' => 'string'],
             ['group' => 'general', 'key' => 'site_logo', 'value' => '', 'type' => 'string'],
             ['group' => 'general', 'key' => 'site_favicon', 'value' => '', 'type' => 'string'],
+            ['group' => 'general', 'key' => 'head_office_name', 'value' => 'Drs. H. Syahrul, M.IP.', 'type' => 'string'],
+            ['group' => 'general', 'key' => 'head_office_title', 'value' => 'Kepala Dinas DPMPTSP', 'type' => 'string'],
+            ['group' => 'general', 'key' => 'head_office_photo', 'value' => '', 'type' => 'string'],
             ['group' => 'contact', 'key' => 'contact_email', 'value' => 'dpmptsp@tubabakab.go.id', 'type' => 'string'],
             ['group' => 'contact', 'key' => 'contact_phone', 'value' => '+62 726-1234-567', 'type' => 'string'],
             ['group' => 'contact', 'key' => 'contact_address', 'value' => 'Jl. Kompleks Perkantoran Pemda, Panaragan, Tulang Bawang Barat, Lampung', 'type' => 'string'],
@@ -59,7 +63,7 @@ class DpmptspLandingPageSeeder extends Seeder
             ['title' => 'Profil', 'url' => '#', 'order' => 2, 'children' => [
                 ['title' => 'Profil Dinas', 'url' => '/profil/dinas', 'order' => 1],
                 ['title' => 'Visi dan Misi', 'url' => '/profil/visi-misi', 'order' => 2],
-                ['title' => 'Struktur Organisasi', 'url' => '/profil/struktur', 'order' => 3],
+                ['title' => 'Struktur Organisasi', 'url' => '/profil/struktur-organisasi', 'order' => 3],
                 ['title' => 'Tugas dan Fungsi', 'url' => '/profil/tugas-fungsi', 'order' => 4],
                 ['title' => 'Profil Pejabat', 'url' => '/profil/pejabat', 'order' => 5],
                 ['title' => 'Sejarah Instansi', 'url' => '/profil/sejarah', 'order' => 6],
@@ -277,7 +281,119 @@ class DpmptspLandingPageSeeder extends Seeder
                 'content' => '<p class="mb-4">Seluruh aparatur pelayanan DPMPTSP Kabupaten Tulang Bawang Barat wajib menjunjung tinggi etika pelayanan publik:</p><ul class="list-disc pl-5 space-y-2"><li>Bersikap 5S (Senyum, Sapa, Salam, Sopan, Santun).</li><li>Menjaga integritas tinggi dan menolak segala bentuk gratifikasi.</li><li>Mengutamakan profesionalisme dan objektivitas penilaian berkas.</li></ul>',
                 'status' => 'published',
             ],
+
+            // Informasi Publik Pages
+            [
+                'slug' => 'berita',
+                'title' => 'Berita Terkini',
+                'content' => '<p class="mb-4">Halaman Berita Terkini Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu Kabupaten Tulang Bawang Barat.</p><p>Temukan informasi, berita terbaru, dan perkembangan pelayanan serta regulasi dari kami.</p>',
+                'status' => 'published',
+            ],
+            [
+                'slug' => 'pengumuman',
+                'title' => 'Pengumuman Resmi',
+                'content' => '<p class="mb-4">Halaman Pengumuman Resmi Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu Kabupaten Tulang Bawang Barat.</p><p>Semua informasi resmi, edaran, dan pengumuman pelayanan dipublikasikan di sini.</p>',
+                'status' => 'published',
+            ],
+            [
+                'slug' => 'agenda',
+                'title' => 'Agenda Kegiatan',
+                'content' => '<p class="mb-4">Halaman Agenda Kegiatan Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu Kabupaten Tulang Bawang Barat.</p><p>Daftar jadwal kegiatan, sosialisasi, dan agenda penting dinas.</p>',
+                'status' => 'published',
+            ],
+            [
+                'slug' => 'galeri',
+                'title' => 'Galeri Kegiatan',
+                'content' => '<p class="mb-4">Halaman Galeri Foto dan Dokumentasi Kegiatan Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu Kabupaten Tulang Bawang Barat.</p>',
+                'status' => 'published',
+            ],
+            [
+                'slug' => 'dokumen',
+                'title' => 'Dokumen Publik',
+                'content' => '<p class="mb-4">Halaman Unduh Dokumen Publik Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu Kabupaten Tulang Bawang Barat.</p><p>Unduh formulir, brosur, laporan, dan dokumen publik lainnya secara gratis.</p>',
+                'status' => 'published',
+            ],
+            [
+                'slug' => 'regulasi',
+                'title' => 'Regulasi & Produk Hukum',
+                'content' => '<p class="mb-4">Halaman Regulasi dan Produk Hukum terkait Penanaman Modal dan Pelayanan Perizinan di Kabupaten Tulang Bawang Barat.</p>',
+                'status' => 'published',
+            ],
+
+            // Investasi Pages
+            [
+                'slug' => 'potensi',
+                'title' => 'Potensi Investasi',
+                'content' => '<p class="mb-4">Kabupaten Tulang Bawang Barat memiliki berbagai potensi investasi unggulan di sektor pertanian, perkebunan, peternakan, dan industri pengolahan yang siap dikembangkan.</p><p>Didukung oleh ketersediaan lahan yang luas, tenaga kerja produktif, dan kemudahan proses perizinan berusaha.</p>',
+                'status' => 'published',
+            ],
+            [
+                'slug' => 'data',
+                'title' => 'Data Investasi',
+                'content' => '<p class="mb-4">Data perkembangan realisasi investasi Penanaman Modal Asing (PMA) dan Penanaman Modal Dalam Negeri (PMDN) di Kabupaten Tulang Bawang Barat.</p>',
+                'status' => 'published',
+            ],
+            [
+                'slug' => 'peluang',
+                'title' => 'Peluang Investasi',
+                'content' => '<p class="mb-4">Peluang investasi strategis yang ditawarkan kepada para investor untuk menanamkan modalnya di wilayah Kabupaten Tulang Bawang Barat.</p>',
+                'status' => 'published',
+            ],
+            [
+                'slug' => 'statistik',
+                'title' => 'Statistik Investasi',
+                'content' => '<p class="mb-4">Statistik perkembangan dan grafik pertumbuhan investasi dari tahun ke tahun di Kabupaten Tulang Bawang Barat.</p>',
+                'status' => 'published',
+            ],
+
+            // PPID Pages
+            [
+                'slug' => 'berkala',
+                'title' => 'Informasi Berkala',
+                'content' => '<p class="mb-4">Informasi publik yang disediakan dan diumumkan secara berkala oleh Pejabat Pengelola Informasi dan Dokumentasi (PPID) sesuai dengan undang-undang yang berlaku.</p>',
+                'status' => 'published',
+            ],
+            [
+                'slug' => 'serta-merta',
+                'title' => 'Informasi Serta Merta',
+                'content' => '<p class="mb-4">Informasi yang dapat mempengaruhi hajat hidup orang banyak dan ketertiban umum yang wajib diumumkan secara serta merta oleh PPID.</p>',
+                'status' => 'published',
+            ],
+            [
+                'slug' => 'setiap-saat',
+                'title' => 'Informasi Setiap Saat',
+                'content' => '<p class="mb-4">Daftar informasi publik yang wajib disediakan setiap saat dan dapat diakses oleh pemohon informasi publik.</p>',
+                'status' => 'published',
+            ],
+            [
+                'slug' => 'permohonan',
+                'title' => 'Permohonan Informasi',
+                'content' => '<p class="mb-4">Panduan dan formulir pengajuan permohonan informasi publik secara online kepada PPID Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu Kabupaten Tulang Bawang Barat.</p>',
+                'status' => 'published',
+            ],
+
+            // Kontak Pages
+            [
+                'slug' => 'kami',
+                'title' => 'Kontak Kami',
+                'content' => '<p class="mb-4">Hubungi kami melalui saluran resmi pelayanan Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu Kabupaten Tulang Bawang Barat.</p>',
+                'status' => 'published',
+            ],
+            [
+                'slug' => 'lokasi',
+                'title' => 'Lokasi Kantor',
+                'content' => '<p class="mb-4">Alamat kantor dan peta navigasi Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu Kabupaten Tulang Bawang Barat.</p>',
+                'status' => 'published',
+            ],
+            [
+                'slug' => 'pengaduan',
+                'title' => 'Pengaduan Masyarakat',
+                'content' => '<p class="mb-4">Saluran resmi untuk menyampaikan pengaduan, saran, dan aspirasi terkait pelayanan publik yang diselenggarakan oleh DPMPTSP Kabupaten Tulang Bawang Barat.</p>',
+                'status' => 'published',
+            ],
         ];
+
+        CmsPage::withTrashed()->whereIn('slug', array_column($pages, 'slug'))->forceDelete();
 
         foreach ($pages as $pageData) {
             CmsPage::updateOrCreate(['slug' => $pageData['slug']], $pageData);
@@ -286,13 +402,14 @@ class DpmptspLandingPageSeeder extends Seeder
         // 5. Statistics Pelayanan
         $statistics = [
             ['icon' => 'lucide:file-check', 'label' => 'Jumlah Izin Terbit', 'value' => 14205, 'order' => 1, 'is_active' => true],
-            ['icon' => 'lucide:badge-dollar-sign', 'label' => 'Jumlah Investasi (Miliar)', 'value' => 450, 'order' => 2, 'is_active' => true],
-            ['icon' => 'lucide:users-2', 'label' => 'Jumlah Pelaku Usaha', 'value' => 8930, 'order' => 3, 'is_active' => true],
+            ['icon' => 'lucide:file-text', 'label' => 'Dokumen Diproses', 'value' => 42100, 'order' => 2, 'is_active' => true],
+            ['icon' => 'lucide:users', 'label' => 'Masyarakat Terlayani', 'value' => 25800, 'order' => 3, 'is_active' => true],
             ['icon' => 'lucide:monitor-smartphone', 'label' => 'Jumlah Layanan Online', 'value' => 6, 'order' => 4, 'is_active' => true],
         ];
 
+        CmsStatistic::truncate();
         foreach ($statistics as $stat) {
-            CmsStatistic::updateOrCreate(['label' => $stat['label']], $stat);
+            CmsStatistic::create($stat);
         }
 
         // 6. Quick Access Services
@@ -328,13 +445,17 @@ class DpmptspLandingPageSeeder extends Seeder
 
         // 9. Articles (6 News Items)
         $author = User::first();
+        if (! $author) {
+            $role = Role::first() ?? Role::create(['name' => 'Super Admin', 'slug' => 'superadmin']);
+            $author = User::factory()->create(['role_id' => $role->id]);
+        }
         $articles = [
             [
                 'title' => 'Sosialisasi Implementasi Perizinan Berusaha Berbasis Risiko (OSS-RBA)',
                 'slug' => 'sosialisasi-implementasi-perizinan-berusaha-berbasis-risiko',
                 'excerpt' => 'DPMPTSP menggelar bimbingan teknis kemudahan berusaha bagi para pelaku UMKM lokal di Tubaba.',
                 'content' => 'Kegiatan ini diselenggarakan guna meningkatkan pemahaman wirausaha di Kabupaten Tulang Bawang Barat mengenai regulasi terbaru OSS-RBA pasca berlakunya Undang-Undang Cipta Kerja.',
-                'featured_image' => '',
+                'featured_image' => 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80',
                 'category_id' => $catBerita->id,
                 'author_id' => $author?->id,
                 'status' => 'published',
@@ -345,7 +466,7 @@ class DpmptspLandingPageSeeder extends Seeder
                 'slug' => 'realisasi-target-investasi-kabupaten-tubaba-lampaui-120-persen',
                 'excerpt' => 'DPMPTSP mencatat lonjakan nilai realisasi investasi di sektor ketahanan pangan dan perkebunan.',
                 'content' => 'Realisasi investasi pada tahun ini naik signifikan yang didominasi oleh investasi PMDN pada industri pengolahan singkong dan tebu di wilayah utara Tubaba.',
-                'featured_image' => '',
+                'featured_image' => 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?auto=format&fit=crop&w=800&q=80',
                 'category_id' => $catBerita->id,
                 'author_id' => $author?->id,
                 'status' => 'published',
@@ -356,7 +477,7 @@ class DpmptspLandingPageSeeder extends Seeder
                 'slug' => 'dpmptsp-permudah-izin-praktik-tenaga-kesehatan-lewat-sicantik-cloud',
                 'excerpt' => 'Layanan Surat Izin Praktik (SIP) dokter, bidan, dan perawat kini terintegrasi penuh secara digital.',
                 'content' => 'Melalui SICANTIK Cloud, para tenaga kesehatan di Tubaba tidak perlu menyerahkan berkas fisik ke kantor dinas, melainkan cukup mengunggah berkas rekomendasi profesi secara online.',
-                'featured_image' => '',
+                'featured_image' => 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=800&q=80',
                 'category_id' => $catBerita->id,
                 'author_id' => $author?->id,
                 'status' => 'published',
@@ -367,7 +488,7 @@ class DpmptspLandingPageSeeder extends Seeder
                 'slug' => 'penerapan-sistem-baru-simbg-untuk-pembangunan-gedung-bebas-hambatan',
                 'excerpt' => 'Masyarakat dihimbau mengajukan Persetujuan Bangunan Gedung (PBG) pengganti IMB melalui SIMBG.',
                 'content' => 'SIMBG memfasilitasi koordinasi tim ahli bangunan gedung (TABG) pemda dalam meninjau rencana konstruksi pemohon secara digital.',
-                'featured_image' => '',
+                'featured_image' => 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80',
                 'category_id' => $catBerita->id,
                 'author_id' => $author?->id,
                 'status' => 'published',
@@ -378,7 +499,7 @@ class DpmptspLandingPageSeeder extends Seeder
                 'slug' => 'kunjungan-lapangan-pengawasan-penanaman-modal',
                 'excerpt' => 'Tim Pengawasan DPMPTSP melakukan tinjauan lapangan untuk memastikan kepatuhan LKPM pelaku usaha.',
                 'content' => 'Pengawasan rutin dilaksanakan agar pelaku usaha mematuhi kewajiban penyampaian Laporan Kegiatan Penanaman Modal (LKPM) setiap triwulan.',
-                'featured_image' => '',
+                'featured_image' => 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=800&q=80',
                 'category_id' => $catBerita->id,
                 'author_id' => $author?->id,
                 'status' => 'published',
@@ -389,7 +510,7 @@ class DpmptspLandingPageSeeder extends Seeder
                 'slug' => 'maklumat-pelayanan-dpmptsp-siap-melayani-dengan-ramah-dan-cepat',
                 'excerpt' => 'Kami berkomitmen mewujudkan wilayah bebas korupsi dan memberikan pelayanan tanpa diskriminasi.',
                 'content' => 'Sebagai komitmen nyata reformasi birokrasi, seluruh staf pelayanan DPMPTSP menandatangani maklumat kesiapan pelayanan prima demi kepuasan publik.',
-                'featured_image' => '',
+                'featured_image' => 'https://images.unsplash.com/photo-1521791136364-7286d35243dd?auto=format&fit=crop&w=800&q=80',
                 'category_id' => $catPengumuman->id,
                 'author_id' => $author?->id,
                 'status' => 'published',
