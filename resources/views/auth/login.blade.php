@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ config('app.name', 'Sistem Verifikasi Pelayanan Dokumen') }} - Login</title>
-
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,7 +40,8 @@
         <!-- Logo/Header -->
         <div class="text-center mb-10">
             <div class="inline-flex w-16 h-16 mb-6">
-                <img src="{{ asset('assets/images/logo-tubaba.png') }}" alt="Logo Tubaba" class="w-full h-full object-contain">
+                <img src="{{ asset('assets/images/logo-tubaba.png') }}" alt="Logo Tubaba"
+                    class="w-full h-full object-contain">
             </div>
             <h1 class="text-xl font-black text-slate-800 tracking-tight uppercase">Sistem Verifikasi<br>Pelayanan
                 Dokumen</h1>

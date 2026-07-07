@@ -10,7 +10,7 @@ $watch('sidebarOpen', val => localStorage.setItem('sidebarOpen', val));"
 
 <head>
     <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     <script>
         if (localStorage.getItem('darkMode') === 'true' || (!('darkMode' in localStorage) && window.matchMedia(
                 '(prefers-color-scheme: dark)').matches)) {
