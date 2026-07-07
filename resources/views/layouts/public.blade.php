@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="{{ asset('assets/images/logo-tubaba.png') }}">
-
+<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
     @include('components.landing.seo-meta', ['settings' => $settings, 'seo' => $seo ?? null])
 
     {{-- Fonts --}}
