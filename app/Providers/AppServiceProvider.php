@@ -41,6 +41,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->app->environment('production') || config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
+
         // Register landing page cache invalidation observers
         $cmsModels = [
             CmsArticle::class, CmsBanner::class, CmsFaq::class, CmsPage::class,
