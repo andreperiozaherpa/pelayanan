@@ -4,10 +4,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>SIBERUGO — Mal Pelayanan Publik Tubaba</title>
     <link rel="icon" type="image/png" href="{{ asset('assets/images/logo-mpp.png') }}">
     <meta name="description"
         content="Sistem Informasi Geospasial Kabupaten Tulang Bawang Barat (SIBERUGO). Portal pemetaan batas wilayah, rencana tata ruang/zonasi, dan titik lokasi pelayanan publik.">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -68,16 +70,20 @@
     <div class="w-full bg-[#6d272e] border-b border-white/10 shadow-lg">
         <header class="w-full max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl overflow-hidden bg-white/10 flex items-center justify-center border border-white/20">
-                    <img src="{{ asset('assets/images/logo-tubaba.png') }}" alt="Logo" class="w-8 h-8 object-contain">
+                <div
+                    class="w-10 h-10 rounded-xl overflow-hidden bg-white/10 flex items-center justify-center border border-white/20">
+                    <img src="{{ asset('assets/images/logo-tubaba.png') }}" alt="Logo"
+                        class="w-8 h-8 object-contain">
                 </div>
                 <div>
                     <h1 class="text-sm font-black uppercase tracking-wider text-white">SIBERUGO</h1>
-                    <p class="text-[9px] text-rose-200/70 font-bold uppercase tracking-widest">Kab. Tulang Bawang Barat</p>
+                    <p class="text-[9px] text-rose-200/70 font-bold uppercase tracking-widest">Kab. Tulang Bawang Barat
+                    </p>
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                <span class="text-xs font-black uppercase tracking-wider text-[#6d272e] bg-[#f4edd8] px-4 py-2 rounded-full shadow-sm">
+                <span
+                    class="text-xs font-black uppercase tracking-wider text-[#6d272e] bg-[#f4edd8] px-4 py-2 rounded-full shadow-sm">
                     Home
                 </span>
                 @auth
