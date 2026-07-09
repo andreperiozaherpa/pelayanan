@@ -67,7 +67,7 @@
                         <input id="email" type="email" name="email" value="{{ old('email') }}" required
                             autofocus
                             class="block w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-black/[0.03] rounded-2xl text-sm font-bold placeholder-slate-300 focus:ring-4 focus:ring-[#3498db]/10 focus:border-[#3498db] outline-none transition tracking-wider"
-                            placeholder="ADMIN@PELAYANAN.TEST">
+                            placeholder="mail@tubaba.go.id">
                     </div>
                     @error('email')
                         <p class="text-rose-500 text-[10px] font-black uppercase tracking-widest mt-1 ml-1">
