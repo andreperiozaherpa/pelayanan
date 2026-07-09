@@ -82,10 +82,14 @@
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                <span
+                {{-- <span
                     class="text-xs font-black uppercase tracking-wider text-[#6d272e] bg-[#f4edd8] px-4 py-2 rounded-full shadow-sm">
                     Home
-                </span>
+                </span> --}}
+                <a href="/"
+                    class="inline-block text-xs font-black uppercase tracking-wider text-[#6d272e] bg-[#f4edd8] px-4 py-2 rounded-full shadow-sm hover:bg-[#ebdcb9] transition-colors">
+                    Home
+                </a>
                 @auth
                     <a href="{{ route('services.verification') }}"
                         class="text-xs font-black uppercase tracking-wider text-white border border-white/25 px-4 py-2 rounded-full hover:bg-white/10 transition">
