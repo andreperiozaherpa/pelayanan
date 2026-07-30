@@ -25,14 +25,6 @@ use Illuminate\Support\Carbon;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ServiceRequest newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ServiceRequest newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ServiceRequest query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ServiceRequest whereCitizenNik($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ServiceRequest whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ServiceRequest whereFrontOfficeUserId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ServiceRequest whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ServiceRequest whereNotes($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ServiceRequest whereServiceType($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ServiceRequest whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ServiceRequest whereUpdatedAt($value)
  *
  * @mixin \Eloquent
  */

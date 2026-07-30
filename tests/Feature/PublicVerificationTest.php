@@ -2,7 +2,6 @@
 
 use App\Models\Citizen;
 use App\Models\PovertyRecord;
-use App\Models\Role;
 use App\Models\Village;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 

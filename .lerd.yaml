@@ -1,20 +1,20 @@
 domains:
-    - pelayanan
+  - pelayanan
 php_version: "8.4"
 framework: laravel
 framework_version: "12"
 secured: true
 services:
-    - mysql
-    - redis
-    - mailpit
-    - chromium-service:
-        name: chromium-service
-        image: docker.io/browserless/chrome:latest
-        ports:
-            - 3000:3000
-        description: Chrome Headless Service
+  - chromium-service:
+      name: chromium-service
+      image: docker.io/browserless/chrome:latest
+      ports:
+        - 3000:3000
+      description: Chrome Headless Service
+  - mailpit
+  - mysql
+  - redis
 workers:
-    - queue
-    - schedule
-    - vite
+  - queue
+  - schedule
+  - vite

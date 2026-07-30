@@ -212,10 +212,12 @@
             <!-- Header -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 class="text-xl font-black text-slate-800 dark:text-white tracking-tight uppercase">
+                    <h1 class="text-xl font-black text-slate-800 dark:text-white tracking-tight uppercase"
+                        x-text="getServiceTitle()">
                         Data Dokumen
                     </h1>
-                    <p class="text-xs text-slate-500 font-medium tracking-tight mt-1">
+                    <p class="text-xs text-slate-500 font-medium tracking-tight mt-1"
+                        x-text="getServiceDescription()">
                         Gunakan Nomor Induk Kependudukan atau Pindai Kode QR untuk validasi status kemiskinan secara
                         real-time.
                     </p>
@@ -372,6 +374,25 @@
                     },
 
 
+                    getServiceTitle() {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const type = urlParams.get('service_type');
+                        if (type === 'KETERANGAN KEMISKINAN') return 'Permohonan Surat Keterangan Miskin (SKTM)';
+                        if (type === 'KETERANGAN DOMISILI') return 'Permohonan Surat Keterangan Domisili (SKD)';
+                        if (type === 'PENGANTAR PINDAH') return 'Permohonan Surat Pengantar Pindah';
+                        if (type === 'SURAT KEMATIAN') return 'Permohonan Pelaporan Surat Kematian';
+                        return 'Cek Data & Dokumen Warga';
+                    },
+
+                    getServiceDescription() {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const type = urlParams.get('service_type');
+                        if (type) {
+                            return 'Masukkan NIK atau Pindai Kode QR warga untuk memulai pengisian permohonan ' + type.toLowerCase().replace('_', ' ') + '.';
+                        }
+                        return 'Gunakan Nomor Induk Kependudukan atau Pindai Kode QR untuk validasi status kemiskinan dan dokumen kependudukan secara real-time.';
+                    },
+
                     init() {
                         // Check if there is a search query in the URL on load
                         const urlParams = new URLSearchParams(window.location.search);
@@ -449,17 +470,39 @@
 
                                 // Update browser URL and history
                                 if (shouldPushState) {
-                                    const newUrl = window.location.pathname + '?q=' + this.nik;
+                                    const urlParams = new URLSearchParams(window.location.search);
+                                    const serviceTypeParam = urlParams.get('service_type');
+                                    let newUrl = window.location.pathname + '?q=' + this.nik;
+                                    if (serviceTypeParam) {
+                                        newUrl += '&service_type=' + serviceTypeParam;
+                                    }
                                     window.history.pushState({
                                         nik: this.nik,
                                         method: method,
-                                        manual: isManualSearch
+                                        manual: isManualSearch,
+                                        service_type: serviceTypeParam
                                     }, '', newUrl);
                                 }
 
                                 // If we just found a household, store it for potential 'back' navigation
                                 if (this.resultType === 'HOUSEHOLD') {
                                     this.lastHouseholdResult = json.data;
+                                }
+
+                                // Auto-open modal if service_type parameter is present and result is citizen
+                                const urlParams = new URLSearchParams(window.location.search);
+                                const serviceTypeParam = urlParams.get('service_type');
+                                if (serviceTypeParam && this.resultType === 'CITIZEN' && this.result?.death_status !== 'ACTIVE') {
+                                    this.report.service_type = serviceTypeParam;
+                                    this.$nextTick(() => {
+                                        this.showReportModal = true;
+                                        setTimeout(() => {
+                                            const select = $('#service-type-select');
+                                            if (select.length) {
+                                                select.val(serviceTypeParam).trigger('change');
+                                            }
+                                        }, 150);
+                                    });
                                 }
                             } else {
                                 this.error = json.data ? json.data.message : (json.message || 'Terjadi kesalahan sistem.');

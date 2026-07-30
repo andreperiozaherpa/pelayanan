@@ -10,19 +10,22 @@ namespace Illuminate\Database\Eloquent {
     {
         /**
          * Register a created model event with the dispatcher.
-         * @param \Closure|string $callback
+         *
+         * @param  \Closure|string  $callback
          */
         public static function created($callback) {}
 
         /**
          * Register an updated model event with the dispatcher.
-         * @param \Closure|string $callback
+         *
+         * @param  \Closure|string  $callback
          */
         public static function updated($callback) {}
 
         /**
          * Register a deleted model event with the dispatcher.
-         * @param \Closure|string $callback
+         *
+         * @param  \Closure|string  $callback
          */
         public static function deleted($callback) {}
     }

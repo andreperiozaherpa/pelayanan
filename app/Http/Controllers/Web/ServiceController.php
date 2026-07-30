@@ -13,6 +13,7 @@ use App\Models\DomicileRecord;
 use App\Models\MoveRecord;
 use App\Models\PovertyRecord;
 use App\Models\ServiceRequest;
+use App\Models\Village;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -294,6 +295,58 @@ class ServiceController extends Controller
         $arrivals = new LengthAwarePaginator([], 0, 15);
 
         return view('services.desa.requests.index', compact('requests', 'arrivals', 'tab', 'pendingCount', 'arrivalsCount'));
+    }
+
+    /**
+     * Display a listing of all service requests with filtering.
+     */
+    public function allRequests(Request $request): View
+    {
+        $user = Auth::user();
+        if (! ($user->hasPermission('service.report') || $user->hasPermission('service.verify') || $user->hasPermission('service.manage'))) {
+            abort(403, 'Anda tidak memiliki hak akses untuk halaman ini.');
+        }
+
+        $search = $request->query('search');
+        $status = $request->query('status');
+        $type = $request->query('type');
+        $villageId = $request->query('village_id');
+
+        $query = ServiceRequest::with(['citizen', 'citizen.village', 'frontOfficeUser']);
+
+        // Scope to user's village if they are Operator Desa
+        if ($user->isOperatorDesa() && $user->desa_id) {
+            $query->whereHas('citizen', fn ($q) => $q->where('desa_id', $user->desa_id));
+        } elseif ($villageId) {
+            // Non-village operators can filter by village
+            $query->whereHas('citizen', fn ($q) => $q->where('desa_id', $villageId));
+        }
+
+        // Filters
+        if ($status) {
+            $query->where('status', $status);
+        }
+        if ($type) {
+            $query->where('service_type', $type);
+        }
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('citizen_nik', 'like', "%{$search}%")
+                    ->orWhereHas('citizen', function ($qc) use ($search) {
+                        $qc->where('nama_lengkap', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $requests = $query->latest()->paginate(15)->withQueryString();
+
+        // Get villages for filter dropdown if user is admin/OPD/FO
+        $villages = [];
+        if (! $user->isOperatorDesa()) {
+            $villages = Village::orderBy('name')->get();
+        }
+
+        return view('services.admin.requests.all', compact('requests', 'villages', 'status', 'type', 'search', 'villageId'));
     }
 
     /**

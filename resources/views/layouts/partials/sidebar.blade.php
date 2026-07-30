@@ -28,44 +28,88 @@
                         </button>
 
                         <a href="{{ route('dashboard.index') }}"
-                            class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('dashboard.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
+                            class="flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('dashboard.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
+                            title="Dashboard">
                             <iconify-icon icon="lucide:layout-grid" class="text-xl"></iconify-icon>
+                            <span class="text-[8px] font-semibold mt-0.5 leading-none">Dash</span>
                         </a>
-                        @can('citizens.manage')
-                        <a href="{{ route('citizens.index') }}"
-                            class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('citizens.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
-                            <iconify-icon icon="lucide:users-2" class="text-xl"></iconify-icon>
-                        </a>
-                        @endcan
+                        @php
+                            $servicesActive = request()->routeIs('services.*') || request()->routeIs('citizens.*');
+                            $hasServicesAccess =
+                                Auth::user()->can('service.verify') ||
+                                Auth::user()->can('citizens.manage') ||
+                                Auth::user()->can('service.report') ||
+                                Auth::user()->can('service.manage');
 
-                        @can('service.verify')
-                            <a href="{{ route('services.verification') }}"
-                                class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('services.verification') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}">
-                                <iconify-icon icon="lucide:clipboard-list" class="text-xl"></iconify-icon>
+                            $servicesUrl = '#';
+                            if (Auth::user()->can('service.verify')) {
+                                $servicesUrl = route('services.verification');
+                            } elseif (Auth::user()->can('citizens.manage')) {
+                                $servicesUrl = route('citizens.index');
+                            } elseif (Auth::user()->can('service.manage')) {
+                                $servicesUrl = route('services.requests.index');
+                            } elseif (Auth::user()->can('service.report')) {
+                                $servicesUrl = route('services.arrival.create');
+                            }
+                        @endphp
+
+                        @if (Auth::user()->hasAnyPermission([
+                                'cms.articles.view',
+                                'cms.pages.view',
+                                'cms.banners.view',
+                                'cms.faqs.view',
+                                'cms.testimonials.view',
+                                'cms.teams.view',
+                                'cms.settings.view',
+                                'cms.complaints.view',
+                            ]))
+                            <a href="{{ route('cms-articles.index') }}"
+                                class="flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('cms-articles.*') || request()->routeIs('cms-categories.*') || request()->routeIs('cms-pages.*') || request()->routeIs('cms-banners.*') || request()->routeIs('cms-faqs.*') || request()->routeIs('cms-testimonials.*') || request()->routeIs('cms-teams.*') || request()->routeIs('cms-settings.*') || request()->routeIs('cms-complaints.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
+                                title="CMS Website">
+                                <iconify-icon icon="lucide:layout-template" class="text-xl"></iconify-icon>
+                                <span class="text-[8px] font-semibold mt-0.5 leading-none">CMS</span>
                             </a>
-                        @endcan
+                        @endif
 
-                        @if (Auth::user()->hasAnyPermission(['users.manage', 'roles.manage', 'villages.manage', 'districts.manage', 'opds.manage']))
-                            <a href="{{ route('users.index') }}"
-                                class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('users.*') || request()->routeIs('roles.*') || request()->routeIs('districts.*') || request()->routeIs('villages.*') || request()->routeIs('opds.*') || request()->routeIs('admin.certificates.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
-                                title="Pengaturan Sistem">
-                                <iconify-icon icon="lucide:settings-2" class="text-xl"></iconify-icon>
+                        @if (Auth::user()->can('service.report'))
+                            <a href="{{ route('mpp-requests.index') }}"
+                                class="flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('mpp-requests.*') || request()->routeIs('anjungans.*') || request()->routeIs('mpp-services.*') || request()->routeIs('counter-users.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
+                                title="MPP - Mal Pelayanan Publik">
+                                <iconify-icon icon="lucide:building-2" class="text-xl"></iconify-icon>
+                                <span class="text-[8px] font-semibold mt-0.5 leading-none">MPP</span>
+                            </a>
+                        @endif
+
+                        @if ($hasServicesAccess)
+                            <a href="{{ $servicesUrl }}"
+                                class="flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ $servicesActive ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
+                                title="Pelayanan Warga & Surat (Cek Dokumen, Lapor Datang, Permohonan Surat, Kependudukan)">
+                                <iconify-icon icon="lucide:file-signature" class="text-xl"></iconify-icon>
+                                <span class="text-[8px] font-semibold mt-0.5 leading-none">Pelayanan</span>
                             </a>
                         @endif
 
                         @can('maps.manage')
                             <a href="{{ route('map-regions.index') }}"
-                                class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('map-regions.*') || request()->routeIs('map-zones.*') || request()->routeIs('map-locations.*') || request()->routeIs('map-zone-types.*') || request()->routeIs('map-location-categories.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
+                                class="flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('map-regions.*') || request()->routeIs('map-zones.*') || request()->routeIs('map-locations.*') || request()->routeIs('map-zone-types.*') || request()->routeIs('map-location-categories.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
                                 title="SIBERUGO GIS">
                                 <iconify-icon icon="lucide:map" class="text-xl"></iconify-icon>
+                                <span class="text-[8px] font-semibold mt-0.5 leading-none">GIS</span>
                             </a>
                         @endcan
 
-                        @if (Auth::user()->hasAnyPermission(['cms.articles.view', 'cms.pages.view', 'cms.banners.view', 'cms.faqs.view', 'cms.testimonials.view', 'cms.teams.view', 'cms.settings.view', 'cms.complaints.view']))
-                            <a href="{{ route('cms-articles.index') }}"
-                                class="flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('cms-articles.*') || request()->routeIs('cms-categories.*') || request()->routeIs('cms-pages.*') || request()->routeIs('cms-banners.*') || request()->routeIs('cms-faqs.*') || request()->routeIs('cms-testimonials.*') || request()->routeIs('cms-teams.*') || request()->routeIs('cms-settings.*') || request()->routeIs('cms-complaints.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
-                                title="CMS Website">
-                                <iconify-icon icon="lucide:layout-template" class="text-xl"></iconify-icon>
+                        @if (Auth::user()->hasAnyPermission([
+                                'users.manage',
+                                'roles.manage',
+                                'villages.manage',
+                                'districts.manage',
+                                'opds.manage',
+                            ]) || Auth::user()->can('system.manage'))
+                            <a href="{{ route('users.index') }}"
+                                class="flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('users.*') || request()->routeIs('roles.*') || request()->routeIs('districts.*') || request()->routeIs('villages.*') || request()->routeIs('opds.*') || request()->routeIs('admin.certificates.*') || request()->routeIs('mpp-services.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
+                                title="Pengaturan Sistem">
+                                <iconify-icon icon="lucide:settings-2" class="text-xl"></iconify-icon>
+                                <span class="text-[8px] font-semibold mt-0.5 leading-none">Sistem</span>
                             </a>
                         @endif
 
@@ -90,118 +134,183 @@
                                     <x-nav-link href="{{ route('dashboard.desa') }}" :active="request()->routeIs('dashboard.desa')"
                                         icon="lucide:building-2">Dashboard Desa</x-nav-link>
                                 @endif
-                            @elseif(request()->routeIs('services.*'))
+                            @elseif(request()->routeIs('mpp-requests.*') ||
+                                    request()->routeIs('anjungans.*') ||
+                                    request()->routeIs('mpp-services.*') ||
+                                    request()->routeIs('counter-users.*'))
                                 <div class="px-4 py-4">
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Layanan
-                                    </p>
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">MPP
+                                        & Pelayanan</p>
                                 </div>
-                                <x-nav-link href="{{ route('services.verification') }}" :active="request()->routeIs('services.verification')"
-                                    icon="lucide:scan-line">Cek Data & Dokumen</x-nav-link>
-
                                 @can('service.report')
-                                    <x-nav-link href="{{ route('services.arrival.create') }}" :active="request()->routeIs('services.arrival.create')"
-                                        icon="lucide:user-plus">Lapor Datang Warga</x-nav-link>
+                                    <x-nav-link href="{{ route('mpp-requests.index') }}" :active="request()->routeIs('mpp-requests.index')"
+                                        icon="lucide:layout-list">Daftar Pengajuan MPP</x-nav-link>
+
+                                    {{-- @php
+                                        $activeMppServices = \App\Models\MppService::where('is_active', true)
+                                            ->orderBy('name')
+                                            ->get();
+                                    @endphp
+                                    @foreach ($activeMppServices as $mppSvc)
+                                        <x-nav-link href="{{ route('mpp-requests.create', $mppSvc->slug) }}"
+                                            :active="request()->routeIs('mpp-requests.create') &&
+                                                request()->route('mppService')?->slug === $mppSvc->slug" icon="lucide:file-plus">{{ $mppSvc->name }}</x-nav-link>
+                                    @endforeach --}}
                                 @endcan
-                                
+
+                                @can('system.manage')
+                                    <div class="px-4 py-3 mt-4">
+                                        <p class="text-[9px] font-black text-slate-400/60 uppercase tracking-widest">
+                                            Konfigurasi Anjungan</p>
+                                    </div>
+                                    <x-nav-link href="{{ route('anjungans.index') }}" :active="request()->routeIs('anjungans.*')"
+                                        icon="lucide:monitor">Daftar Anjungan</x-nav-link>
+                                    <x-nav-link href="{{ route('mpp-services.index') }}" :active="request()->routeIs('mpp-services.*')"
+                                        icon="lucide:file-text">Pelayanan MPP</x-nav-link>
+                                    <x-nav-link href="{{ route('counter-users.index') }}" :active="request()->routeIs('counter-users.*')"
+                                        icon="lucide:user-cog">Pengaturan Loket</x-nav-link>
+                                @endcan
+                            @elseif(request()->routeIs('services.*') || request()->routeIs('citizens.*'))
+                                <div class="px-4 py-4">
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pelayanan
+                                        & Loket MPP</p>
+                                </div>
+                                @can('service.verify')
+                                    <x-nav-link href="{{ route('services.verification') }}" :active="request()->routeIs('services.verification') &&
+                                        !request()->has('service_type')"
+                                        icon="lucide:scan-line">Cek Data & Dokumen</x-nav-link>
+                                @endcan
+
                                 @can('service.manage')
                                     <div class="px-4 py-3 mt-4">
-                                        <p class="text-[9px] font-black text-slate-400/60 uppercase tracking-widest">Antrean Permohonan</p>
+                                        <p class="text-[9px] font-black text-slate-400/60 uppercase tracking-widest">Antrean
+                                            Verifikasi Surat Warga</p>
                                     </div>
-                                    
+
                                     <x-nav-link href="{{ route('services.requests.index') }}" :active="request()->routeIs('services.requests.index') && !request()->has('type')"
                                         icon="lucide:inbox">
                                         <div class="flex items-center justify-between w-full">
                                             <span>Semua Antrean</span>
-                                            @if(($pendingBadges['all'] ?? 0) > 0)
-                                                <span class="bg-primary-acorn text-white text-[9px] font-black px-2 py-0.5 rounded-full">{{ $pendingBadges['all'] }}</span>
+                                            @if (($pendingBadges['all'] ?? 0) > 0)
+                                                <span
+                                                    class="bg-primary-acorn text-white text-[9px] font-black px-2 py-0.5 rounded-full">{{ $pendingBadges['all'] }}</span>
                                             @endif
                                         </div>
                                     </x-nav-link>
-                                    <x-nav-link href="{{ route('services.requests.index', ['type' => 'KETERANGAN KEMISKINAN']) }}" :active="request()->query('type') === 'KETERANGAN KEMISKINAN'"
-                                        icon="lucide:coins">
+                                    <x-nav-link
+                                        href="{{ route('services.requests.index', ['type' => 'KETERANGAN KEMISKINAN']) }}"
+                                        :active="request()->query('type') === 'KETERANGAN KEMISKINAN'" icon="lucide:coins">
                                         <div class="flex items-center justify-between w-full">
                                             <span>Surat Miskin</span>
-                                            @if(($pendingBadges['KETERANGAN KEMISKINAN'] ?? 0) > 0)
-                                                <span class="bg-orange-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{{ $pendingBadges['KETERANGAN KEMISKINAN'] }}</span>
+                                            @if (($pendingBadges['KETERANGAN KEMISKINAN'] ?? 0) > 0)
+                                                <span
+                                                    class="bg-orange-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{{ $pendingBadges['KETERANGAN KEMISKINAN'] }}</span>
                                             @endif
                                         </div>
                                     </x-nav-link>
-                                    <x-nav-link href="{{ route('services.requests.index', ['type' => 'PENGANTAR PINDAH']) }}" :active="request()->query('type') === 'PENGANTAR PINDAH'"
-                                        icon="lucide:truck">
+                                    <x-nav-link
+                                        href="{{ route('services.requests.index', ['type' => 'PENGANTAR PINDAH']) }}"
+                                        :active="request()->query('type') === 'PENGANTAR PINDAH'" icon="lucide:truck">
                                         <div class="flex items-center justify-between w-full">
                                             <span>Pengantar Pindah</span>
-                                            @if(($pendingBadges['PENGANTAR PINDAH'] ?? 0) > 0)
-                                                <span class="bg-blue-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{{ $pendingBadges['PENGANTAR PINDAH'] }}</span>
+                                            @if (($pendingBadges['PENGANTAR PINDAH'] ?? 0) > 0)
+                                                <span
+                                                    class="bg-blue-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{{ $pendingBadges['PENGANTAR PINDAH'] }}</span>
                                             @endif
                                         </div>
                                     </x-nav-link>
-                                    <x-nav-link href="{{ route('services.requests.index', ['type' => 'KETERANGAN DOMISILI']) }}" :active="request()->query('type') === 'KETERANGAN DOMISILI'"
-                                        icon="lucide:home">
+                                    <x-nav-link
+                                        href="{{ route('services.requests.index', ['type' => 'KETERANGAN DOMISILI']) }}"
+                                        :active="request()->query('type') === 'KETERANGAN DOMISILI'" icon="lucide:home">
                                         <div class="flex items-center justify-between w-full">
                                             <span>Domisili</span>
-                                            @if(($pendingBadges['KETERANGAN DOMISILI'] ?? 0) > 0)
-                                                <span class="bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{{ $pendingBadges['KETERANGAN DOMISILI'] }}</span>
+                                            @if (($pendingBadges['KETERANGAN DOMISILI'] ?? 0) > 0)
+                                                <span
+                                                    class="bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{{ $pendingBadges['KETERANGAN DOMISILI'] }}</span>
                                             @endif
                                         </div>
                                     </x-nav-link>
-                                    <x-nav-link href="{{ route('services.requests.index', ['type' => 'SURAT KEMATIAN']) }}" :active="request()->query('type') === 'SURAT KEMATIAN'"
-                                        icon="lucide:file-heart">
+                                    <x-nav-link
+                                        href="{{ route('services.requests.index', ['type' => 'SURAT KEMATIAN']) }}"
+                                        :active="request()->query('type') === 'SURAT KEMATIAN'" icon="lucide:file-heart">
                                         <div class="flex items-center justify-between w-full">
                                             <span>Surat Kematian</span>
-                                            @if(($pendingBadges['SURAT KEMATIAN'] ?? 0) > 0)
-                                                <span class="bg-rose-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{{ $pendingBadges['SURAT KEMATIAN'] }}</span>
+                                            @if (($pendingBadges['SURAT KEMATIAN'] ?? 0) > 0)
+                                                <span
+                                                    class="bg-rose-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">{{ $pendingBadges['SURAT KEMATIAN'] }}</span>
                                             @endif
                                         </div>
                                     </x-nav-link>
                                 @endcan
-                                
+
+                                @can('citizens.manage')
+                                    <div class="px-4 py-3 mt-4">
+                                        <p class="text-[9px] font-black text-slate-400/60 uppercase tracking-widest">
+                                            Kependudukan Warga</p>
+                                    </div>
+                                    <x-nav-link href="{{ route('citizens.index') }}" :active="request()->routeIs('citizens.index') ||
+                                        request()->routeIs('citizens.show') ||
+                                        request()->routeIs('citizens.edit')"
+                                        icon="lucide:users">Data Warga (Direktori)</x-nav-link>
+                                    <x-nav-link href="{{ route('citizens.create') }}" :active="request()->routeIs('citizens.create')"
+                                        icon="lucide:user-plus">Pendaftaran Warga Baru</x-nav-link>
+                                @endcan
+
                                 <div class="px-4 py-3 mt-4">
-                                    <p class="text-[9px] font-black text-slate-400/60 uppercase tracking-widest">Lainnya</p>
+                                    <p class="text-[9px] font-black text-slate-400/60 uppercase tracking-widest">
+                                        Riwayat
+                                        & Arsip</p>
                                 </div>
                                 <x-nav-link href="{{ route('services.history') }}" :active="request()->routeIs('services.history')"
-                                    icon="lucide:history">History Pelayanan</x-nav-link>
-                            @elseif(request()->routeIs('citizens.*'))
-                                <div class="px-4 py-4">
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Citizens
-                                    </p>
-                                </div>
-                                <x-nav-link href="{{ route('citizens.index') }}" :active="request()->routeIs('citizens.index')"
-                                    icon="lucide:users">Directory</x-nav-link>
-                                <x-nav-link href="{{ route('citizens.create') }}" :active="request()->routeIs('citizens.create')"
-                                    icon="lucide:user-plus">Registration</x-nav-link>
+                                    icon="lucide:history">Riwayat Pelayanan</x-nav-link>
                             @elseif(request()->routeIs('users.*') ||
                                     request()->routeIs('roles.*') ||
                                     request()->routeIs('districts.*') ||
                                     request()->routeIs('villages.*') ||
                                     request()->routeIs('opds.*') ||
-                                    request()->routeIs('admin.certificates.*'))
+                                    request()->routeIs('admin.certificates.*') ||
+                                    request()->routeIs('mpp-services.*'))
                                 <div class="px-4 py-4">
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Settings
-                                    </p>
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                        Pengaturan Sistem</p>
                                 </div>
-                                @can('users.manage')
-                                    <x-nav-link href="{{ route('users.index') }}" :active="request()->routeIs('users.*')"
-                                        icon="lucide:user-cog">Users</x-nav-link>
-                                @endcan
-                                @can('roles.manage')
-                                    <x-nav-link href="{{ route('roles.index') }}" :active="request()->routeIs('roles.*')"
-                                        icon="lucide:shield-check">Roles</x-nav-link>
-                                @endcan
-                                @can('districts.manage')
-                                    <x-nav-link href="{{ route('districts.index') }}" :active="request()->routeIs('districts.*')"
-                                        icon="lucide:map">Districts</x-nav-link>
-                                @endcan
-                                @can('villages.manage')
-                                    <x-nav-link href="{{ route('villages.index') }}" :active="request()->routeIs('villages.*')"
-                                        icon="lucide:home">Villages</x-nav-link>
-                                @endcan
-                                @can('opds.manage')
-                                    <x-nav-link href="{{ route('opds.index') }}" :active="request()->routeIs('opds.*')"
-                                        icon="lucide:building-2">OPD</x-nav-link>
-                                @endcan
-                                @if (Auth::user()->isSuperAdmin())
-                                    <x-nav-link href="{{ route('admin.certificates.index') }}" :active="request()->routeIs('admin.certificates.*')"
-                                        icon="lucide:badge-check">Sertifikat TTE</x-nav-link>
+
+                                @if (Auth::user()->can('users.manage') || Auth::user()->can('roles.manage') || Auth::user()->isSuperAdmin())
+                                    <div class="px-4 py-3 mt-2">
+                                        <p class="text-[9px] font-black text-slate-400/60 uppercase tracking-widest">
+                                            Keamanan & Pengguna</p>
+                                    </div>
+                                    @can('users.manage')
+                                        <x-nav-link href="{{ route('users.index') }}" :active="request()->routeIs('users.*')"
+                                            icon="lucide:user-cog">Pengguna Sistem</x-nav-link>
+                                    @endcan
+                                    @can('roles.manage')
+                                        <x-nav-link href="{{ route('roles.index') }}" :active="request()->routeIs('roles.*')"
+                                            icon="lucide:shield-check">Hak Akses (Roles)</x-nav-link>
+                                    @endcan
+                                    @if (Auth::user()->isSuperAdmin())
+                                        <x-nav-link href="{{ route('admin.certificates.index') }}" :active="request()->routeIs('admin.certificates.*')"
+                                            icon="lucide:badge-check">Sertifikat TTE</x-nav-link>
+                                    @endif
+                                @endif
+
+                                @if (Auth::user()->can('districts.manage') || Auth::user()->can('villages.manage') || Auth::user()->can('opds.manage'))
+                                    <div class="px-4 py-3 mt-4">
+                                        <p class="text-[9px] font-black text-slate-400/60 uppercase tracking-widest">
+                                            Wilayah & Instansi</p>
+                                    </div>
+                                    @can('districts.manage')
+                                        <x-nav-link href="{{ route('districts.index') }}" :active="request()->routeIs('districts.*')"
+                                            icon="lucide:map">Wilayah Kecamatan</x-nav-link>
+                                    @endcan
+                                    @can('villages.manage')
+                                        <x-nav-link href="{{ route('villages.index') }}" :active="request()->routeIs('villages.*')"
+                                            icon="lucide:home">Wilayah Desa / Tiyuh</x-nav-link>
+                                    @endcan
+                                    @can('opds.manage')
+                                        <x-nav-link href="{{ route('opds.index') }}" :active="request()->routeIs('opds.*')"
+                                            icon="lucide:building-2">Instansi OPD</x-nav-link>
+                                    @endcan
                                 @endif
                             @elseif(request()->routeIs('map-regions.*') ||
                                     request()->routeIs('map-zones.*') ||
@@ -209,7 +318,8 @@
                                     request()->routeIs('map-zone-types.*') ||
                                     request()->routeIs('map-location-categories.*'))
                                 <div class="px-4 py-4">
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">SIBERUGO GIS
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">SIBERUGO
+                                        GIS
                                     </p>
                                 </div>
                                 @can('maps.manage')
@@ -224,9 +334,19 @@
                                     <x-nav-link href="{{ route('map-location-categories.index') }}" :active="request()->routeIs('map-location-categories.*')"
                                         icon="lucide:tags">Kategori POI</x-nav-link>
                                 @endcan
-                            @elseif(request()->routeIs('cms-articles.*') || request()->routeIs('cms-categories.*') || request()->routeIs('cms-pages.*') || request()->routeIs('cms-menus.*') || request()->routeIs('cms-banners.*') || request()->routeIs('cms-faqs.*') || request()->routeIs('cms-testimonials.*') || request()->routeIs('cms-teams.*') || request()->routeIs('cms-settings.*') || request()->routeIs('cms-complaints.*'))
+                            @elseif(request()->routeIs('cms-articles.*') ||
+                                    request()->routeIs('cms-categories.*') ||
+                                    request()->routeIs('cms-pages.*') ||
+                                    request()->routeIs('cms-menus.*') ||
+                                    request()->routeIs('cms-banners.*') ||
+                                    request()->routeIs('cms-faqs.*') ||
+                                    request()->routeIs('cms-testimonials.*') ||
+                                    request()->routeIs('cms-teams.*') ||
+                                    request()->routeIs('cms-settings.*') ||
+                                    request()->routeIs('cms-complaints.*'))
                                 <div class="px-4 py-4">
-                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">CMS Website</p>
+                                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">CMS
+                                        Website</p>
                                 </div>
                                 @can('cms.articles.view')
                                     <x-nav-link href="{{ route('cms-articles.index') }}" :active="request()->routeIs('cms-articles.*')"
@@ -270,6 +390,4 @@
                         </nav>
                     </div>
                 </div>
-
-
             </aside>

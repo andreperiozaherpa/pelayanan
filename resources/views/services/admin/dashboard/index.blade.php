@@ -26,33 +26,83 @@
 
         <!-- Stats Widgets -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-2 lg:gap-4 xl:gap-6">
-            <x-stats-card 
-                label="Total Data" 
-                :value="$stats['total_verifications']" 
-                icon="lucide:database" 
-                color="primary" 
-            />
-            <x-stats-card 
-                label="Status Valid" 
-                :value="$stats['status_distribution']['active']" 
-                icon="lucide:check-circle-2" 
-                color="emerald" 
-            />
-            <x-stats-card 
-                label="Kadaluarsa" 
-                :value="$stats['status_distribution']['expired']" 
-                icon="lucide:clock" 
-                color="amber" 
-            />
-            <x-stats-card 
-                label="Unmapped" 
-                :value="$stats['status_distribution']['pending']" 
-                icon="lucide:alert-triangle" 
-                color="rose" 
-            />
+            <x-stats-card label="Total Verifikasi" :value="$stats['total_verifications']" icon="lucide:database" color="primary" />
+            <x-stats-card label="Status Valid" :value="$stats['status_distribution']['active']" icon="lucide:check-circle-2" color="emerald" />
+            <x-stats-card label="Kadaluarsa" :value="$stats['status_distribution']['expired']" icon="lucide:clock" color="amber" />
+            <x-stats-card label="Pending" :value="$stats['status_distribution']['pending']" icon="lucide:alert-triangle" color="rose" />
         </div>
 
-        <!-- Content Grid -->
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Line Chart: Tren Pelayanan -->
+            <div class="lg:col-span-2 premium-card p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">Tren
+                                Pelayanan Publik</h3>
+                            <p class="text-[10px] text-slate-400 font-medium mt-0.5">Jumlah pengajuan permohonan dalam 6
+                                bulan terakhir</p>
+                        </div>
+                    </div>
+                    <div id="trendChart" class="w-full h-72"></div>
+                </div>
+            </div>
+
+            <!-- Donut Chart: Komposisi Layanan -->
+            <div class="premium-card p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">Jenis
+                                Pelayanan</h3>
+                            <p class="text-[10px] text-slate-400 font-medium mt-0.5">Distribusi pengajuan berdasarkan jenis
+                                layanan</p>
+                        </div>
+                    </div>
+                    <div id="typeChart" class="w-full h-72 flex items-center justify-center"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Arsip Aktif -->
+        <div class="space-y-6">
+            <h3 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider px-1">
+                Data Arsip Dokumen Terdaftar
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="premium-card p-4 flex flex-col justify-between border-l-4 border-primary-acorn">
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Surat Miskin</span>
+                    <span class="text-2xl font-black text-slate-800 dark:text-white mt-2 tabular-nums">
+                        {{ number_format($stats['records_breakdown']['poverty']) }}
+                    </span>
+                    <span class="text-[9px] text-slate-500 mt-1 font-semibold uppercase">Poverty Records</span>
+                </div>
+                <div class="premium-card p-4 flex flex-col justify-between border-l-4 border-emerald-500">
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Domisili</span>
+                    <span class="text-2xl font-black text-slate-800 dark:text-white mt-2 tabular-nums">
+                        {{ number_format($stats['records_breakdown']['domicile']) }}
+                    </span>
+                    <span class="text-[9px] text-slate-500 mt-1 font-semibold uppercase">Domicile Records</span>
+                </div>
+                <div class="premium-card p-4 flex flex-col justify-between border-l-4 border-blue-500">
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pindah Datang</span>
+                    <span class="text-2xl font-black text-slate-800 dark:text-white mt-2 tabular-nums">
+                        {{ number_format($stats['records_breakdown']['move']) }}
+                    </span>
+                    <span class="text-[9px] text-slate-500 mt-1 font-semibold uppercase">Move Records</span>
+                </div>
+                <div class="premium-card p-4 flex flex-col justify-between border-l-4 border-rose-500">
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Surat Kematian</span>
+                    <span class="text-2xl font-black text-slate-800 dark:text-white mt-2 tabular-nums">
+                        {{ number_format($stats['records_breakdown']['death']) }}
+                    </span>
+                    <span class="text-[9px] text-slate-500 mt-1 font-semibold uppercase">Death Records</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Grid (Village Breakdown & Recent Activity) -->
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
             <!-- Village Performance -->
             <div class="xl:col-span-2 space-y-6">
@@ -71,7 +121,7 @@
                                 <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama
                                     Desa</th>
                                 <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Kode
-                                 </th>
+                                </th>
                                 <th
                                     class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">
                                     Verifikasi</th>
@@ -157,3 +207,130 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const textColor = isDark ? '#94a3b8' : '#64748b';
+            const borderColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+
+            // 1. Line Chart: Tren Pelayanan
+            const trendOptions = {
+                chart: {
+                    type: 'area',
+                    height: 280,
+                    toolbar: {
+                        show: false
+                    },
+                    zoom: {
+                        enabled: false
+                    },
+                    fontFamily: 'Mulish, sans-serif'
+                },
+                series: [{
+                    name: 'Jumlah Permohonan',
+                    data: {!! json_encode(array_values($stats['monthly_trend'])) !!}
+                }],
+                xaxis: {
+                    categories: {!! json_encode(array_keys($stats['monthly_trend'])) !!},
+                    labels: {
+                        style: {
+                            colors: textColor
+                        }
+                    },
+                    axisBorder: {
+                        show: false
+                    },
+                    axisTicks: {
+                        show: false
+                    }
+                },
+                yaxis: {
+                    labels: {
+                        style: {
+                            colors: textColor
+                        }
+                    }
+                },
+                grid: {
+                    borderColor: borderColor,
+                    strokeDashArray: 4
+                },
+                colors: ['#33ac1b'],
+                stroke: {
+                    curve: 'smooth',
+                    width: 3
+                },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shadeIntensity: 1,
+                        opacityFrom: 0.45,
+                        opacityTo: 0.05,
+                        stops: [0, 100]
+                    }
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                tooltip: {
+                    theme: isDark ? 'dark' : 'light'
+                }
+            };
+
+            const trendChart = new ApexCharts(document.querySelector("#trendChart"), trendOptions);
+            trendChart.render();
+
+            // 2. Donut Chart: Komposisi Layanan
+            const typeOptions = {
+                chart: {
+                    type: 'donut',
+                    height: 280,
+                    fontFamily: 'Mulish, sans-serif'
+                },
+                series: {!! json_encode(array_values($stats['service_type_counts'])) !!},
+                labels: {!! json_encode(array_keys($stats['service_type_counts'])) !!},
+                colors: ['#33ac1b', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'],
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        colors: textColor
+                    }
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '75%',
+                            labels: {
+                                show: true,
+                                total: {
+                                    show: true,
+                                    label: 'TOTAL',
+                                    formatter: function(w) {
+                                        return w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                                    },
+                                    style: {
+                                        fontSize: '12px',
+                                        fontWeight: '900',
+                                        color: isDark ? '#ffffff' : '#1e293b'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                tooltip: {
+                    theme: isDark ? 'dark' : 'light'
+                }
+            };
+
+            const typeChart = new ApexCharts(document.querySelector("#typeChart"), typeOptions);
+            typeChart.render();
+        });
+    </script>
+@endpush

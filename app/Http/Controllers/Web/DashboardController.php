@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\ServiceType;
 use App\Http\Controllers\Controller;
 use App\Models\DeathRecord;
 use App\Models\DomicileRecord;
@@ -57,12 +58,44 @@ class DashboardController extends Controller
             'pending' => ServiceRequest::where('status', 'PENDING')->count(),
         ];
 
+        // 3. Service Type counts
+        $serviceTypeCounts = [];
+        foreach (ServiceType::cases() as $case) {
+            $serviceTypeCounts[$case->value] = ServiceRequest::where('service_type', $case->value)->count();
+        }
+
+        // 4. Records detail breakdown
+        $recordsBreakdown = [
+            'poverty' => PovertyRecord::count(),
+            'domicile' => DomicileRecord::count(),
+            'move' => MoveRecord::count(),
+            'death' => DeathRecord::count(),
+        ];
+
+        // 5. Monthly Service Requests trend (last 6 months)
+        $sixMonthsAgo = now()->subMonths(5)->startOfMonth();
+        $monthlyTrendRaw = ServiceRequest::where('created_at', '>=', $sixMonthsAgo)
+            ->orderBy('created_at')
+            ->get()
+            ->groupBy(function ($request) {
+                return $request->created_at->format('M Y');
+            });
+
+        $monthlyTrend = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $monthKey = now()->subMonths($i)->format('M Y');
+            $monthlyTrend[$monthKey] = isset($monthlyTrendRaw[$monthKey]) ? $monthlyTrendRaw[$monthKey]->count() : 0;
+        }
+
         $stats = [
             'total_verifications' => $totalVerifications,
             'recent_requests' => ServiceRequest::with('citizen.village')->latest()->take(6)->get(),
             'today_count' => $todayCount,
             'village_breakdown' => $villageBreakdown,
             'status_distribution' => $statusDistribution,
+            'service_type_counts' => $serviceTypeCounts,
+            'records_breakdown' => $recordsBreakdown,
+            'monthly_trend' => $monthlyTrend,
         ];
 
         return view('services.admin.dashboard.index', compact('stats'));

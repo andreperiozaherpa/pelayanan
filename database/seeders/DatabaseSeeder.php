@@ -20,6 +20,9 @@ class DatabaseSeeder extends Seeder
     {
         // 1. Jalankan Master Data Seeders
         $this->call(RBACSeeder::class);
+        $this->call(CounterSeeder::class);
+        $this->call(AnjunganSeeder::class);
+        $this->call(MppServiceSeeder::class);
         $this->call(CmsRBACSeeder::class);
         $this->call(OpdSeeder::class);
         $this->call(VillageSeeder::class);
@@ -88,7 +91,10 @@ class DatabaseSeeder extends Seeder
             'opd_id' => $opdSosial->id,
         ]);
 
-        // 4. Seeding data warga (Core Data)
+        // 4. Penugasan loket untuk petugas FO
+        $this->call(CounterUserSeeder::class);
+
+        // 5. Seeding data warga (Core Data)
         $this->call(CitizenSeeder::class);
 
         // 5. Seeding CMS settings
