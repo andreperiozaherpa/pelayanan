@@ -95,8 +95,10 @@
                     <thead>
                         <tr class="bg-slate-50/50 dark:bg-slate-800/20 border-b border-black/[0.03] dark:border-white/[0.03]">
                             <th class="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">No</th>
+                            <th class="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">No. Antrian</th>
                             <th class="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Layanan</th>
                             <th class="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Pemohon</th>
+                            <th class="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Durasi Proses</th>
                             <th class="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Status</th>
                             <th class="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Tanggal</th>
                             <th class="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Aksi</th>
@@ -107,6 +109,16 @@
                             <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition border-b border-black/[0.02] dark:border-white/[0.02]">
                                 <td class="py-4 px-6 text-[11px] font-bold text-slate-500">{{ $loop->iteration }}</td>
                                 <td class="py-4 px-6">
+                                    @if ($request->nomor_antrian)
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-acorn/10 text-primary-acorn border border-primary-acorn/20 rounded-lg text-[11px] font-black tracking-widest">
+                                            <iconify-icon icon="lucide:hash" class="text-sm"></iconify-icon>
+                                            {{ $request->nomor_antrian }}
+                                        </span>
+                                    @else
+                                        <span class="text-[11px] text-slate-400">-</span>
+                                    @endif
+                                </td>
+                                <td class="py-4 px-6">
                                     <p class="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-wider">
                                         {{ $request->mppService?->name ?? '-' }}
                                     </p>
@@ -115,6 +127,17 @@
                                     <p class="text-[11px] font-medium text-slate-600 dark:text-slate-300">
                                         {{ $request->applicant_name }}
                                     </p>
+                                </td>
+                                <td class="py-4 px-6">
+                                    @if ($request->queue)
+                                        <div class="space-y-0.5 text-[10px] font-bold leading-tight">
+                                            <p class="text-slate-500">FO: <span class="text-slate-700 dark:text-slate-200">{{ $request->queue->durasi_fo ?? '-' }}</span></p>
+                                            <p class="text-slate-500">Gerai: <span class="text-slate-700 dark:text-slate-200">{{ $request->queue->durasi_gerai ?? '-' }}</span></p>
+                                            <p class="text-slate-500">Total: <span class="text-primary-acorn">{{ $request->queue->durasi_total ?? '-' }}</span></p>
+                                        </div>
+                                    @else
+                                        <span class="text-[11px] text-slate-400">-</span>
+                                    @endif
                                 </td>
                                 <td class="py-4 px-6">
                                     @php
@@ -139,7 +162,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="py-16 text-center">
+                                <td colspan="8" class="py-16 text-center">
                                     <div class="flex flex-col items-center gap-3">
                                         <iconify-icon icon="lucide:inbox" class="text-4xl text-slate-300"></iconify-icon>
                                         <p class="text-sm font-medium text-slate-400">Belum ada pengajuan MPP</p>

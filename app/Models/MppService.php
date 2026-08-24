@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MppService extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'name',
         'slug',
@@ -15,7 +18,8 @@ class MppService extends Model
         'description',
         'fields',
         'is_active',
-        'anjungan_id',
+        'opd_id',
+        'gerai_id',
     ];
 
     /**
@@ -36,8 +40,18 @@ class MppService extends Model
         return $this->hasMany(MppServiceRequest::class, 'mpp_service_id');
     }
 
-    public function anjungan(): BelongsTo
+    public function queues(): HasMany
     {
-        return $this->belongsTo(Anjungan::class, 'anjungan_id');
+        return $this->hasMany(Queue::class, 'service_id');
+    }
+
+    public function opd(): BelongsTo
+    {
+        return $this->belongsTo(Opd::class);
+    }
+
+    public function gerai(): BelongsTo
+    {
+        return $this->belongsTo(Gerai::class);
     }
 }

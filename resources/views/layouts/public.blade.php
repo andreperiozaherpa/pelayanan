@@ -190,6 +190,11 @@
                         </a>
                     @endif
                 @endforeach
+                <a href="{{ route('survey.index') }}"
+                    class="font-semibold text-sm text-white/80 hover:text-white transition-colors duration-200 flex items-center gap-1.5">
+                    <iconify-icon icon="lucide:clipboard-check" class="text-base"></iconify-icon>
+                    Survei SKM
+                </a>
                 <a href="{{ route('login') }}"
                     class="text-xs font-black uppercase tracking-wider text-[#6d272e] bg-[#f4edd8] px-5 py-2.5 rounded-full shadow-sm hover:scale-105 transition-transform duration-200">
                     Masuk
@@ -239,6 +244,11 @@
                     </a>
                 @endif
             @endforeach
+            <a href="{{ route('survey.index') }}" @click="open = false"
+                class="flex items-center gap-2 py-2 font-semibold text-rose-100 hover:text-white transition-colors">
+                <iconify-icon icon="lucide:clipboard-check" class="text-lg"></iconify-icon>
+                Survei SKM
+            </a>
             <a href="{{ route('login') }}"
                 class="block text-center font-bold py-3 rounded-xl bg-[#f4edd8] text-[#5d1e25] transition-colors">
                 Masuk

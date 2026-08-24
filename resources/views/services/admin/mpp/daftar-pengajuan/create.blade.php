@@ -68,6 +68,17 @@
                                     </div>
                                     <input type="hidden" name="form_data[{{ $field['name'] }}]" value="{{ old('form_data.' . $field['name']) }}">
                                 </div>
+                            @elseif (($field['type'] ?? 'text') === 'checkbox')
+                                <div class="space-y-2">
+                                    @foreach ($field['options'] ?? [] as $opt)
+                                        <label class="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 border border-black/[0.03] dark:border-white/[0.03] rounded-xl px-4 py-3 cursor-pointer">
+                                            <input type="checkbox" name="form_data[{{ $field['name'] }}][]" value="{{ $opt['value'] ?? $opt }}"
+                                                @checked(is_array(old('form_data.' . $field['name'])) && in_array($opt['value'] ?? $opt, old('form_data.' . $field['name'])))
+                                                class="w-4 h-4 rounded border-slate-300 text-primary-acorn focus:ring-primary-acorn/30">
+                                            <span class="text-[11px] font-bold text-slate-600 dark:text-slate-300">{{ $opt['label'] ?? $opt }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
                             @elseif (($field['type'] ?? 'text') === 'select' && !empty($field['options']))
                                 <select name="form_data[{{ $field['name'] }}]"
                                     class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-black/[0.03] dark:border-white/[0.03] rounded-xl text-[11px] font-bold outline-none focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn transition-all appearance-none"

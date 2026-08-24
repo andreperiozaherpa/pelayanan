@@ -29,23 +29,28 @@ class MppServiceRequestFactory extends Factory
                     'value' => fake()->name(),
                 ],
             ],
-            'status' => 'PENDING',
+            'status' => MppServiceRequest::STATUS_PENDING,
             'notes' => fake()->optional()->sentence(),
         ];
     }
 
     public function pending(): static
     {
-        return $this->state(['status' => 'PENDING']);
+        return $this->state(['status' => MppServiceRequest::STATUS_PENDING]);
     }
 
-    public function approved(): static
+    public function processed(): static
     {
-        return $this->state(['status' => 'APPROVED']);
+        return $this->state(['status' => MppServiceRequest::STATUS_PROCESSED]);
+    }
+
+    public function completed(): static
+    {
+        return $this->state(['status' => MppServiceRequest::STATUS_COMPLETED]);
     }
 
     public function rejected(): static
     {
-        return $this->state(['status' => 'REJECTED']);
+        return $this->state(['status' => MppServiceRequest::STATUS_REJECTED]);
     }
 }

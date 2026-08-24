@@ -16,14 +16,16 @@ class CitizenSeeder extends Seeder
     {
         // 1. Create a FIXED resident for predictable manual testing (Fase 4 Refinement)
         $fixedVillage = Village::first();
-        Citizen::create([
-            'nik' => '1234567890123456',
-            'nama_lengkap' => 'Budi Sudarsono',
-            'tgl_lahir' => '1985-05-20',
-            'alamat_desa' => 'Jl. Merdeka No. 12, RT 02/RW 05, Desa Sukamaju',
-            'kontak' => '081234567890',
-            'desa_id' => $fixedVillage->id,
-        ]);
+        Citizen::updateOrCreate(
+            ['nik' => '1234567890123456'],
+            [
+                'nama_lengkap' => 'Budi Sudarsono',
+                'tgl_lahir' => '1985-05-20',
+                'alamat_desa' => 'Jl. Merdeka No. 12, RT 02/RW 05, Desa Sukamaju',
+                'kontak' => '081234567890',
+                'desa_id' => $fixedVillage->id,
+            ]
+        );
 
         // 2. Create 50 more citizens for general testing
         Citizen::factory(50)->create()->each(function ($citizen) {

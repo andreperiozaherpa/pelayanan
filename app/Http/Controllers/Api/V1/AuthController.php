@@ -10,19 +10,18 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
-    /**
-     * Authenticate user and issue token.
-     */
     public function login(LoginRequest $request): JsonResponse
     {
-        $credentials = $request->only('email', 'password');
+        $login = $request->input('login', $request->input('username'));
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $login)->orWhere('name', $login)->first();
 
-        if (! $user || ! Auth::attempt($credentials)) {
+        if (! $user || ! Hash::check($request->password, $user->password)) {
             if ($user) {
                 Audit::log('login_failed', $user, [
                     'ip' => $request->ip(),
@@ -31,78 +30,88 @@ class AuthController extends Controller
             }
 
             return response()->json([
-                'status' => 'error',
-                'message' => 'Invalid credentials',
+                'success' => false,
+                'error' => 'Invalid credentials',
             ], 401);
         }
 
         if (! $user->is_active) {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Account has been deactivated.',
+                'success' => false,
+                'error' => 'Account has been deactivated.',
             ], 403);
         }
 
-        $user = Auth::user();
+        if ($request->filled('role') && (! $user->role || $user->role->slug !== $request->role)) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Role mismatch.',
+            ], 403);
+        }
 
-        // Token name includes IP and UA for binding awareness
+        Auth::login($user);
+
         $tokenName = 'auth_token_'.md5($request->ip().$request->userAgent());
+        $accessToken = $user->createToken($tokenName, ['*'], now()->addHours(8))->plainTextToken;
+        $refreshName = 'refresh_'.$tokenName;
+        $refreshToken = $user->createToken($refreshName, ['*'], now()->addDays(30))->plainTextToken;
 
-        // Access Token: 15 minutes (Blueprint 3.2)
-        $token = $user->createToken($tokenName, ['*'], now()->addMinutes(15))->plainTextToken;
-
-        // Log successful login (Audit)
         Audit::log('login_success', $user, [
             'ip' => $request->ip(),
             'ua' => $request->userAgent(),
         ]);
 
         return response()->json([
-            'status' => 'success',
+            'success' => true,
             'data' => [
-                'token' => $token,
+                'access_token' => $accessToken,
+                'refresh_token' => $refreshToken,
                 'user' => new UserResource($user),
             ],
         ]);
     }
 
-    /**
-     * Refresh access token (Rotation logic).
-     */
     public function refresh(Request $request): JsonResponse
     {
-        $user = $request->user();
+        $request->validate(['refresh_token' => ['required', 'string']]);
 
-        // Revoke current token
-        $user->currentAccessToken()->delete();
+        $tokenId = explode('|', $request->refresh_token)[0] ?? null;
+        $token = $tokenId ? PersonalAccessToken::find($tokenId) : null;
 
-        // Issue new access token (15 mins)
+        if (! $token || ! str_starts_with($token->name, 'refresh_') || ($token->expires_at && $token->expires_at->isPast())) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Invalid or expired refresh token',
+            ], 401);
+        }
+
+        $user = $token->tokenable;
+        $token->delete();
+
         $tokenName = 'auth_token_'.md5($request->ip().$request->userAgent());
-        $token = $user->createToken($tokenName, ['*'], now()->addMinutes(15))->plainTextToken;
+        $accessToken = $user->createToken($tokenName, ['*'], now()->addHours(8))->plainTextToken;
+        $refreshName = 'refresh_'.$tokenName;
+        $refreshToken = $user->createToken($refreshName, ['*'], now()->addDays(30))->plainTextToken;
 
         return response()->json([
-            'status' => 'success',
+            'success' => true,
             'data' => [
-                'token' => $token,
+                'access_token' => $accessToken,
+                'refresh_token' => $refreshToken,
             ],
         ]);
     }
 
-    /**
-     * Revoke access token.
-     */
     public function logout(Request $request): JsonResponse
     {
         $user = $request->user();
 
-        // Log logout (Audit)
         Audit::log('logout', $user);
 
-        // Revoke current token
         $user->currentAccessToken()->delete();
 
         return response()->json([
-            'status' => 'success',
+            'success' => true,
             'message' => 'Successfully logged out',
         ]);
     }

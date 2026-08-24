@@ -97,7 +97,7 @@
         const clearBtn = document.getElementById('dz-clear-{{ $id }}');
 
         const dz = new Dropzone('#dz-{{ $id }}', {
-            url: '{{ route("cms-media.upload") }}',
+            url: '{{ $url ?? route("cms-media.upload") }}',
             maxFiles: 1,
             paramName: 'file',
             acceptedFiles: 'image/*',

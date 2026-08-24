@@ -20,8 +20,19 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            'login' => ['required_without:username', 'string'],
+            'username' => ['required_without:login', 'string'],
             'password' => ['required', 'string'],
+            'role' => ['sometimes', 'string', 'exists:roles,slug'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'login.required' => 'Email atau username wajib diisi.',
+            'username.required' => 'Email atau username wajib diisi.',
+            'role.exists' => 'Role yang dipilih tidak valid.',
         ];
     }
 }

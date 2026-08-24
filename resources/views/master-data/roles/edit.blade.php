@@ -56,14 +56,24 @@
                         </div>
 
                         <div class="space-y-2">
-                            @foreach($groupedPermissions as $groupName => $groupPermissions)
+                            @foreach($groupedPermissions as $groupName => $subGroups)
                                 <div class="p-4 bg-slate-50/50 dark:bg-slate-900/10 border border-black/[0.02] dark:border-white/[0.02] rounded-2xl transition-all"
                                      x-data="{
                                          open: false,
+                                         count: '0/0',
+                                         init() {
+                                             this.updateCount();
+                                         },
+                                         updateCount() {
+                                             const checks = this.$root.querySelectorAll('input[type=checkbox]');
+                                             const checked = this.$root.querySelectorAll('input[type=checkbox]:checked');
+                                             this.count = checked.length + '/' + checks.length;
+                                         },
                                          toggleGroup() {
-                                             const checks = this.$el.querySelectorAll('input[type=checkbox]');
+                                             const checks = this.$root.querySelectorAll('input[type=checkbox]');
                                              const allChecked = Array.from(checks).every(c => c.checked);
                                              checks.forEach(c => c.checked = !allChecked);
+                                             this.updateCount();
                                          }
                                      }">
                                     <div class="flex items-center justify-between">
@@ -73,34 +83,44 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
                                             </svg>
                                             {{ $groupName }}
+                                            <span class="px-2 py-0.5 rounded-full bg-primary-acorn/15 text-primary-acorn text-[9px] font-black uppercase tracking-widest" x-text="count"></span>
                                         </button>
                                         <button type="button" @click="toggleGroup()"
                                             class="text-[9px] font-bold text-primary-acorn uppercase tracking-widest hover:opacity-80 transition">
                                             Pilih / Batal Modul
                                         </button>
                                     </div>
-                                    <div x-show="open" class="grid grid-cols-1 md:grid-cols-2 gap-2 pt-3 border-t border-black/[0.03] dark:border-white/[0.03] mt-3">
-                                        @foreach($groupPermissions as $permission)
-                                            <label class="flex items-center gap-3 p-3 bg-white dark:bg-slate-900/30 border border-black/[0.03] dark:border-white/[0.03] rounded-xl hover:border-primary-acorn/50 transition-all cursor-pointer group">
-                                                <div class="relative inline-flex items-center">
-                                                    <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" 
-                                                        class="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-700 text-primary-acorn focus:ring-primary-acorn/20 bg-white dark:bg-slate-900 transition-all"
-                                                        {{ in_array($permission->id, old('permissions', $rolePermissions)) ? 'checked' : '' }}>
+                                    <div x-show="open" class="space-y-3 pt-3 border-t border-black/[0.03] dark:border-white/[0.03] mt-3">
+                                        @foreach($subGroups as $subGroup)
+                                            <div>
+                                                @if ($subGroup['name'])
+                                                    <p class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">{{ $subGroup['name'] }}</p>
+                                                @endif
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                    @foreach($subGroup['permissions'] as $permission)
+                                                        <label class="flex items-center gap-3 p-3 bg-white dark:bg-slate-900/30 border border-black/[0.03] dark:border-white/[0.03] rounded-xl hover:border-primary-acorn/50 transition-all cursor-pointer group">
+                                                            <div class="relative inline-flex items-center">
+                                                                <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" @change="updateCount()"
+                                                                    class="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-700 text-primary-acorn focus:ring-primary-acorn/20 bg-white dark:bg-slate-900 transition-all"
+                                                                    {{ in_array($permission->id, old('permissions', $rolePermissions)) ? 'checked' : '' }}>
+                                                            </div>
+                                                            <div>
+                                                                <p class="text-xs font-black text-slate-800 dark:text-white group-hover:text-primary-acorn transition-colors uppercase tracking-tight">
+                                                                    {{ $permission->name }}
+                                                                </p>
+                                                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                                                                    {{ $permission->slug }}
+                                                                </p>
+                                                                @if ($permission->description)
+                                                                    <p class="text-[9px] font-medium text-slate-500 dark:text-slate-400 mt-1 leading-relaxed normal-case tracking-normal">
+                                                                        {{ $permission->description }}
+                                                                    </p>
+                                                                @endif
+                                                            </div>
+                                                        </label>
+                                                    @endforeach
                                                 </div>
-                                                <div>
-                                                    <p class="text-xs font-black text-slate-800 dark:text-white group-hover:text-primary-acorn transition-colors uppercase tracking-tight">
-                                                        {{ $permission->name }}
-                                                    </p>
-                                                    <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
-                                                        {{ $permission->slug }}
-                                                    </p>
-                                                    @if ($permission->description)
-                                                        <p class="text-[9px] font-medium text-slate-500 dark:text-slate-400 mt-1 leading-relaxed normal-case tracking-normal">
-                                                            {{ $permission->description }}
-                                                        </p>
-                                                    @endif
-                                                </div>
-                                            </label>
+                                            </div>
                                         @endforeach
                                     </div>
                                 </div>

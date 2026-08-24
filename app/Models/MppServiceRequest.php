@@ -25,8 +25,34 @@ class MppServiceRequest extends Model
 {
     use HasFactory;
 
+    public const STATUS_PENDING = 'PENDING';
+
+    public const STATUS_PROCESSED = 'PROCESSED';
+
+    public const STATUS_COMPLETED = 'COMPLETED';
+
+    public const STATUS_REJECTED = 'REJECTED';
+
+    /**
+     * Petakan status tiket antrian (mpp_queues.status) ke status pengajuan
+     * (mpp_service_requests.status) agar kedua tabel selalu selaras.
+     */
+    public static function mapQueueStatus(string $queueStatus): string
+    {
+        return match ($queueStatus) {
+            Queue::STATUS_CALLING_FO,
+            Queue::STATUS_WAITING_GERAI,
+            Queue::STATUS_CALLING_GERAI => self::STATUS_PROCESSED,
+            Queue::STATUS_DONE => self::STATUS_COMPLETED,
+            Queue::STATUS_REJECTED => self::STATUS_REJECTED,
+            default => self::STATUS_PENDING,
+        };
+    }
+
     protected $fillable = [
         'mpp_service_id',
+        'nomor_antrian',
+        'queue_id',
         'front_office_user_id',
         'submitted_form_data',
         'status',
@@ -67,6 +93,11 @@ class MppServiceRequest extends Model
     public function mppService(): BelongsTo
     {
         return $this->belongsTo(MppService::class, 'mpp_service_id');
+    }
+
+    public function queue(): BelongsTo
+    {
+        return $this->belongsTo(Queue::class, 'queue_id');
     }
 
     public function frontOfficeUser(): BelongsTo

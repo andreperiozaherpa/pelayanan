@@ -63,4 +63,94 @@ class FirebaseService
         } catch (FirebaseException) {
         }
     }
+
+    public function isReady(): bool
+    {
+        return $this->database !== null;
+    }
+
+    /**
+     * Baca nilai satu node Firebase (null bila belum ada / Firebase nonaktif).
+     */
+    public function getValue(string $path): ?array
+    {
+        if (! $this->database) {
+            return null;
+        }
+
+        try {
+            $value = $this->database->getReference($path)->getSnapshot()->getValue();
+
+            return is_array($value) ? $value : null;
+        } catch (FirebaseException) {
+            return null;
+        }
+    }
+
+    /**
+     * Simpan seluruh pengaturan tampilan display (running text, youtube, header, TTS, warna).
+     */
+    public function updateDisplaySettings(array $settings): void
+    {
+        $this->setValue('display_settings', $settings);
+    }
+
+    /**
+     * Publikasikan panggilan aktif yang sedang ditampilkan di layar TV.
+     */
+    public function publishCurrentCall(array $call): void
+    {
+        $this->setValue('current_call', $call);
+    }
+
+    /**
+     * Tambahkan baris riwayat antrian (Selesai / Tidak Hadir) dan potong ke limit terakhir.
+     */
+    public function appendRecentHistory(array $entry, int $limit = 20): void
+    {
+        if (! $this->database) {
+            return;
+        }
+
+        try {
+            $ref = $this->database->getReference('recent_history');
+            $history = $ref->getSnapshot()->getValue();
+
+            $history = is_array($history) ? array_values($history) : [];
+            array_unshift($history, $entry);
+            $history = array_slice($history, 0, $limit);
+
+            $ref->set($history);
+        } catch (FirebaseException) {
+        }
+    }
+
+    /**
+     * Perbarui / hapus satu kartu loket aktif di bawah layar TV.
+     * Data null akan menghapus kartu dengan key bersangkutan.
+     */
+    public function setActiveCounter(string $key, ?array $data): void
+    {
+        if (! $this->database) {
+            return;
+        }
+
+        try {
+            $ref = $this->database->getReference("active_counters/{$key}");
+            $data === null ? $ref->remove() : $ref->set($data);
+        } catch (FirebaseException) {
+        }
+    }
+
+    private function setValue(string $path, array $value): void
+    {
+        if (! $this->database) {
+            return;
+        }
+
+        try {
+            $this->database->getReference($path)->set($value);
+        } catch (FirebaseException) {
+        }
+    }
 }

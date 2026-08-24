@@ -10,6 +10,7 @@ use App\Models\CmsMenu;
 use App\Models\CmsPage;
 use App\Models\CmsSetting;
 use App\Models\CmsTeam;
+use App\Models\Opd;
 use App\Services\LandingPageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,6 +27,12 @@ class LandingPageController extends Controller
     public function index(): View
     {
         $data = $this->landingPageService->getPageData();
+
+        $data['gerais'] = Opd::query()
+            ->whereHas('gerais', fn ($q) => $q->where('is_active', true))
+            ->with('gerais')
+            ->orderBy('name')
+            ->get();
 
         return view('pages.landing', $data);
     }

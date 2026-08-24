@@ -4,13 +4,14 @@ namespace App\Http\Controllers\Web;
 
 use App\Facades\Audit;
 use App\Http\Controllers\Controller;
-use App\Models\Anjungan;
 use App\Models\MppService;
+use App\Models\Opd;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class MppPelayananController extends Controller
@@ -24,16 +25,16 @@ class MppPelayananController extends Controller
                 ->orWhere('description', 'like', '%'.$request->search.'%');
         }
 
-        $services = $query->with('anjungan')->latest()->paginate(10);
+        $services = $query->with('opd')->latest()->paginate(10);
 
         return view('services.admin.mpp.daftar-pelayanan.index', compact('services'));
     }
 
     public function create(): View
     {
-        $anjungans = Anjungan::where('is_active', true)->orderBy('name')->get();
+        $opds = Opd::with('gerais')->orderBy('name')->get();
 
-        return view('services.admin.mpp.daftar-pelayanan.create', compact('anjungans'));
+        return view('services.admin.mpp.daftar-pelayanan.create', compact('opds'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -41,10 +42,11 @@ class MppPelayananController extends Controller
         $rules = [
             'name' => 'required|string|max:255|unique:mpp_services,name',
             'description' => 'nullable|string',
-            'anjungan_id' => 'nullable|exists:mpp_anjungans,id',
+            'opd_id' => 'required|exists:opds,id',
+            'gerai_id' => ['required', Rule::exists('mpp_gerais', 'id')->where('opd_id', $request->input('opd_id'))],
             'fields' => 'required|array|min:1',
             'fields.*.label' => 'required|string|max:255',
-            'fields.*.type' => 'required|string|in:text,number,select,textarea,file',
+            'fields.*.type' => 'required|string|in:text,number,select,textarea,file,checkbox',
             'fields.*.required' => 'nullable',
             'fields.*.options' => 'nullable|array',
         ];
@@ -81,7 +83,7 @@ class MppPelayananController extends Controller
                 'label' => $field['label'],
                 'type' => $field['type'],
                 'required' => isset($field['required']) && ($field['required'] === 'true' || $field['required'] === true || $field['required'] === '1'),
-                'options' => ($field['type'] === 'select') ? array_filter($field['options'] ?? []) : [],
+                'options' => in_array($field['type'], ['select', 'checkbox']) ? array_filter($field['options'] ?? []) : [],
             ];
         }
 
@@ -89,7 +91,8 @@ class MppPelayananController extends Controller
             'name' => $validated['name'],
             'slug' => Str::slug($validated['name']),
             'description' => $validated['description'],
-            'anjungan_id' => $validated['anjungan_id'] ?? null,
+            'opd_id' => $validated['opd_id'],
+            'gerai_id' => $validated['gerai_id'],
             'logo' => $logoPath,
             'fields' => $fields,
             'is_active' => $request->has('is_active'),
@@ -103,9 +106,9 @@ class MppPelayananController extends Controller
 
     public function edit(MppService $mppService): View
     {
-        $anjungans = Anjungan::where('is_active', true)->orderBy('name')->get();
+        $opds = Opd::with('gerais')->orderBy('name')->get();
 
-        return view('services.admin.mpp.daftar-pelayanan.edit', compact('mppService', 'anjungans'));
+        return view('services.admin.mpp.daftar-pelayanan.edit', compact('mppService', 'opds'));
     }
 
     public function update(Request $request, MppService $mppService): RedirectResponse
@@ -113,10 +116,11 @@ class MppPelayananController extends Controller
         $rules = [
             'name' => 'required|string|max:255|unique:mpp_services,name,'.$mppService->id,
             'description' => 'nullable|string',
-            'anjungan_id' => 'nullable|exists:mpp_anjungans,id',
+            'opd_id' => 'required|exists:opds,id',
+            'gerai_id' => ['required', Rule::exists('mpp_gerais', 'id')->where('opd_id', $request->input('opd_id'))],
             'fields' => 'required|array|min:1',
             'fields.*.label' => 'required|string|max:255',
-            'fields.*.type' => 'required|string|in:text,number,select,textarea,file',
+            'fields.*.type' => 'required|string|in:text,number,select,textarea,file,checkbox',
             'fields.*.required' => 'nullable',
             'fields.*.options' => 'nullable|array',
         ];
@@ -164,7 +168,7 @@ class MppPelayananController extends Controller
                 'label' => $field['label'],
                 'type' => $field['type'],
                 'required' => isset($field['required']) && ($field['required'] === 'true' || $field['required'] === true || $field['required'] === '1'),
-                'options' => ($field['type'] === 'select') ? array_filter($field['options'] ?? []) : [],
+                'options' => in_array($field['type'], ['select', 'checkbox']) ? array_filter($field['options'] ?? []) : [],
             ];
         }
 
@@ -172,7 +176,8 @@ class MppPelayananController extends Controller
             'name' => $validated['name'],
             'slug' => Str::slug($validated['name']),
             'description' => $validated['description'],
-            'anjungan_id' => $validated['anjungan_id'] ?? null,
+            'opd_id' => $validated['opd_id'],
+            'gerai_id' => $validated['gerai_id'],
             'logo' => $logoPath,
             'fields' => $fields,
             'is_active' => $request->has('is_active'),

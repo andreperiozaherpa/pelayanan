@@ -5,6 +5,7 @@ use App\Models\User;
 use Database\Seeders\RBACSeeder;
 use Database\Seeders\VillageSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\PersonalAccessToken;
 
 uses(RefreshDatabase::class);
 
@@ -17,20 +18,22 @@ test('user can login and audit log is recorded', function () {
     $role = Role::where('slug', 'superadmin')->first();
     $user = User::factory()->create([
         'email' => 'admin@pelayanan.test',
+        'name' => 'admin',
         'password' => 'password',
         'role_id' => $role->id,
     ]);
 
     $response = $this->postJson('/api/v1/auth/login', [
-        'email' => 'admin@pelayanan.test',
+        'username' => 'admin',
         'password' => 'password',
     ]);
 
     $response->assertSuccessful()
+        ->assertJsonPath('success', true)
         ->assertJsonStructure([
-            'status',
             'data' => [
-                'token',
+                'access_token',
+                'refresh_token',
                 'user',
             ],
         ]);
@@ -45,12 +48,13 @@ test('failed login attempt is audited', function () {
     $role = Role::where('slug', 'superadmin')->first();
     $user = User::factory()->create([
         'email' => 'admin@pelayanan.test',
+        'name' => 'admin',
         'password' => 'password',
         'role_id' => $role->id,
     ]);
 
     $response = $this->postJson('/api/v1/auth/login', [
-        'email' => 'admin@pelayanan.test',
+        'username' => 'admin',
         'password' => 'wrongpassword',
     ]);
 
@@ -63,19 +67,38 @@ test('failed login attempt is audited', function () {
 
 test('token refresh rotates the token', function () {
     $role = Role::where('slug', 'superadmin')->first();
-    $user = User::factory()->create(['role_id' => $role->id]);
-    $token = $user->createToken('initial-token')->plainTextToken;
+    $user = User::factory()->create([
+        'email' => 'admin@pelayanan.test',
+        'name' => 'admin',
+        'password' => 'password',
+        'role_id' => $role->id,
+    ]);
 
-    $response = $this->withHeader('Authorization', 'Bearer '.$token)
-        ->postJson('/api/v1/auth/refresh');
+    $login = $this->postJson('/api/v1/auth/login', [
+        'username' => 'admin',
+        'password' => 'password',
+    ]);
+
+    $login->assertSuccessful();
+    $oldRefreshToken = $login->json('data.refresh_token');
+    $oldAccessToken = $login->json('data.access_token');
+
+    $response = $this->postJson('/api/v1/auth/refresh', [
+        'refresh_token' => $oldRefreshToken,
+    ]);
 
     $response->assertSuccessful()
-        ->assertJsonStructure(['status', 'data' => ['token']]);
+        ->assertJsonPath('success', true)
+        ->assertJsonStructure(['data' => ['access_token', 'refresh_token']]);
 
-    $newToken = $response->json('data.token');
+    $newAccessToken = $response->json('data.access_token');
+    $newRefreshToken = $response->json('data.refresh_token');
 
-    expect($newToken)->not->toBe($token);
-    expect($user->tokens()->count())->toBe(1); // Old token should be deleted
+    expect($newAccessToken)->not->toBe($oldAccessToken);
+    expect($newRefreshToken)->not->toBe($oldRefreshToken);
+
+    $oldRefreshId = (int) explode('|', $oldRefreshToken)[0];
+    expect(PersonalAccessToken::find($oldRefreshId))->toBeNull();
 });
 
 test('authenticated user can logout and audit log is recorded', function () {

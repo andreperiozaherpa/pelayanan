@@ -72,7 +72,7 @@ test('creating operator desa fails without village', function () {
 
     $response = $this->actingAs($this->superAdmin)->post(route('users.store'), $userData);
 
-    $response->assertSessionHasErrors(['desa_id']);
+    $response->assertSessionHasErrors(['district_id']);
 });
 
 test('super admin can update a user', function () {

@@ -9,6 +9,7 @@
     @include('components.landing.why-choose-us', ['whyChooseUs' => $whyChooseUs])
     @include('components.landing.portfolio', ['portfolios' => $portfolios])
     @include('components.landing.team', ['team' => $team])
+    @include('components.landing.survey', ['gerais' => $gerais])
     @include('components.landing.testimonials', ['testimonials' => $testimonials])
     @include('components.landing.blog', ['articles' => $articles])
     @include('components.landing.faq', ['faqs' => $faqs])

@@ -25,7 +25,7 @@
             <x-slot:thead>
                 <th class="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Logo & Nama Pelayanan
                 </th>
-                <th class="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Anjungan</th>
+                <th class="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Instansi</th>
                 <th class="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Deskripsi</th>
                 <th class="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Jumlah Kolom Form</th>
                 <th class="py-4 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
@@ -49,18 +49,20 @@
                                 </div>
                             @endif
                             <div>
-                                <p class="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-wider">
-                                    {{ $service->name }}</p>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-[11px] font-black text-slate-800 dark:text-white uppercase tracking-wider">
+                                        {{ $service->name }}</p>
+                                </div>
                                 <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tight">{{ $service->slug }}
                                 </p>
                             </div>
                         </div>
                     </td>
                     <td class="py-4 px-6">
-                        @if ($service->anjungan)
+                        @if ($service->opd)
                             <span
                                 class="px-2 py-0.5 rounded-lg text-[9px] font-black bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-700/30">
-                                {{ $service->anjungan->code }}
+                                {{ $service->opd->code }}
                             </span>
                         @else
                             <span class="text-[9px] font-bold text-slate-400">-</span>

@@ -55,6 +55,11 @@
                                 </a>
                             </li>
                         @endforeach
+                        <li>
+                            <a href="{{ route('survey.index') }}" class="text-rose-200/70 hover:text-white transition-colors duration-200 text-sm">
+                                Survei Kepuasan Masyarakat (SKM)
+                            </a>
+                        </li>
                     @else
                         @foreach (['#hero' => 'Beranda', '#about' => 'Tentang Kami', '#services' => 'Layanan', '#portfolio' => 'Portfolio', '#blog' => 'Blog', '#faq' => 'FAQ'] as $href => $label)
                             <li>
@@ -63,6 +68,11 @@
                                 </a>
                             </li>
                         @endforeach
+                        <li>
+                            <a href="{{ route('survey.index') }}" class="text-rose-200/70 hover:text-white transition-colors duration-200 text-sm">
+                                Survei Kepuasan Masyarakat (SKM)
+                            </a>
+                        </li>
                     @endif
                 </ul>
             </div>

@@ -45,8 +45,33 @@ class OpdSeeder extends Seeder
             ['code' => '28', 'name' => 'Badan Penanggulangan Bencana Daerah', 'description' => 'Penanggulangan bencana di lingkup Kabupaten Tulang Bawang Barat.'],
         ];
 
+        // Instansi layanan MPP non-OPD (kode lanjutan 29–45)
+        $instansis = [
+            ['code' => '29', 'name' => 'Badan Penyelenggara Jaminan Produk Halal', 'description' => 'Instansi layanan sertifikasi produk halal (BPJPH).'],
+            ['code' => '30', 'name' => 'Kantor Pelayanan Pajak Pratama Kotabumi', 'description' => 'Instansi layanan perpajakan (KPP Pratama).'],
+            ['code' => '31', 'name' => 'BPJS Ketenagakerjaan Lampung Tengah', 'description' => 'Instansi layanan jaminan sosial ketenagakerjaan.'],
+            ['code' => '32', 'name' => 'Kejaksaan Negeri Tulang Bawang Barat', 'description' => 'Instansi layanan hukum dan perdata (Kejari).'],
+            ['code' => '33', 'name' => 'Kementerian Agama RI Kab. Tubaba', 'description' => 'Instansi layanan keagamaan (Kemenag).'],
+            ['code' => '34', 'name' => 'Kantor Imigrasi Kelas III Non TPI Kotabumi', 'description' => 'Instansi layanan keimigrasian.'],
+            ['code' => '35', 'name' => 'Kantor Layanan BNNP Lampung Kab. Tubaba', 'description' => 'Instansi layanan pencegahan penyalahgunaan narkoba (BNNP).'],
+            ['code' => '36', 'name' => 'Kepolisian Resor (POLRES) Tulang Bawang Barat', 'description' => 'Instansi layanan keamanan dan ketertiban masyarakat.'],
+            ['code' => '37', 'name' => 'Pengadilan Agama Tulang Bawang Tengah', 'description' => 'Instansi layanan peradilan agama.'],
+            ['code' => '38', 'name' => 'Loka Pengawas Obat dan Makanan (BPOM)', 'description' => 'Instansi layanan pengawasan obat dan makanan (BPOM).'],
+            ['code' => '39', 'name' => 'Kantor Pertanahan Kab. Tulang Bawang Barat', 'description' => 'Instansi layanan pertanahan (BPN).'],
+            ['code' => '40', 'name' => 'Bank Pembangunan Daerah Lampung Cabang Panaragan', 'description' => 'Instansi layanan perbankan daerah (Bank Lampung).'],
+            ['code' => '41', 'name' => 'Dinas Tanaman Pangan, Hortikultura & Perkebunan', 'description' => 'Urusan pemerintahan bidang tanaman pangan, hortikultura dan perkebunan.'],
+            ['code' => '42', 'name' => 'Dinas Peternakan & Kesehatan Hewan', 'description' => 'Urusan pemerintahan bidang peternakan dan kesehatan hewan.'],
+            ['code' => '43', 'name' => 'Badan Pendapatan Daerah (BAPENDA)', 'description' => 'Fungsi penunjang urusan pemerintahan bidang pendapatan daerah.'],
+            ['code' => '44', 'name' => 'BPJS Kesehatan Cabang Metro', 'description' => 'Instansi layanan jaminan kesehatan nasional (BPJS Kesehatan).'],
+            ['code' => '45', 'name' => 'Dinas Tenaga Kerja & Transmigrasi', 'description' => 'Urusan pemerintahan bidang ketenagakerjaan dan transmigrasi.'],
+        ];
+
         foreach ($opds as $opd) {
             Opd::updateOrCreate(['code' => $opd['code']], $opd);
+        }
+
+        foreach ($instansis as $instansi) {
+            Opd::updateOrCreate(['code' => $instansi['code']], $instansi);
         }
     }
 }

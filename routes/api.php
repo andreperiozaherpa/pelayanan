@@ -2,39 +2,59 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CitizenController;
+use App\Http\Controllers\Api\V1\DisplayController;
+use App\Http\Controllers\Api\V1\MppQueueOperationController;
+use App\Http\Controllers\Api\V1\MppRequestController;
+use App\Http\Controllers\Api\V1\MppServiceController;
+use App\Http\Controllers\Api\V1\MppSkmController;
+use App\Http\Controllers\Api\V1\MppTicketController;
 use App\Http\Controllers\Api\V1\PovertyController;
-use App\Http\Controllers\Api\V1\QueueAuthController;
-use App\Http\Controllers\Api\V1\QueueController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::prefix('auth')->group(function () {
         Route::post('/login', [AuthController::class, 'login']);
-        Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('auth:sanctum');
+        Route::post('/refresh', [AuthController::class, 'refresh']);
         Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
     });
 
-    // Queue-specific auth (username-based, for Wails app)
-    Route::post('auth/login', [QueueAuthController::class, 'login']);
-    Route::post('auth/verify', [QueueAuthController::class, 'verify']);
-    Route::post('auth/logout', [QueueAuthController::class, 'logout'])->middleware('auth:sanctum');
+    // Publik — dipakai kiosk (Gerai) tanpa login
+    Route::get('/services', [MppServiceController::class, 'index']);
+    Route::get('/services/{service}', [MppServiceController::class, 'show'])->whereNumber('service');
+    Route::post('/services/{service}/requests', [MppRequestController::class, 'store'])->whereNumber('service');
+    Route::post('/tickets', [MppTicketController::class, 'store']);
 
-    // Public queue data
-    Route::get('counters', [QueueController::class, 'counters']);
+    // Publik — data layar display (riwayat antrian hari ini)
+    Route::get('/display/history', [DisplayController::class, 'history']);
+
+    // Publik — Survei Kepuasan Masyarakat (SKM)
+    Route::get('/opd/{opd}/skm', [MppSkmController::class, 'questions'])->whereNumber('opd');
+    Route::post('/opd/{opd}/skm', [MppSkmController::class, 'store'])->whereNumber('opd');
 
     Route::middleware('auth:sanctum')->group(function () {
-        // Citizens CRUD
+        Route::get('/gerai', [MppServiceController::class, 'geraiIndex']);
+
+        Route::prefix('fo')->group(function () {
+            Route::get('/waiting', [MppQueueOperationController::class, 'foWaiting']);
+            Route::get('/calling', [MppQueueOperationController::class, 'foCalling']);
+            Route::post('/call', [MppQueueOperationController::class, 'foCall']);
+            Route::post('/forward', [MppQueueOperationController::class, 'foForward']);
+            Route::post('/reject', [MppQueueOperationController::class, 'foReject']);
+            Route::post('/recall', [MppQueueOperationController::class, 'foRecall']);
+            Route::post('/skip', [MppQueueOperationController::class, 'foSkip']);
+        });
+
+        Route::prefix('gerai')->group(function () {
+            Route::get('/{gerai}/waiting', [MppQueueOperationController::class, 'geraiWaiting']);
+            Route::get('/{gerai}/calling', [MppQueueOperationController::class, 'geraiCalling']);
+            Route::post('/call', [MppQueueOperationController::class, 'geraiCall']);
+            Route::post('/complete', [MppQueueOperationController::class, 'geraiComplete']);
+            Route::post('/recall', [MppQueueOperationController::class, 'geraiRecall']);
+        });
+
         Route::apiResource('citizens', CitizenController::class)->names('api.v1.citizens');
 
-        // Poverty Status & Management
         Route::get('/poverty/status/{nik}', [PovertyController::class, 'status'])->name('api.v1.poverty.status');
         Route::apiResource('poverty', PovertyController::class)->names('api.v1.poverty')->only(['index', 'store']);
-
-        // Queue system
-        Route::get('queues', [QueueController::class, 'index']);
-        Route::post('queues/call-next', [QueueController::class, 'callNext']);
-        Route::post('queues/{queue:number}/recall', [QueueController::class, 'recall']);
-        Route::post('queues/{queue:number}/complete', [QueueController::class, 'complete']);
-        Route::post('queues/{queue:number}/skip', [QueueController::class, 'skip']);
     });
 });

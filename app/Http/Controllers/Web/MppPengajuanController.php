@@ -6,6 +6,7 @@ use App\Facades\Audit;
 use App\Http\Controllers\Controller;
 use App\Models\MppService;
 use App\Models\MppServiceRequest;
+use App\Services\QueueService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +18,7 @@ class MppPengajuanController extends Controller
     public function index(Request $request): View
     {
         $user = auth()->user();
-        if (! ($user->hasPermission('service.report') || $user->hasPermission('service.verify') || $user->hasPermission('service.manage'))) {
+        if (! $user->hasPermission('mpp.pengajuan.view')) {
             abort(403, 'Anda tidak memiliki hak akses untuk halaman ini.');
         }
 
@@ -25,7 +26,7 @@ class MppPengajuanController extends Controller
         $status = $request->query('status');
         $mppServiceId = $request->query('mpp_service_id');
 
-        $query = MppServiceRequest::with(['mppService', 'frontOfficeUser'])->latest();
+        $query = MppServiceRequest::with(['mppService', 'frontOfficeUser', 'queue'])->latest();
 
         if ($status) {
             $query->where('status', $status);
@@ -84,6 +85,11 @@ class MppPengajuanController extends Controller
                 }
             } elseif ($field['type'] === 'select') {
                 $fieldRules[] = 'in:'.implode(',', $field['options'] ?? []);
+            } elseif ($field['type'] === 'checkbox') {
+                $fieldRules[] = 'array';
+                if (! empty($field['options'])) {
+                    $fieldRules[] = 'in:'.implode(',', $field['options']);
+                }
             } else {
                 $fieldRules[] = 'string';
             }
@@ -134,12 +140,15 @@ class MppPengajuanController extends Controller
         }
 
         $mppServiceRequest = DB::transaction(function () use ($request, $mppService, $submittedData) {
+            $service = MppService::query()->whereKey($mppService->id)->lockForUpdate()->first();
+
             return MppServiceRequest::create([
-                'mpp_service_id' => $mppService->id,
+                'mpp_service_id' => $service->id,
+                'nomor_antrian' => app(QueueService::class)->generateNomorAntrian($service),
                 'front_office_user_id' => Auth::id(),
                 'notes' => $request->notes,
                 'submitted_form_data' => $submittedData,
-                'status' => 'PENDING',
+                'status' => MppServiceRequest::STATUS_PENDING,
             ]);
         });
 

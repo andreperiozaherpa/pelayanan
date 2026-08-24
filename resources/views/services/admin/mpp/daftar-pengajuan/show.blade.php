@@ -28,6 +28,16 @@
                     </div>
                 </div>
 
+                @if ($mppServiceRequest->nomor_antrian)
+                    <div class="flex items-center justify-between gap-3 rounded-xl bg-primary-acorn/10 border border-primary-acorn/20 px-4 py-3">
+                        <div>
+                            <p class="text-[9px] font-black text-primary-acorn uppercase tracking-widest mb-0.5">Nomor Antrian</p>
+                            <p class="text-2xl font-black text-primary-acorn tracking-widest">{{ $mppServiceRequest->nomor_antrian }}</p>
+                        </div>
+                        <iconify-icon icon="lucide:ticket" class="text-3xl text-primary-acorn/70"></iconify-icon>
+                    </div>
+                @endif
+
                 <div class="border-t border-black/[0.03] dark:border-white/[0.03] pt-4">
                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
                     @php
@@ -58,6 +68,36 @@
                         <p class="text-sm font-bold text-slate-600 dark:text-slate-300">{{ $mppServiceRequest->notes }}</p>
                     </div>
                 @endif
+
+                @if($mppServiceRequest->queue)
+                    <div class="border-t border-black/[0.03] dark:border-white/[0.03] pt-4 space-y-2.5">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Durasi Proses</p>
+
+                        <div class="rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-black/[0.03] dark:border-white/[0.03] p-3">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Front Office</p>
+                            <p class="text-sm font-black text-slate-800 dark:text-white">{{ $mppServiceRequest->queue->durasi_fo ?? '-' }}</p>
+                            <p class="text-[10px] font-medium text-slate-400">
+                                {{ $mppServiceRequest->queue->fo_called_at?->format('H:i') ?? '-' }} → {{ $mppServiceRequest->queue->fo_finished_at?->format('H:i') ?? '-' }}
+                            </p>
+                        </div>
+
+                        <div class="rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-black/[0.03] dark:border-white/[0.03] p-3">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Gerai</p>
+                            <p class="text-sm font-black text-slate-800 dark:text-white">{{ $mppServiceRequest->queue->durasi_gerai ?? '-' }}</p>
+                            <p class="text-[10px] font-medium text-slate-400">
+                                {{ $mppServiceRequest->queue->gerai_called_at?->format('H:i') ?? '-' }} → {{ $mppServiceRequest->queue->done_at?->format('H:i') ?? '-' }}
+                            </p>
+                        </div>
+
+                        <div class="rounded-xl bg-primary-acorn/10 border border-primary-acorn/20 p-3">
+                            <p class="text-[9px] font-black text-primary-acorn uppercase tracking-widest mb-0.5">Total</p>
+                            <p class="text-sm font-black text-primary-acorn">{{ $mppServiceRequest->queue->durasi_total ?? '-' }}</p>
+                            <p class="text-[10px] font-medium text-primary-acorn/60">
+                                {{ $mppServiceRequest->created_at->format('H:i') }} → {{ $mppServiceRequest->queue->done_at?->format('H:i') ?? '-' }}
+                            </p>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -68,6 +108,12 @@
                 </div>
                 <div class="p-6 space-y-5">
                     @forelse(($mppServiceRequest->submitted_form_data ?? []) as $fieldName => $data)
+                        @php
+                            $fieldDef = collect($mppServiceRequest->mppService?->fields ?? [])
+                                ->firstWhere('name', $fieldName);
+                            $fieldOptions = $fieldDef['options'] ?? [];
+                            $checkedValues = (array) ($data['value'] ?? []);
+                        @endphp
                         <div class="pb-4 border-b border-black/[0.02] dark:border-white/[0.02] last:border-0">
                             <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ $data['label'] ?? $fieldName }}</p>
                             @if(($data['type'] ?? 'text') === 'file' && !empty($data['value']))
@@ -75,6 +121,19 @@
                                     <iconify-icon icon="lucide:file" class="inline-block mr-1"></iconify-icon>
                                     {{ $data['original_name'] ?? 'Lihat Berkas' }}
                                 </a>
+                            @elseif(($data['type'] ?? 'text') === 'checkbox' && !empty($fieldOptions))
+                                <div class="space-y-1.5 mt-1">
+                                    @foreach($fieldOptions as $opt)
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-4 h-4 rounded border flex items-center justify-center text-[10px] {{ in_array($opt, $checkedValues, true) ? 'bg-primary-acorn text-white border-primary-acorn' : 'border-slate-300 dark:border-slate-600 text-transparent' }}">
+                                                <iconify-icon icon="lucide:check"></iconify-icon>
+                                            </span>
+                                            <span class="text-[11px] font-bold text-slate-700 dark:text-slate-200">{{ $opt }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @elseif(is_array($data['value'] ?? null))
+                                <p class="text-[11px] font-bold text-slate-700 dark:text-slate-200">{{ implode(', ', $data['value']) }}</p>
                             @else
                                 <p class="text-[11px] font-bold text-slate-700 dark:text-slate-200">{{ $data['value'] ?? '-' }}</p>
                             @endif

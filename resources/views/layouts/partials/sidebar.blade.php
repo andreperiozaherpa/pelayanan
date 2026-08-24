@@ -73,7 +73,7 @@
 
                         @if (Auth::user()->can('service.report'))
                             <a href="{{ route('mpp-requests.index') }}"
-                                class="flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('mpp-requests.*') || request()->routeIs('anjungans.*') || request()->routeIs('mpp-services.*') || request()->routeIs('counter-users.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
+                                class="flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('mpp-requests.*') || request()->routeIs('mpp-services.*') || request()->routeIs('counter-users.*') || request()->routeIs('counters.*') || request()->routeIs('gerais.*') || request()->routeIs('skm.*') || request()->routeIs('display-settings.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
                                 title="MPP - Mal Pelayanan Publik">
                                 <iconify-icon icon="lucide:building-2" class="text-xl"></iconify-icon>
                                 <span class="text-[8px] font-semibold mt-0.5 leading-none">MPP</span>
@@ -135,9 +135,12 @@
                                         icon="lucide:building-2">Dashboard Desa</x-nav-link>
                                 @endif
                             @elseif(request()->routeIs('mpp-requests.*') ||
-                                    request()->routeIs('anjungans.*') ||
                                     request()->routeIs('mpp-services.*') ||
-                                    request()->routeIs('counter-users.*'))
+                                    request()->routeIs('counter-users.*') ||
+                                    request()->routeIs('counters.*') ||
+                                    request()->routeIs('gerais.*') ||
+                                    request()->routeIs('skm.*') ||
+                                    request()->routeIs('display-settings.*'))
                                 <div class="px-4 py-4">
                                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">MPP
                                         & Pelayanan</p>
@@ -161,14 +164,34 @@
                                 @can('system.manage')
                                     <div class="px-4 py-3 mt-4">
                                         <p class="text-[9px] font-black text-slate-400/60 uppercase tracking-widest">
-                                            Konfigurasi Anjungan</p>
+                                            Konfigurasi Layanan</p>
                                     </div>
-                                    <x-nav-link href="{{ route('anjungans.index') }}" :active="request()->routeIs('anjungans.*')"
-                                        icon="lucide:monitor">Daftar Anjungan</x-nav-link>
+                                    <x-nav-link href="{{ route('gerais.index') }}" :active="request()->routeIs('gerais.*')"
+                                        icon="lucide:store">Daftar Gerai</x-nav-link>
+                                    <x-nav-link href="{{ route('counters.index') }}" :active="request()->routeIs('counters.*')"
+                                        icon="lucide:layout-grid">Daftar Loket</x-nav-link>
                                     <x-nav-link href="{{ route('mpp-services.index') }}" :active="request()->routeIs('mpp-services.*')"
                                         icon="lucide:file-text">Pelayanan MPP</x-nav-link>
                                     <x-nav-link href="{{ route('counter-users.index') }}" :active="request()->routeIs('counter-users.*')"
-                                        icon="lucide:user-cog">Pengaturan Loket</x-nav-link>
+                                        icon="lucide:user-cog">Penugasan Loket</x-nav-link>
+                                @endcan
+
+                                @can('mpp.display.settings')
+                                    <div class="px-4 py-3 mt-4">
+                                        <p class="text-[9px] font-black text-slate-400/60 uppercase tracking-widest">
+                                            Display Caller</p>
+                                    </div>
+                                    <x-nav-link href="{{ route('display-settings.index') }}" :active="request()->routeIs('display-settings.*')"
+                                        icon="lucide:monitor-play">Pengaturan Display</x-nav-link>
+                                @endcan
+
+                                @can('service.report')
+                                    <div class="px-4 py-3 mt-4">
+                                        <p class="text-[9px] font-black text-slate-400/60 uppercase tracking-widest">
+                                            Survei Kepuasan Masyarakat</p>
+                                    </div>
+                                    <x-nav-link href="{{ route('skm.index') }}" :active="request()->routeIs('skm.*')"
+                                        icon="lucide:clipboard-check">Laporan Survei (SKM)</x-nav-link>
                                 @endcan
                             @elseif(request()->routeIs('services.*') || request()->routeIs('citizens.*'))
                                 <div class="px-4 py-4">

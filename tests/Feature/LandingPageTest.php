@@ -11,6 +11,8 @@ use App\Models\CmsStatistic;
 use App\Models\CmsTeam;
 use App\Models\CmsTestimonial;
 use App\Models\CmsWebsiteSection;
+use App\Models\Gerai;
+use App\Models\Opd;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -169,6 +171,32 @@ test('landing page renders mega menu details for Pelayanan', function () {
     $response->assertSee('Pelayanan');
     $response->assertSee('Perizinan Berusaha');
     $response->assertSee('Sistem perizinan berusaha berbasis resiko');
+});
+
+test('landing page renders survey SKM section with active instansi', function () {
+    $opdAktif = Opd::create(['code' => '01', 'name' => 'Dinas Akta']);
+    Gerai::factory()->create(['code' => 'AB', 'name' => 'Gerai Akta', 'opd_id' => $opdAktif->id, 'is_active' => true]);
+
+    $opdNonaktif = Opd::create(['code' => '02', 'name' => 'Dinas Nonaktif']);
+    Gerai::factory()->create(['name' => 'Gerai Nonaktif', 'opd_id' => $opdNonaktif->id, 'is_active' => false]);
+
+    $response = $this->get(route('landing.index'));
+
+    $response->assertStatus(200);
+    $response->assertSee('Survei Kepuasan Masyarakat');
+    $response->assertSee('Mulai Survei Sekarang');
+    $response->assertSee('Dinas Akta');
+    $response->assertDontSee('Dinas Nonaktif');
+    $response->assertSee(route('survey.index'));
+});
+
+test('landing page header and footer link to the SKM survey', function () {
+    $response = $this->get(route('landing.index'));
+
+    $response->assertStatus(200);
+    $response->assertSee('Survei SKM');
+    $response->assertSee('Survei Kepuasan Masyarakat (SKM)');
+    $response->assertSee(route('survey.index'));
 });
 
 test('dynamic profile page renders successfully', function () {

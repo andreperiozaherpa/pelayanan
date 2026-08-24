@@ -15,6 +15,7 @@ use App\Http\Controllers\Web\CmsSettingController;
 use App\Http\Controllers\Web\CmsTeamController;
 use App\Http\Controllers\Web\CmsTestimonialController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\DisplayController;
 use App\Http\Controllers\Web\DistrictController;
 use App\Http\Controllers\Web\HistoryController;
 use App\Http\Controllers\Web\LandingPageController;
@@ -24,9 +25,10 @@ use App\Http\Controllers\Web\MapLocationController;
 use App\Http\Controllers\Web\MapRegionController;
 use App\Http\Controllers\Web\MapZoneController;
 use App\Http\Controllers\Web\MapZoneTypeController;
-use App\Http\Controllers\Web\MppAnjunganController;
 use App\Http\Controllers\Web\MppCitizenController;
+use App\Http\Controllers\Web\MppCounterController;
 use App\Http\Controllers\Web\MppCounterUserController;
+use App\Http\Controllers\Web\MppGeraiController;
 use App\Http\Controllers\Web\MppPelayananController;
 use App\Http\Controllers\Web\MppPengajuanController;
 use App\Http\Controllers\Web\OpdController;
@@ -35,20 +37,33 @@ use App\Http\Controllers\Web\ReportController;
 use App\Http\Controllers\Web\RoleController;
 use App\Http\Controllers\Web\ServiceController;
 use App\Http\Controllers\Web\SiberugoController;
+use App\Http\Controllers\Web\SkmController;
+use App\Http\Controllers\Web\SurveyController;
 use App\Http\Controllers\Web\UploadController;
 use App\Http\Controllers\Web\UserController;
 use App\Http\Controllers\Web\VerificationController;
 use App\Http\Controllers\Web\VillageController;
+use App\Http\Controllers\Web\YtRelayController;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes (tanpa autentikasi)
 Route::get('/cek-surat', [PublicVerificationController::class, 'show'])->name('public.verify');
+
+// E-Survei SKM Public Routes
+Route::prefix('survey')->name('survey.')->group(function () {
+    Route::get('/', [SurveyController::class, 'index'])->name('index');
+    Route::get('/{opd}', [SurveyController::class, 'show'])->name('show');
+    Route::post('/{opd}', [SurveyController::class, 'store'])->name('store');
+});
 
 // SIBERUGO Public Map Routes
 Route::get('/', [LandingPageController::class, 'index'])->name('landing.index');
 Route::get('/siberugo', [SiberugoController::class, 'index'])->name('siberugo.index');
 Route::get('/siberugo/peta', [SiberugoController::class, 'map'])->name('siberugo.map');
 Route::post('/kontak/pengaduan', [LandingPageController::class, 'submitComplaint'])->name('landing.complaint.submit');
+
+// YouTube Embed Relay (Referer HTTP valid untuk webview Wails — Error 153)
+Route::get('/yt-relay', [YtRelayController::class, 'index'])->name('yt-relay');
 
 // Public Map API Endpoints
 Route::prefix('api/map')->name('api.map.')->group(function () {
@@ -117,21 +132,23 @@ Route::middleware('auth')->group(function () {
     // MPP Routes (semua di bawah /mpp)
     Route::prefix('mpp')->group(function () {
         Route::name('mpp-requests.')->group(function () {
-            Route::get('/pengajuan', [MppPengajuanController::class, 'index'])->name('index');
-            Route::get('/pengajuan/{mppServiceRequest}', [MppPengajuanController::class, 'show'])->name('show');
-            Route::get('/{mppService:slug}/buat', [MppPengajuanController::class, 'create'])->name('create');
-            Route::post('/{mppService:slug}/simpan', [MppPengajuanController::class, 'store'])->name('store');
-            Route::post('/upload', [UploadController::class, 'store'])->name('upload')->middleware('permission:service.report');
+            Route::get('/pengajuan', [MppPengajuanController::class, 'index'])->name('index')->middleware('permission:mpp.pengajuan.view');
+            Route::get('/pengajuan/{mppServiceRequest}', [MppPengajuanController::class, 'show'])->name('show')->middleware('permission:mpp.pengajuan.view');
+            Route::get('/{mppService:slug}/buat', [MppPengajuanController::class, 'create'])->name('create')->middleware('permission:mpp.pengajuan.submit');
+            Route::post('/{mppService:slug}/simpan', [MppPengajuanController::class, 'store'])->name('store')->middleware('permission:mpp.pengajuan.submit');
+            Route::post('/upload', [UploadController::class, 'store'])->name('upload')->middleware('permission:mpp.pengajuan.submit');
         });
 
-        Route::middleware('permission:system.manage')->group(function () {
+        Route::middleware('permission:mpp.counter.manage')->group(function () {
             Route::get('pengaturan-loket', [MppCounterUserController::class, 'index'])->name('counter-users.index');
             Route::get('pengaturan-loket/create', [MppCounterUserController::class, 'create'])->name('counter-users.create');
             Route::post('pengaturan-loket', [MppCounterUserController::class, 'store'])->name('counter-users.store');
             Route::get('pengaturan-loket/{counterUser}/edit', [MppCounterUserController::class, 'edit'])->name('counter-users.edit');
             Route::put('pengaturan-loket/{counterUser}', [MppCounterUserController::class, 'update'])->name('counter-users.update');
             Route::delete('pengaturan-loket/{counterUser}', [MppCounterUserController::class, 'destroy'])->name('counter-users.destroy');
+        });
 
+        Route::middleware('permission:mpp.service.manage')->group(function () {
             Route::get('pelayanan', [MppPelayananController::class, 'index'])->name('mpp-services.index');
             Route::get('pelayanan/create', [MppPelayananController::class, 'create'])->name('mpp-services.create');
             Route::post('pelayanan', [MppPelayananController::class, 'store'])->name('mpp-services.store');
@@ -140,14 +157,38 @@ Route::middleware('auth')->group(function () {
             Route::put('pelayanan/{mpp_service}', [MppPelayananController::class, 'update'])->name('mpp-services.update');
             Route::delete('pelayanan/{mpp_service}', [MppPelayananController::class, 'destroy'])->name('mpp-services.destroy');
             Route::post('pelayanan/upload-logo', [MppPelayananController::class, 'uploadLogo'])->name('mpp-services.upload-logo');
+        });
 
-            Route::get('anjungan', [MppAnjunganController::class, 'index'])->name('anjungans.index');
-            Route::get('anjungan/create', [MppAnjunganController::class, 'create'])->name('anjungans.create');
-            Route::post('anjungan', [MppAnjunganController::class, 'store'])->name('anjungans.store');
-            Route::get('anjungan/{anjungan}', [MppAnjunganController::class, 'show'])->name('anjungans.show');
-            Route::get('anjungan/{anjungan}/edit', [MppAnjunganController::class, 'edit'])->name('anjungans.edit');
-            Route::put('anjungan/{anjungan}', [MppAnjunganController::class, 'update'])->name('anjungans.update');
-            Route::delete('anjungan/{anjungan}', [MppAnjunganController::class, 'destroy'])->name('anjungans.destroy');
+        Route::middleware('permission:mpp.gerai.manage')->group(function () {
+            Route::get('daftar-gerai', [MppGeraiController::class, 'index'])->name('gerais.index');
+            Route::get('daftar-gerai/create', [MppGeraiController::class, 'create'])->name('gerais.create');
+            Route::post('daftar-gerai', [MppGeraiController::class, 'store'])->name('gerais.store');
+            Route::get('daftar-gerai/{gerai}/edit', [MppGeraiController::class, 'edit'])->name('gerais.edit');
+            Route::put('daftar-gerai/{gerai}', [MppGeraiController::class, 'update'])->name('gerais.update');
+            Route::delete('daftar-gerai/{gerai}', [MppGeraiController::class, 'destroy'])->name('gerais.destroy');
+            Route::post('gerai/upload-logo', [MppGeraiController::class, 'uploadLogo'])->name('gerais.upload-logo');
+        });
+
+        Route::middleware('permission:mpp.counter.manage')->group(function () {
+            Route::get('daftar-loket', [MppCounterController::class, 'index'])->name('counters.index');
+            Route::get('daftar-loket/create', [MppCounterController::class, 'create'])->name('counters.create');
+            Route::post('daftar-loket', [MppCounterController::class, 'store'])->name('counters.store');
+            Route::get('daftar-loket/{counter}/edit', [MppCounterController::class, 'edit'])->name('counters.edit');
+            Route::put('daftar-loket/{counter}', [MppCounterController::class, 'update'])->name('counters.update');
+            Route::delete('daftar-loket/{counter}', [MppCounterController::class, 'destroy'])->name('counters.destroy');
+        });
+
+        Route::middleware('permission:mpp.skm.manage')->group(function () {
+            Route::get('survei', [SkmController::class, 'index'])->name('skm.index');
+            Route::get('survei/export', [SkmController::class, 'export'])->name('skm.export');
+            Route::get('survei/{opd}', [SkmController::class, 'show'])->name('skm.show');
+        });
+
+        Route::middleware('permission:mpp.display.settings')->group(function () {
+            Route::get('pengaturan-display', [DisplayController::class, 'index'])->name('display-settings.index');
+            Route::post('pengaturan-display', [DisplayController::class, 'update'])->name('display-settings.update');
+            Route::post('pengaturan-display/test-call', [DisplayController::class, 'simulate'])->name('display-settings.simulate');
+            Route::post('pengaturan-display/tts-preview', [DisplayController::class, 'preview'])->name('display-settings.preview');
         });
     });
 

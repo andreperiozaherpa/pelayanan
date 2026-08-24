@@ -36,12 +36,16 @@ class UpdateUserRequest extends FormRequest
             ],
             'password' => ['nullable', 'confirmed', Password::min(8)->mixedCase()->numbers()],
             'role_id' => ['required', 'exists:roles,id'],
-            'desa_id' => [
+            'district_id' => [
                 Rule::requiredIf(function () {
                     $role = Role::find($this->role_id);
 
-                    return $role && $role->slug === 'operatordesa';
+                    return $role && $role->slug === 'operatordesa' && empty($this->desa_id);
                 }),
+                'nullable',
+                'exists:districts,id',
+            ],
+            'desa_id' => [
                 'nullable',
                 'exists:villages,id',
             ],
@@ -64,7 +68,9 @@ class UpdateUserRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'desa_id.required_if' => 'Wilayah Desa wajib dipilih untuk role Operator Desa.',
+            'district_id.required' => 'Wilayah Kecamatan wajib dipilih untuk role Operator Desa.',
+            'district_id.required_if' => 'Wilayah Kecamatan wajib dipilih untuk role Operator Desa.',
+            'opd_id.required' => 'OPD wajib dipilih untuk role Operator OPD.',
             'opd_id.required_if' => 'OPD wajib dipilih untuk role Operator OPD.',
         ];
     }

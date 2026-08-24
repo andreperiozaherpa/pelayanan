@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'Pengaturan Loket Petugas')
+@section('title', 'Penugasan Loket Petugas')
 
 @section('content')
 <div class="space-y-6">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h1 class="text-xl font-black text-slate-800 dark:text-white tracking-tight uppercase">Pengaturan Loket</h1>
+            <h1 class="text-xl font-black text-slate-800 dark:text-white tracking-tight uppercase">Penugasan Loket</h1>
             <p class="text-xs text-slate-500 font-medium tracking-tight">Atur penugasan petugas front office ke loket antrean MPP.</p>
         </div>
         <a href="{{ route('counter-users.create') }}"

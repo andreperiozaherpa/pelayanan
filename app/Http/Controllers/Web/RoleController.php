@@ -113,31 +113,37 @@ class RoleController extends Controller
 
     /**
      * Get and group permissions by their module context.
+     *
+     * @return \Illuminate\Support\Collection<string, \Illuminate\Support\Collection<int, array{name: string|null, permissions: \Illuminate\Support\Collection}>
      */
     private function getGroupedPermissions()
     {
-        return Permission::all()->groupBy(function ($permission) {
+        $cmsModuleNames = [
+            'articles' => 'Artikel',
+            'pages' => 'Halaman',
+            'banners' => 'Banner',
+            'faqs' => 'FAQ',
+            'testimonials' => 'Testimoni',
+            'teams' => 'Struktur Organisasi',
+            'settings' => 'Pengaturan',
+            'media' => 'Media',
+            'menus' => 'Menu Navigasi',
+            'complaints' => 'Pengaduan Masyarakat',
+        ];
+
+        $groups = Permission::all()->groupBy(function ($permission) {
             $slug = $permission->slug;
             if (str_starts_with($slug, 'cms.')) {
-                $parts = explode('.', $slug);
-                $module = $parts[1] ?? 'umum';
-                $moduleNames = [
-                    'articles' => 'CMS: Artikel',
-                    'pages' => 'CMS: Halaman',
-                    'banners' => 'CMS: Banner',
-                    'faqs' => 'CMS: FAQ',
-                    'testimonials' => 'CMS: Testimoni',
-                    'teams' => 'CMS: Struktur Organisasi',
-                    'settings' => 'CMS: Pengaturan',
-                    'media' => 'CMS: Media',
-                    'menus' => 'CMS: Menu Navigasi',
-                    'complaints' => 'CMS: Pengaduan Masyarakat',
-                ];
-
-                return $moduleNames[$module] ?? 'CMS: '.ucfirst($module);
+                return 'CMS';
             }
             if (str_starts_with($slug, 'service.')) {
                 return 'Pelayanan & Dokumen';
+            }
+            if (str_starts_with($slug, 'mpp.')) {
+                return 'Mal Pelayanan Publik (MPP)';
+            }
+            if (str_starts_with($slug, 'poverty.')) {
+                return 'Pengelolaan Data Warga';
             }
             if (str_ends_with($slug, '.manage')) {
                 $parts = explode('.', $slug);
@@ -150,6 +156,7 @@ class RoleController extends Controller
                     'districts' => 'Pengelolaan Wilayah',
                     'opds' => 'Pengelolaan OPD',
                     'maps' => 'Pengelolaan Peta SIBERUGO',
+                    'system' => 'Audit Log & Sistem',
                 ];
 
                 return $moduleNames[$module] ?? 'Pengelolaan '.ucfirst($module);
@@ -165,26 +172,38 @@ class RoleController extends Controller
         })->sortBy(function ($items, $key) {
             $order = [
                 'Pelayanan & Dokumen' => 1,
-                'Pengelolaan Data Warga' => 2,
-                'Pengelolaan Wilayah' => 3,
-                'Pengelolaan OPD' => 4,
-                'Pengelolaan Peta SIBERUGO' => 5,
-                'Pengguna & Otorisasi' => 6,
-                'Audit Log & Sistem' => 7,
-                'Laporan & Ekspor' => 8,
-                'CMS: Menu Navigasi' => 9,
-                'CMS: Pengaduan Masyarakat' => 10,
-                'CMS: Artikel' => 11,
-                'CMS: Halaman' => 12,
-                'CMS: Banner' => 13,
-                'CMS: FAQ' => 14,
-                'CMS: Testimoni' => 15,
-                'CMS: Struktur Organisasi' => 16,
-                'CMS: Media' => 17,
-                'CMS: Pengaturan' => 18,
+                'Mal Pelayanan Publik (MPP)' => 2,
+                'Pengelolaan Data Warga' => 3,
+                'Pengelolaan Wilayah' => 4,
+                'Pengelolaan OPD' => 5,
+                'Pengelolaan Peta SIBERUGO' => 6,
+                'Pengguna & Otorisasi' => 7,
+                'Audit Log & Sistem' => 8,
+                'Laporan & Ekspor' => 9,
+                'CMS' => 10,
             ];
 
             return $order[$key] ?? 99;
+        });
+
+        // Nested sub-groups: CMS split by module, others as single sub-group
+        return $groups->map(function ($permissions, $groupName) use ($cmsModuleNames) {
+            if ($groupName === 'CMS') {
+                return $permissions->groupBy(function ($permission) use ($cmsModuleNames) {
+                    $parts = explode('.', $permission->slug);
+                    $module = $parts[1] ?? 'umum';
+
+                    return $cmsModuleNames[$module] ?? ucfirst($module);
+                })->map(fn ($modulePermissions, $moduleName) => [
+                    'name' => $moduleName,
+                    'permissions' => $modulePermissions,
+                ])->values();
+            }
+
+            return collect([[
+                'name' => null,
+                'permissions' => $permissions,
+            ]]);
         });
     }
 }

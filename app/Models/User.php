@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\Auditable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -124,6 +125,18 @@ class User extends Authenticatable
         return $this->role && $this->role->permissions()->whereIn('slug', $permissionSlugs)->exists();
     }
 
+    public function hasMppPermission(): bool
+    {
+        return $this->role && $this->role->permissions()->where('slug', 'like', 'mpp.%')->exists();
+    }
+
+    public function scopeEligibleForCounter(Builder $query): Builder
+    {
+        return $query->whereHas('role.permissions', function ($query) {
+            $query->where('slug', 'like', 'mpp.%');
+        });
+    }
+
     public function isSuperAdmin(): bool
     {
         return $this->role && $this->role->slug === 'superadmin';
@@ -151,7 +164,7 @@ class User extends Authenticatable
 
     public function certificates(): HasMany
     {
-        return $this->hasMany(Certificate::class, 'user_id');
+        return $this->hasMany(UserCertificate::class, 'user_id');
     }
 
     public function counters(): BelongsToMany
@@ -164,5 +177,10 @@ class User extends Authenticatable
     public function activeCounterAssignments(): HasMany
     {
         return $this->hasMany(CounterUser::class)->where('is_active', true);
+    }
+
+    public function activeCounter(): ?Counter
+    {
+        return $this->activeCounterAssignments()->with('counter.gerai.opd')->first()?->counter;
     }
 }

@@ -153,7 +153,7 @@
         </a>
         <div>
             <h1 class="text-xl font-black text-slate-800 dark:text-white tracking-tight uppercase">Tambah Penugasan Loket</h1>
-            <p class="text-xs text-slate-500 font-medium tracking-tight">Tugaskan petugas front office ke loket antrean.</p>
+            <p class="text-xs text-slate-500 font-medium tracking-tight">Tugaskan petugas ke loket yang masih kosong.</p>
         </div>
     </div>
 

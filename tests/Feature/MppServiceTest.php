@@ -2,8 +2,10 @@
 
 use App\Models\Citizen;
 use App\Models\DeathRecord;
+use App\Models\Gerai;
 use App\Models\MppService;
 use App\Models\MppServiceRequest;
+use App\Models\Opd;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -35,6 +37,18 @@ beforeEach(function () {
         'role_id' => $this->roleOperatorDesa->id,
         'desa_id' => $this->village->id,
     ]);
+
+    $this->opd = Opd::create([
+        'code' => '11',
+        'name' => 'Dinas Kependudukan dan Pencatatan Sipil',
+    ]);
+
+    $this->gerai = Gerai::create([
+        'code' => 'A',
+        'name' => 'Gerai Dukcapil',
+        'opd_id' => $this->opd->id,
+        'is_active' => true,
+    ]);
 });
 
 test('tamu tidak dapat mengakses manajemen pelayanan mpp', function () {
@@ -64,6 +78,8 @@ test('super admin dapat membuat pelayanan baru dengan form builder', function ()
         'name' => 'Layanan Izin Usaha Mikro',
         'description' => 'Persyaratan izin usaha mikro dan kecil tingkat kecamatan.',
         'logo' => $logo,
+        'opd_id' => $this->opd->id,
+        'gerai_id' => $this->gerai->id,
         'is_active' => '1',
         'fields' => [
             [
@@ -105,6 +121,33 @@ test('super admin dapat membuat pelayanan baru dengan form builder', function ()
     expect($service->fields[2]['options'])->toBe(['Pertanian', 'Perdagangan', 'Jasa']);
 });
 
+test('super admin dapat membuat pelayanan dengan field checkbox', function () {
+    $payload = [
+        'name' => 'Layanan Perpindahan',
+        'description' => 'Deskripsi perpindahan.',
+        'opd_id' => $this->opd->id,
+        'gerai_id' => $this->gerai->id,
+        'is_active' => '1',
+        'fields' => [
+            [
+                'label' => 'Kelengkapan Berkas',
+                'type' => 'checkbox',
+                'required' => 'true',
+                'options' => ['KK', 'KTP', 'Surat Pindah'],
+            ],
+        ],
+    ];
+
+    $this->actingAs($this->superAdmin)
+        ->post(route('mpp-services.store'), $payload)
+        ->assertRedirect(route('mpp-services.index'));
+
+    $service = MppService::first();
+    expect($service->fields[0]['name'])->toBe('kelengkapan_berkas');
+    expect($service->fields[0]['type'])->toBe('checkbox');
+    expect($service->fields[0]['options'])->toBe(['KK', 'KTP', 'Surat Pindah']);
+});
+
 test('super admin dapat mengubah pelayanan dan form builder', function () {
     $service = MppService::create([
         'name' => 'Layanan Awal',
@@ -124,6 +167,8 @@ test('super admin dapat mengubah pelayanan dan form builder', function () {
     $payload = [
         'name' => 'Layanan Baru',
         'description' => 'Deskripsi Baru',
+        'opd_id' => $this->opd->id,
+        'gerai_id' => $this->gerai->id,
         'fields' => [
             [
                 'id' => 'field_1',
@@ -241,6 +286,91 @@ test('pengajuan permohonan mpp berhasil dengan data valid', function () {
     expect($requestRecord->submitted_form_data)->toBeArray();
     expect($requestRecord->submitted_form_data['nama_usaha']['value'])->toBe('Toko Kelontong Sejahtera');
     expect($requestRecord->submitted_form_data['jumlah_modal']['value'])->toBe(5000000);
+});
+
+test('pengajuan permohonan mpp menyimpan pilihan checkbox', function () {
+    $service = MppService::create([
+        'name' => 'Layanan Usaha',
+        'slug' => 'layanan-usaha',
+        'fields' => [
+            [
+                'id' => 'f1',
+                'name' => 'kelengkapan_berkas',
+                'label' => 'Kelengkapan Berkas',
+                'type' => 'checkbox',
+                'required' => true,
+                'options' => ['KK', 'KTP'],
+            ],
+        ],
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($this->operatorDesa)
+        ->post(route('mpp-requests.store', $service->slug), [
+            'form_data' => [
+                'kelengkapan_berkas' => ['KK', 'KTP'],
+            ],
+        ])
+        ->assertRedirect(route('mpp-requests.index'));
+
+    $requestRecord = MppServiceRequest::where('mpp_service_id', $service->id)->first();
+    expect($requestRecord->submitted_form_data['kelengkapan_berkas']['value'])->toBe(['KK', 'KTP']);
+});
+
+test('pengajuan permohonan mpp menolak nilai checkbox di luar opsi', function () {
+    $service = MppService::create([
+        'name' => 'Layanan Usaha',
+        'slug' => 'layanan-usaha',
+        'fields' => [
+            [
+                'id' => 'f1',
+                'name' => 'kelengkapan_berkas',
+                'label' => 'Kelengkapan Berkas',
+                'type' => 'checkbox',
+                'required' => true,
+                'options' => ['KK', 'KTP'],
+            ],
+        ],
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($this->operatorDesa)
+        ->from(route('mpp-requests.create', $service->slug))
+        ->post(route('mpp-requests.store', $service->slug), [
+            'form_data' => [
+                'kelengkapan_berkas' => ['KK', 'SERTIFIKAT'],
+            ],
+        ])
+        ->assertSessionHasErrors(['form_data.kelengkapan_berkas']);
+});
+
+test('pengajuan permohonan mpp mendapat nomor antrian', function () {
+    $service = MppService::create([
+        'name' => 'Layanan KTP',
+        'slug' => 'layanan-ktp',
+        'opd_id' => $this->opd->id,
+        'gerai_id' => $this->gerai->id,
+        'fields' => [],
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($this->operatorDesa)
+        ->post(route('mpp-requests.store', $service->slug), ['form_data' => []]);
+
+    $this->actingAs($this->operatorDesa)
+        ->post(route('mpp-requests.store', $service->slug), ['form_data' => []]);
+
+    $numbers = MppServiceRequest::where('mpp_service_id', $service->id)
+        ->orderBy('id')
+        ->pluck('nomor_antrian')
+        ->all();
+
+    expect($numbers)->toBe(['A-001', 'A-002']);
+
+    $this->get(route('mpp-requests.index'))
+        ->assertOk()
+        ->assertSee('A-001')
+        ->assertSee('A-002');
 });
 
 test('pengajuan permohonan mpp sukses bahkan jika NIK warga terdaftar meninggal karena terdecouple', function () {
@@ -435,6 +565,8 @@ test('super admin dapat membuat pelayanan baru dengan logo string path dropzone'
         'name' => 'Layanan Ketenagakerjaan Baru',
         'description' => 'Deskripsi layanan ketenagakerjaan.',
         'logo' => 'mpp-logos/fake_logo.png',
+        'opd_id' => $this->opd->id,
+        'gerai_id' => $this->gerai->id,
         'is_active' => '1',
         'fields' => [
             [
@@ -479,6 +611,8 @@ test('super admin dapat memperbarui pelayanan dengan logo string path dropzone',
         'name' => 'Layanan Kesehatan Terbaru',
         'description' => 'Deskripsi baru.',
         'logo' => 'mpp-logos/new_logo.png',
+        'opd_id' => $this->opd->id,
+        'gerai_id' => $this->gerai->id,
         'is_active' => '1',
         'fields' => [
             [

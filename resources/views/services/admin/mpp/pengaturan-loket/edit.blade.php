@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Penugasan Loket')
+@section('title', 'Tukar Loket Petugas')
 
 @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -152,41 +152,48 @@
             <span>Kembali</span>
         </a>
         <div>
-            <h1 class="text-xl font-black text-slate-800 dark:text-white tracking-tight uppercase">Edit Penugasan Loket</h1>
-            <p class="text-xs text-slate-500 font-medium tracking-tight">Ubah penugasan petugas ke loket antrean.</p>
+            <h1 class="text-xl font-black text-slate-800 dark:text-white tracking-tight uppercase">Tukar Loket Petugas</h1>
+            <p class="text-xs text-slate-500 font-medium tracking-tight">Tukar loket antara petugas yang sudah memiliki loket.</p>
         </div>
     </div>
 
     <div class="premium-card">
         <div class="p-8 sm:p-12">
+            <div class="mb-8 p-5 bg-primary-acorn/5 border border-primary-acorn/15 rounded-2xl">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Petugas Saat Ini</p>
+                <div class="flex items-center gap-3">
+                    <span class="px-3 py-1 bg-primary-acorn/10 text-primary-acorn text-[10px] font-black uppercase tracking-wider rounded-lg border border-primary-acorn/20">
+                        {{ $counterUser->counter->code }}
+                    </span>
+                    <div>
+                        <p class="text-sm font-black text-slate-800 dark:text-white">{{ $counterUser->user->name }}</p>
+                        <p class="text-xs text-slate-500 font-medium">{{ $counterUser->counter->name }}</p>
+                    </div>
+                </div>
+            </div>
+
             <form method="POST" action="{{ route('counter-users.update', $counterUser) }}" class="space-y-6">
                 @csrf
                 @method('PUT')
 
-                <x-select label="Loket" name="counter_id" :selected="old('counter_id', $counterUser->counter_id)" required select2>
-                    <option value="">Pilih Loket</option>
-                    @foreach($counters as $counter)
-                        <option value="{{ $counter->id }}">{{ $counter->code }} - {{ $counter->name }}</option>
-                    @endforeach
-                </x-select>
-
-                <x-select label="Petugas" name="user_id" :selected="old('user_id', $counterUser->user_id)" required select2>
-                    <option value="">Pilih Petugas</option>
-                    @foreach($users as $user)
+                <x-select label="Tukar dengan Petugas" name="swap_user_id" :selected="old('swap_user_id')" required select2>
+                    <option value="">Pilih Petugas Lain</option>
+                    @foreach($swapUsers as $user)
                         <option value="{{ $user->id }}" data-role="{{ $user->role?->name ?? 'Tanpa Role' }}">{{ $user->name }} ({{ $user->email }}) — {{ $user->role?->name ?? 'Tanpa Role' }}</option>
                     @endforeach
                 </x-select>
 
-                <div class="flex items-center gap-3">
-                    <input type="checkbox" name="is_active" id="is_active" value="1" {{ $counterUser->is_active ? 'checked' : '' }}
-                        class="w-4 h-4 rounded border-slate-300 text-primary-acorn focus:ring-primary-acorn/30">
-                    <label for="is_active" class="text-[11px] font-bold text-slate-600 dark:text-slate-300">Aktif</label>
+                <div class="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-500/5 border border-amber-200/60 dark:border-amber-500/15 rounded-xl">
+                    <iconify-icon icon="lucide:repeat-2" class="text-lg text-amber-500 mt-0.5 shrink-0"></iconify-icon>
+                    <p class="text-xs font-medium text-amber-700 dark:text-amber-400 leading-relaxed">
+                        Loket petugas ini akan bertukar dengan loket petugas yang dipilih. Keduanya harus sudah memiliki loket.
+                    </p>
                 </div>
 
                 <div class="flex items-center gap-3 pt-4">
                     <button type="submit" class="px-8 py-3 bg-primary-acorn hover:bg-primary-acorn/90 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary-acorn/20 transition-all hover:-translate-y-0.5">
-                        <iconify-icon icon="lucide:save" class="text-lg inline-block mr-1.5"></iconify-icon>
-                        Perbarui
+                        <iconify-icon icon="lucide:repeat-2" class="text-lg inline-block mr-1.5"></iconify-icon>
+                        Tukar Loket
                     </button>
                     <a href="{{ route('counter-users.index') }}" class="px-6 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all">Batal</a>
                 </div>

@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Anjungan;
+use App\Models\Gerai;
 use App\Models\MppService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -11,13 +11,15 @@ class MppServiceSeeder extends Seeder
 {
     public function run(): void
     {
-        $servicesByAnjungan = [
-            'ANJ-001' => [
+        $servicesByGerai = [
+            'A' => [
                 ['name' => 'KTP Elektronik', 'fields' => [
                     ['label' => 'NIK', 'type' => 'text', 'required' => true],
                     ['label' => 'Nama Lengkap', 'type' => 'text', 'required' => true],
                     ['label' => 'Alamat', 'type' => 'textarea', 'required' => true],
                 ]],
+            ],
+            'AB' => [
                 ['name' => 'Kartu Keluarga', 'fields' => [
                     ['label' => 'No. KK', 'type' => 'text', 'required' => true],
                     ['label' => 'Kepala Keluarga', 'type' => 'text', 'required' => true],
@@ -29,17 +31,21 @@ class MppServiceSeeder extends Seeder
                     ['label' => 'Dokumen Pendukung', 'type' => 'file', 'required' => false],
                 ]],
             ],
-            'ANJ-002' => [
+            'B' => [
                 ['name' => 'Izin Usaha Mikro Kecil', 'fields' => [
                     ['label' => 'Nama Usaha', 'type' => 'text', 'required' => true],
                     ['label' => 'Jenis Usaha', 'type' => 'select', 'required' => true, 'options' => ['Kuliner', 'Fashion', 'Kerajinan', 'Jasa']],
                 ]],
-                ['name' => 'Sertifikasi Halal', 'fields' => [
-                    ['label' => 'Nama Produk', 'type' => 'text', 'required' => true],
-                    ['label' => 'Bahan Baku', 'type' => 'textarea', 'required' => true],
+                ['name' => 'Izin Mendirikan Bangunan', 'fields' => [
+                    ['label' => 'Luas Bangunan', 'type' => 'number', 'required' => true],
+                    ['label' => 'Fungsi Bangunan', 'type' => 'select', 'required' => true, 'options' => ['Hunian', 'Komersial', 'Campuran']],
+                ]],
+                ['name' => 'Surat Keterangan Rencana Kabupaten', 'fields' => [
+                    ['label' => 'Lokasi Tanah', 'type' => 'textarea', 'required' => true],
+                    ['label' => 'Luas Tanah', 'type' => 'number', 'required' => true],
                 ]],
             ],
-            'ANJ-003' => [
+            'C' => [
                 ['name' => 'Bantuan Sosial Tunai', 'fields' => [
                     ['label' => 'NIK', 'type' => 'text', 'required' => true],
                     ['label' => 'Jenis Bantuan', 'type' => 'select', 'required' => true, 'options' => ['BST', 'PKH', 'BNPT']],
@@ -49,7 +55,7 @@ class MppServiceSeeder extends Seeder
                     ['label' => 'Faskes Tujuan', 'type' => 'text', 'required' => true],
                 ]],
             ],
-            'ANJ-004' => [
+            'D' => [
                 ['name' => 'Antrean Puskesmas', 'fields' => [
                     ['label' => 'NIK', 'type' => 'text', 'required' => true],
                     ['label' => 'Poli Tujuan', 'type' => 'select', 'required' => true, 'options' => ['Umum', 'Gigi', 'KIA', 'Lansia']],
@@ -63,23 +69,19 @@ class MppServiceSeeder extends Seeder
                     ['label' => 'Jenis Imunisasi', 'type' => 'select', 'required' => true, 'options' => ['BCG', 'DPT', 'Polio', 'Campak', 'Hepatitis B']],
                 ]],
             ],
-            'ANJ-005' => [
-                ['name' => 'Izin Mendirikan Bangunan', 'fields' => [
-                    ['label' => 'Luas Bangunan', 'type' => 'number', 'required' => true],
-                    ['label' => 'Fungsi Bangunan', 'type' => 'select', 'required' => true, 'options' => ['Hunian', 'Komersial', 'Campuran']],
-                ]],
-                ['name' => 'Surat Keterangan Rencana Kabupaten', 'fields' => [
-                    ['label' => 'Lokasi Tanah', 'type' => 'textarea', 'required' => true],
-                    ['label' => 'Luas Tanah', 'type' => 'number', 'required' => true],
+            'E' => [
+                ['name' => 'Sertifikasi Halal', 'fields' => [
+                    ['label' => 'Nama Produk', 'type' => 'text', 'required' => true],
+                    ['label' => 'Bahan Baku', 'type' => 'textarea', 'required' => true],
                 ]],
             ],
         ];
 
-        $anjungans = Anjungan::whereIn('code', array_keys($servicesByAnjungan))->get()->keyBy('code');
+        $gerais = Gerai::whereIn('code', array_keys($servicesByGerai))->get()->keyBy('code');
 
-        foreach ($servicesByAnjungan as $code => $services) {
-            $anjungan = $anjungans->get($code);
-            if (! $anjungan) {
+        foreach ($servicesByGerai as $code => $services) {
+            $gerai = $gerais->get($code);
+            if (! $gerai) {
                 continue;
             }
 
@@ -97,11 +99,27 @@ class MppServiceSeeder extends Seeder
                     ];
                 }
 
+                $slug = Str::slug($svc['name']);
+
+                $service = MppService::firstWhere('slug', $slug);
+
+                if ($service) {
+                    $service->update([
+                        'opd_id' => $gerai->opd_id,
+                        'gerai_id' => $gerai->id,
+                        'description' => 'Pelayanan '.$svc['name'].' melalui '.$gerai->name,
+                        'is_active' => true,
+                    ]);
+
+                    continue;
+                }
+
                 MppService::create([
                     'name' => $svc['name'],
-                    'slug' => Str::slug($svc['name']),
-                    'description' => 'Pelayanan '.$svc['name'].' melalui '.$anjungan->name,
-                    'anjungan_id' => $anjungan->id,
+                    'slug' => $slug,
+                    'description' => 'Pelayanan '.$svc['name'].' melalui '.$gerai->name,
+                    'opd_id' => $gerai->opd_id,
+                    'gerai_id' => $gerai->id,
                     'fields' => $fields,
                     'is_active' => true,
                 ]);

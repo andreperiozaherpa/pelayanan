@@ -15,7 +15,7 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('mpp-services.update', $mppService) }}" enctype="multipart/form-data" class="space-y-6" x-data='mppServiceForm(@json($mppService->fields ?? []))'>
+    <form method="POST" action="{{ route('mpp-services.update', $mppService) }}" enctype="multipart/form-data" class="space-y-6" x-data='mppServiceForm(@json($mppService->fields ?? []), @json($opds), @json(old('opd_id', $mppService->opd_id)), @json(old('gerai_id', $mppService->gerai_id)))'>
         @csrf
         @method('PUT')
 
@@ -41,17 +41,35 @@
                 </div>
 
                 <div class="space-y-2">
-                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Anjungan</label>
-                    <select name="anjungan_id"
-                        class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-black/[0.03] dark:border-white/[0.03] rounded-xl text-[11px] font-bold outline-none focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn transition-all appearance-none @error('anjungan_id') ring-2 ring-red-500 @enderror">
-                        <option value="">-- Pilih Anjungan (Opsional) --</option>
-                        @foreach($anjungans as $anjungan)
-                            <option value="{{ $anjungan->id }}" {{ old('anjungan_id', $mppService->anjungan_id) == $anjungan->id ? 'selected' : '' }}>
-                                {{ $anjungan->code }} - {{ $anjungan->name }}
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Instansi <span class="text-red-500">*</span></label>
+                    <select name="opd_id" x-model="opdId" @change="geraiId = ''"
+                        class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-black/[0.03] dark:border-white/[0.03] rounded-xl text-[11px] font-bold outline-none focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn transition-all appearance-none @error('opd_id') ring-2 ring-red-500 @enderror">
+                        <option value="">-- Pilih Instansi --</option>
+                        @foreach($opds as $opd)
+                            <option value="{{ $opd->id }}" {{ old('opd_id', $mppService->opd_id) == $opd->id ? 'selected' : '' }}>
+                                {{ $opd->code }} - {{ $opd->name }}
                             </option>
                         @endforeach
                     </select>
-                    @error('anjungan_id')
+                    @error('opd_id')
+                        <p class="text-[9px] font-bold text-red-500 mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Gerai Pelayanan <span class="text-red-500">*</span></label>
+                    <select name="gerai_id" x-model="geraiId" :disabled="!opdId"
+                        class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-black/[0.03] dark:border-white/[0.03] rounded-xl text-[11px] font-bold outline-none focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn transition-all appearance-none @error('gerai_id') ring-2 ring-red-500 @enderror">
+                        <option value="">-- Pilih Gerai --</option>
+                        <template x-for="opd in opds" :key="opd.id">
+                            <template x-if="String(opdId) === String(opd.id)">
+                                <template x-for="gerai in opd.gerais" :key="gerai.id">
+                                    <option :value="gerai.id" x-text="gerai.code + ' - ' + gerai.name"></option>
+                                </template>
+                            </template>
+                        </template>
+                    </select>
+                    @error('gerai_id')
                         <p class="text-[9px] font-bold text-red-500 mt-1">{{ $message }}</p>
                     @enderror
                 </div>
@@ -129,13 +147,14 @@
                                     <option value="text">Text</option>
                                     <option value="number">Number</option>
                                     <option value="select">Select</option>
+                                    <option value="checkbox">Checkbox</option>
                                     <option value="textarea">Textarea</option>
                                     <option value="file">File</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div class="space-y-1.5" x-show="field.type === 'select'">
+                        <div class="space-y-1.5" x-show="field.type === 'select' || field.type === 'checkbox'">
                             <label class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Opsi Pilihan</label>
                             <div class="space-y-2">
                                 <template x-for="(opt, oi) in (field.options || [])" :key="oi">
@@ -187,8 +206,11 @@
 
 @push('scripts')
 <script>
-    function mppServiceForm(fields = []) {
+    function mppServiceForm(fields = [], opds = [], opdId = '', geraiId = '') {
         return {
+            opds: opds,
+            opdId: String(opdId),
+            geraiId: String(geraiId || ''),
             fields: fields,
             addField() {
                 this.fields.push({

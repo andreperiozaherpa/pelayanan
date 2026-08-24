@@ -7,19 +7,11 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 
 ## Foundational Context
 
-This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
+This application is a Laravel application running on PHP 8.4. You are an expert with the Laravel ecosystem. Always use the APIs that match the installed major version of each package — do not assume a version.
 
-- php - 8.4
-- laravel/framework (LARAVEL) - v12
-- laravel/prompts (PROMPTS) - v0
-- laravel/sanctum (SANCTUM) - v4
-- laravel/boost (BOOST) - v2
-- laravel/mcp (MCP) - v0
-- laravel/pail (PAIL) - v1
-- laravel/pint (PINT) - v1
-- pestphp/pest (PEST) - v4
-- phpunit/phpunit (PHPUNIT) - v12
-- tailwindcss (TAILWINDCSS) - v4
+Before relying on a package's API, confirm its installed version:
+- PHP packages: run `composer show --direct` to list direct dependencies with versions, or `composer show <vendor/package>` for a single package.
+- JS packages: check `package.json` for the installed versions.
 
 ## Skills Activation
 
@@ -77,6 +69,11 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 2. Use `"quoted phrases"` for exact position matching: `"infinite scroll"` requires adjacent words in order.
 3. Combine words and phrases for mixed queries: `middleware "rate limit"`.
 4. Use multiple queries for OR logic: `queries=["authentication", "middleware"]`.
+
+## Project Rules
+
+- This project keeps committed, area-grouped rules in `.ai/rules` (settled decisions, non-obvious traps, standing constraints). Framework and package guidelines that only apply to specific paths (testing, frontend, components) also live there, under `.ai/rules/boost` — this is not just recorded decisions, it is load-bearing guidance you have not seen inline. Before you enter plan mode or create/edit any file, you MUST first: open @.ai/rules/index.md (it maps file globs to rule files), read every rule file whose globs cover the path(s) in scope, and run `grep -rin 'keyword' .ai/rules` to catch what a path match alone misses. Do not write code until you have read and are following every matching rule.
+- Record durable rules with `record-rule` so the next agent or teammate inherits them instead of working them out again. Pass a `glob` (e.g. `app/Http/Controllers/**`), a short `title`, and a few-line `note`. Always use `record-rule`, never your native memory or notes tool — native memory is personal and session-scoped; only `.ai/rules` is shared with the team and persists in the repo.
 
 ## Artisan
 
@@ -163,6 +160,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 ## Database
 
 - When modifying a column, the migration must include all of the attributes that were previously defined on the column. Otherwise, they will be dropped and lost.
+
 - Laravel 12 allows limiting eagerly loaded records natively, without external packages: `$query->latest()->limit(10);`.
 
 ### Models
@@ -301,3 +299,71 @@ Actions: `list`, `add`, `remove`, `db_isolate`, `db_share`.
 - Worker unit names follow `lerd-<worker>-<site>` (per-worktree: `lerd-<worker>-<site>-<branch>`)
 
 <!-- lerd:end -->
+
+## Project Context — Sistem Antrian & Pelayanan MPP Tubaba (SIBERUGO)
+
+Aplikasi ini adalah **Single Source of Truth** untuk sistem antrian & pelayanan publik di MPP Kabupaten Tulang Bawang Barat. Dikonsumsi desktop client `antrian/` (Wails v2) via REST API + Firebase, dan menyediakan Web Admin untuk pengelolaan data.
+
+### Tech Stack
+
+- PHP ^8.3 (dev 8.4), **Laravel Framework ^12.0** (bukan 13)
+- MySQL, Sanctum ^4.3 (token API), Firebase Realtime DB (`kreait/firebase-php`)
+- PDF: Spatie Browsershot ^5.2; TTE: `lsnepomuceno/laravel-a1-pdf-sign`; QR: `simple-qrcode`
+- Frontend: Blade + Tailwind CSS v4 + Alpine.js + Vite
+- Testing: Pest ^4.6; Format: Laravel Pint
+- 67 migrations, 50 model
+
+### Arsitektur & Integrasi
+
+```
+antrian/ (Wails) ── REST /api/v1 + JWT Sanctum ──→ pelayanan/ (Laravel)
+        └── baca event realtime dari Firebase (broadcast oleh pelayanan/)
+```
+
+- `antrian/` adalah thin client; semua logika & data ada di sini.
+- Response API: `{ "success": true, "data": {...} }`; error: `{ "success": false, "error": "..." }`.
+- Firewall: route publik di `routes/api.php` tanpa middleware; route operasional FO/Gerai memakai `auth:sanctum`.
+
+### Hirarki Data MPP
+
+```
+instansi (opds) → gerai (mpp_gerais) → loket (mpp_counters)
+```
+
+- `mpp_counters` ke gerai via **`gerai_id`** (JANGAN `opd_id`); `mpp_services` & SKM ke instansi (**`opd_id`**).
+- Model: `Opd → gerais()`, `Gerai → counters()`, `Counter → gerai()`.
+
+### Alur Tiket Antrian
+
+```
+waiting_fo → calling_fo → waiting_gerai → calling_gerai → done
+                ↓                              ↑
+            rejected                       (FO skip → waiting_fo)
+```
+
+- **FO** (`MppQueueOperationController`): `foWaiting/foCalling/foCall/foForward/foReject/foRecall/foSkip`.
+- **Gerai**: `geraiWaiting/geraiCalling/geraiCall/geraiComplete`.
+- Nomor antrian: `{kode_gerai}-{nomor_urut}` (contoh `GR-001`), reset harian, kiosk & web **berbagi urutan** (`QueueService::generateNomorAntrian`).
+
+### Modul
+
+1. **MPP Queue** (`mpp_queues`, `mpp_counters`) — tiket kiosk → FO → gerai; dipakai `antrian/`.
+2. **MPP Dynamic Services** (`mpp_services`, `mpp_service_requests`) — form builder + `submitted_form_data`; submit lewat web (`/mpp/{slug}/simpan`) atau kiosk (`POST /api/v1/services/{id}/requests`), berbagi nomor antrian.
+3. **Gerai/Anjungan** (`mpp_gerais`) — master gerai.
+4. **Data Kependudukan** (`citizens`, `household_cards`, `villages`, `districts`) — enkripsi & masking NIK.
+5. **SKTM & Surat** (`poverty_records`, `domicile/move/arrival/death_records`) — PDF + TTE + QR; status `ACTIVE/PENDING_REVIEW/EXPIRED`.
+6. **SKM** (`skm_responses`) — survei kepuasan per OPD.
+7. **CMS Landing** (`cms_*`) — website publik SIBERUGO + pengaduan.
+8. **GIS** (`map_*`) — peta interaktif + `api/map/*`.
+9. **RBAC** (`roles`, `permissions`, `users`) — web: `role:*` / `permission:*` middleware; API: `auth:sanctum` + cek permission manual.
+
+### Konvensi Wajib
+
+- Seeder MPP ber-prefix `mpp` (`MppGeraiSeeder`, `MppCounterSeeder`, `MppServiceSeeder`); `OpdSeeder` tidak.
+- Permission MPP ber-prefix `mpp.` (`mpp.queue.operate`, `mpp.pengajuan.view/submit`, `mpp.service.manage`, `mpp.gerai.manage`, `mpp.counter.manage`, `mpp.skm.manage`).
+- Kode loket = angka tanpa nol di depan; sort numerik via `orderByRaw('CAST(code AS UNSIGNED)')`.
+- **1 loket = 1 user**; `MppCounterUserController@store` hanya loket kosong, `@update` = tukar (swap).
+- Upload logo via Dropzone (`cms/partials/dropzone-upload.blade.php`), response `{ success: true, path, url }`.
+- Role slug FO = `petugasfrontoffice` (bukan `fo`); API UserResource pakai field `name`.
+- JANGAN `db:wipe` / `migrate:fresh` tanpa izin eksplisit; `--env=testing` fallback ke `.env` utama bila `.env.testing` tak ada.
+
