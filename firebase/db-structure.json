@@ -1,0 +1,35 @@
+{
+  "current_call": {
+    "queue_number": "A-042",
+    "gerai_name": "Gerai 2",
+    "agency": "Dinas Kependudukan dan Pencatatan Sipil",
+    "service_type": "KTP",
+    "timestamp": 1723600000000
+  },
+  "active_counters": {
+    "fo": { "label": "Front Office", "number": "A-042", "timestamp": 1723600000000 },
+    "gerai-1": { "label": "Gerai 1", "number": "A-040", "timestamp": 1723599900000 },
+    "gerai-2": { "label": "Gerai 2", "number": "A-041", "timestamp": 1723599950000 }
+  },
+  "recent_history": [
+    { "queue_number": "A-042", "gerai_name": "Gerai 2", "status": "Selesai", "timestamp": 1723600000000 },
+    { "queue_number": "A-041", "gerai_name": "Gerai 1", "status": "Tidak Hadir", "timestamp": 1723599950000 },
+    { "queue_number": "A-040", "gerai_name": "Gerai 2", "status": "Selesai", "timestamp": 1723599900000 }
+  ],
+  "display_settings": {
+    "header_title": "SIBERUGO MPP TUBABA",
+    "header_subtitle": "Sistem Informasi Bersama Antar Gerai MPP Tulang Bawang Barat",
+    "running_text": "Selamat Datang di Mal Pelayanan Publik (MPP) Tulang Bawang Barat. Silakan antri sesuai nomor yang dipanggil.",
+    "youtube_url": "https://www.youtube.com/watch?v=XXXXXXXXXXX",
+    "tts": { "enabled": true, "rate": 0.9, "pitch": 1 },
+    "colors": {
+      "bg": "#0f172a",
+      "bg_card": "#1e293b",
+      "border": "#334155",
+      "text": "#f8fafc",
+      "text_muted": "#94a3b8",
+      "accent": "#f8ab3a",
+      "number": "#f8ab3a"
+    }
+  }
+}

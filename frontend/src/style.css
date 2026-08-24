@@ -1,0 +1,64 @@
+:root {
+  /* ===== BASE COLORS ===== */
+  --primary:        #149fb5;
+  --secondary:      #2b515d;
+  --accent:         #f8ab3a;
+  --accent-light:   #f9c476;
+  --light:          #eafcff;
+  --dark:           #1D2128;
+
+  /* ===== BACKGROUND VARIANTS ===== */
+  --bg-primary:   var(--primary);
+  --bg-secondary: var(--secondary);
+  --bg-accent:    var(--accent);
+  --bg-light:     var(--light);
+  --bg-dark:      var(--dark);
+  --bg-card:      var(--secondary);
+
+  /* ===== TEXT VARIANTS ===== */
+  --text-primary:   #ffffff;
+  --text-secondary: #c8d6e5;
+  --text-muted:     #8899a6;
+  --text-accent:    var(--accent);
+
+  /* ===== BORDER VARIANTS ===== */
+  --border-primary: rgba(20, 159, 181, 0.2);
+  --border-accent:  rgba(248, 171, 58, 0.3);
+  --border:         var(--border-primary);
+
+  /* ===== COMPUTED TOKENS ===== */
+  --primary-hover:  #17b8d1;
+  --shadow:         0 8px 32px rgba(0, 0, 0, 0.3);
+  --radius:         16px;
+  --radius-sm:      10px;
+}
+
+html {
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+}
+
+body {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+}
+
+@font-face {
+  font-family: "Nunito";
+  font-style: normal;
+  font-weight: 400;
+  src: local(""),
+    url("assets/fonts/nunito-v16-latin-regular.woff2") format("woff2");
+}
+
+* { box-sizing: border-box; }
+h1, h2, h3, p { margin: 0; }
+button { font-family: inherit; }
+input, select, textarea { font-family: inherit; }
+::selection { background: var(--primary); color: #fff; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb { background: var(--bg-card); border-radius: 3px; }

@@ -1,0 +1,22 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "display_settings": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "current_call": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "active_counters": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "recent_history": {
+      ".read": true,
+      ".write": "auth != null"
+    }
+  }
+}
