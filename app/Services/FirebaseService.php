@@ -24,6 +24,14 @@ class FirebaseService
             return null;
         }
 
+        if (! str_starts_with($credentialsPath, '/')) {
+        $credentialsPath = base_path($credentialsPath);
+        }
+
+        if (! file_exists($credentialsPath)) {
+            return null;
+        }
+
         try {
             $factory = (new Factory)
                 ->withServiceAccount($credentialsPath)
