@@ -38,7 +38,8 @@ class FirebaseService
                 ->withDatabaseUri($databaseUri);
 
             return $factory->createDatabase();
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Firebase Init Error: ' . $e->getMessage());
             return null;
         }
     }
