@@ -6,6 +6,7 @@ use App\Facades\Audit;
 use App\Http\Controllers\Controller;
 use App\Models\MppService;
 use App\Models\MppServiceRequest;
+use App\Models\Queue;
 use App\Services\QueueService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,6 +39,8 @@ class MppRequestController extends Controller
 
         $rules = [
             'notes' => 'nullable|string|max:500',
+            'priority' => 'sometimes|boolean',
+            'priority_type' => 'nullable|required_if:priority,true|string|in:'.implode(',', array_keys(Queue::PRIORITY_TYPES)),
         ];
 
         foreach ($service->fields as $field) {
@@ -75,6 +78,9 @@ class MppRequestController extends Controller
         }
 
         $validated = $request->validate($rules);
+
+        $isPriority = (bool) ($validated['priority'] ?? false);
+        $priorityType = $isPriority ? ($validated['priority_type'] ?? null) : null;
 
         $submittedData = [];
         $formData = $request->input('form_data', []);
@@ -116,10 +122,10 @@ class MppRequestController extends Controller
             }
         }
 
-        [$mppServiceRequest, $ticket] = DB::transaction(function () use ($request, $service, $submittedData) {
+        [$mppServiceRequest, $ticket] = DB::transaction(function () use ($request, $service, $submittedData, $isPriority, $priorityType) {
             $service = MppService::query()->whereKey($service->id)->lockForUpdate()->first();
 
-            $nomorAntrian = $this->queueService->generateNomorAntrian($service);
+            $nomorAntrian = $this->queueService->generateNomorAntrian($service, $isPriority);
 
             $mppServiceRequest = MppServiceRequest::create([
                 'mpp_service_id' => $service->id,
@@ -128,9 +134,11 @@ class MppRequestController extends Controller
                 'notes' => $request->input('notes'),
                 'submitted_form_data' => $submittedData,
                 'status' => MppServiceRequest::STATUS_PENDING,
+                'is_priority' => $isPriority,
+                'priority_type' => $priorityType,
             ]);
 
-            $ticket = $this->queueService->createTicket($service, $nomorAntrian);
+            $ticket = $this->queueService->createTicket($service, $nomorAntrian, $isPriority, $priorityType);
 
             $mppServiceRequest->forceFill(['queue_id' => $ticket->id])->save();
 

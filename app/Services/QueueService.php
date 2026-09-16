@@ -23,9 +23,9 @@ class QueueService
      * tiket pada tanggal yang sama. Transaksi + row lock mencegah dua kiosk
      * mendapat nomor yang sama secara bersamaan.
      */
-    public function takeTicket(int $serviceId): Queue
+    public function takeTicket(int $serviceId, bool $priority = false, ?string $priorityType = null): Queue
     {
-        return DB::transaction(function () use ($serviceId) {
+        return DB::transaction(function () use ($serviceId, $priority, $priorityType) {
             $service = MppService::query()
                 ->with('opd.gerais')
                 ->whereKey($serviceId)
@@ -40,9 +40,9 @@ class QueueService
                 throw ValidationException::withMessages(['service_id' => 'Layanan tidak aktif.']);
             }
 
-            $number = $this->generateNomorAntrian($service);
+            $number = $this->generateNomorAntrian($service, $priority);
 
-            return $this->createTicket($service, $number);
+            return $this->createTicket($service, $number, $priority, $priorityType);
         });
     }
 
@@ -54,12 +54,14 @@ class QueueService
      * muncul di antrian Front Office. Panggil dalam transaksi bersama
      * penghasil nomor agar urutan tidak bertabrakan.
      */
-    public function createTicket(MppService $service, string $number): Queue
+    public function createTicket(MppService $service, string $number, bool $priority = false, ?string $priorityType = null): Queue
     {
         $ticket = Queue::create([
             'number' => $number,
             'service_id' => $service->id,
             'status' => Queue::STATUS_WAITING_FO,
+            'is_priority' => $priority,
+            'priority_type' => $priority ? $priorityType : null,
         ]);
 
         $this->broadcast('ticket:new', ['ticket' => $ticket->id, 'number' => $number]);
@@ -68,6 +70,7 @@ class QueueService
             'queue_number' => $number,
             'gerai_name' => $this->geraiNameFor($service),
             'status' => 'Menunggu',
+            'is_priority' => $priority,
             'timestamp' => $ticket->created_at?->timestamp,
         ]);
 
@@ -91,8 +94,11 @@ class QueueService
      * Kiosk & web berbagi urutan yang sama. Reset otomatis ke 1 setiap hari.
      * Panggil dalam transaksi; baris gerai di-lock agar dua layanan pada gerai
      * yang sama tidak mendapat nomor yang sama secara bersamaan.
+     *
+     * Tiket prioritas berbagi urutan yang sama dengan tiket reguler, hanya
+     * prefix-nya disisipi huruf "P" (mis. gerai "A" → prioritas "AP").
      */
-    public function generateNomorAntrian(MppService $service): string
+    public function generateNomorAntrian(MppService $service, bool $priority = false): string
     {
         $service->loadMissing('gerai', 'opd.gerais');
 
@@ -124,12 +130,16 @@ class QueueService
 
         $number = str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
 
+        if ($priority && $prefix) {
+            $prefix .= 'P';
+        }
+
         return $prefix ? $prefix.'-'.$number : $number;
     }
 
     public function foCall(User $petugas): Queue
     {
-        $ticket = Queue::query()->waitingFo()->oldest('created_at')->first();
+        $ticket = Queue::query()->waitingFo()->priorityFirst()->first();
 
         if (! $ticket) {
             throw new \RuntimeException('Tidak ada antrian.');
@@ -144,7 +154,7 @@ class QueueService
         ]);
 
         $this->broadcast('fo:call', ['ticket' => $ticket->id, 'number' => $ticket->number]);
-        $this->broadcast('display:call', ['nomor' => $ticket->number, 'tujuan' => 'Front Office']);
+        $this->broadcastDisplayCall($ticket, 'Front Office');
 
         $this->publishDisplayCall($ticket, 'Front Office', 'fo');
 
@@ -195,7 +205,7 @@ class QueueService
     {
         $ticket->update(['called_at' => now()]);
 
-        $this->broadcast('display:call', ['nomor' => $ticket->number, 'tujuan' => 'Front Office']);
+        $this->broadcastDisplayCall($ticket, 'Front Office');
 
         $this->publishDisplayCall($ticket, 'Front Office', 'fo');
 
@@ -229,7 +239,7 @@ class QueueService
 
         $ticket = Queue::query()
             ->waitingGerai($counter->gerai?->opd_id)
-            ->oldest('created_at')
+            ->priorityFirst()
             ->first();
 
         if (! $ticket) {
@@ -246,7 +256,7 @@ class QueueService
         ]);
 
         $this->broadcast('gerai:call', ['ticket' => $ticket->id, 'number' => $ticket->number, 'gerai' => $counter->name]);
-        $this->broadcast('display:call', ['nomor' => $ticket->number, 'tujuan' => $counter->name]);
+        $this->broadcastDisplayCall($ticket, $counter->name);
 
         $this->publishDisplayCall($ticket, $counter->name, 'gerai-'.$counter->id);
 
@@ -284,11 +294,21 @@ class QueueService
         ]);
 
         $this->broadcast('gerai:call', ['ticket' => $ticket->id, 'number' => $ticket->number, 'gerai' => $ticket->counter_name]);
-        $this->broadcast('display:call', ['nomor' => $ticket->number, 'tujuan' => $ticket->counter_name]);
+        $this->broadcastDisplayCall($ticket, $ticket->counter_name);
 
         $this->publishDisplayCall($ticket, $ticket->counter_name, 'gerai-'.$ticket->counter_id);
 
         return $ticket;
+    }
+
+    private function broadcastDisplayCall(Queue $ticket, string $tujuan): void
+    {
+        $this->broadcast('display:call', [
+            'nomor' => $ticket->number,
+            'tujuan' => $tujuan,
+            'is_priority' => (bool) $ticket->is_priority,
+            'priority_type' => $ticket->is_priority ? $ticket->priority_type : null,
+        ]);
     }
 
     private function publishDisplayCall(Queue $ticket, string $geraiName, string $counterKey): void
@@ -300,12 +320,15 @@ class QueueService
             'gerai_name' => $geraiName,
             'agency' => $ticket->service?->opd?->name,
             'service_type' => $ticket->service?->name,
+            'is_priority' => (bool) $ticket->is_priority,
+            'priority_type' => $ticket->is_priority ? $ticket->priority_type : null,
             'timestamp' => now()->timestamp,
         ]);
 
         $this->firebase->setActiveCounter($counterKey, [
             'label' => $geraiName,
             'number' => $ticket->number,
+            'is_priority' => (bool) $ticket->is_priority,
             'timestamp' => now()->timestamp,
         ]);
     }
@@ -316,6 +339,7 @@ class QueueService
             'queue_number' => $ticket->number,
             'gerai_name' => $geraiName,
             'status' => $status,
+            'is_priority' => (bool) $ticket->is_priority,
             'timestamp' => $ticket->created_at?->timestamp,
         ]);
     }

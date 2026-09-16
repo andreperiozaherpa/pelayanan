@@ -34,6 +34,18 @@ class MppServiceRequest extends Model
     public const STATUS_REJECTED = 'REJECTED';
 
     /**
+     * Label kategori prioritas (null bila bukan prioritas).
+     */
+    public function getPriorityLabelAttribute(): ?string
+    {
+        if (! $this->is_priority) {
+            return null;
+        }
+
+        return Queue::PRIORITY_TYPES[$this->priority_type] ?? 'Prioritas';
+    }
+
+    /**
      * Petakan status tiket antrian (mpp_queues.status) ke status pengajuan
      * (mpp_service_requests.status) agar kedua tabel selalu selaras.
      */
@@ -57,6 +69,8 @@ class MppServiceRequest extends Model
         'submitted_form_data',
         'status',
         'notes',
+        'is_priority',
+        'priority_type',
     ];
 
     /**
@@ -68,6 +82,7 @@ class MppServiceRequest extends Model
     {
         return [
             'submitted_form_data' => 'array',
+            'is_priority' => 'boolean',
         ];
     }
 

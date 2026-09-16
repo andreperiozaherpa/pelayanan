@@ -114,6 +114,12 @@
                                             <iconify-icon icon="lucide:hash" class="text-sm"></iconify-icon>
                                             {{ $request->nomor_antrian }}
                                         </span>
+                                        @if ($request->is_priority)
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-red-500/10 text-red-500 border border-red-500/25 rounded-lg text-[10px] font-black tracking-widest mt-1.5">
+                                                <iconify-icon icon="lucide:star" class="text-xs"></iconify-icon>
+                                                PRIORITAS{{ $request->priority_label ? ' · ' . $request->priority_label : '' }}
+                                            </span>
+                                        @endif
                                     @else
                                         <span class="text-[11px] text-slate-400">-</span>
                                     @endif

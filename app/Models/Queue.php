@@ -43,7 +43,31 @@ class Queue extends Model
         'notes',
         'alasan_reject',
         'skipped_at',
+        'is_priority',
+        'priority_type',
     ];
+
+    /**
+     * Daftar kategori antrian prioritas yang valid (Lansia, Ibu Hamil, dll).
+     */
+    public const PRIORITY_TYPES = [
+        'lansia' => 'Lansia',
+        'ibu_hamil' => 'Ibu Hamil',
+        'difabel' => 'Difabel',
+        'ibu_balita' => 'Ibu Balita',
+    ];
+
+    /**
+     * Label kategori prioritas (null bila bukan tiket prioritas).
+     */
+    public function getPriorityLabelAttribute(): ?string
+    {
+        if (! $this->is_priority) {
+            return null;
+        }
+
+        return self::PRIORITY_TYPES[$this->priority_type] ?? 'Prioritas';
+    }
 
     protected static function booted(): void
     {
@@ -63,6 +87,7 @@ class Queue extends Model
             'gerai_called_at' => 'datetime',
             'done_at' => 'datetime',
             'skipped_at' => 'datetime',
+            'is_priority' => 'boolean',
         ];
     }
 
@@ -196,5 +221,14 @@ class Queue extends Model
     {
         return $query->where('service_id', $serviceId)
             ->whereDate('created_at', today());
+    }
+
+    /**
+     * Urutkan antrian prioritas lebih dulu, lalu FIFO berdasarkan created_at.
+     */
+    public function scopePriorityFirst(Builder $query): Builder
+    {
+        return $query->orderByDesc('is_priority')
+            ->orderBy('created_at');
     }
 }

@@ -470,3 +470,100 @@ test('login via username key returns fo role and gerai info', function () {
         ->assertJsonPath('data.user.counter_id', $this->counter->id)
         ->assertJsonPath('data.user.counter_nama', 'Loket 1 - Pendaftaran');
 });
+
+test('priority ticket shares the same daily sequence with P prefix', function () {
+    $this->postJson('/api/v1/tickets', ['service_id' => $this->service->id])
+        ->assertJsonPath('data.nomor_antrian', 'A-001');
+
+    $this->postJson('/api/v1/tickets', [
+        'service_id' => $this->service->id,
+        'priority' => true,
+        'priority_type' => 'lansia',
+    ])->assertOk()
+        ->assertJsonPath('data.nomor_antrian', 'AP-002')
+        ->assertJsonPath('data.is_priority', true)
+        ->assertJsonPath('data.priority_type', 'lansia')
+        ->assertJsonPath('data.priority_label', 'Lansia');
+
+    $this->postJson('/api/v1/tickets', ['service_id' => $this->service->id])
+        ->assertOk()
+        ->assertJsonPath('data.nomor_antrian', 'A-003');
+});
+
+test('priority ticket must include a valid category', function () {
+    $this->postJson('/api/v1/tickets', [
+        'service_id' => $this->service->id,
+        'priority' => true,
+    ])->assertStatus(422);
+
+    $this->postJson('/api/v1/tickets', [
+        'service_id' => $this->service->id,
+        'priority' => true,
+        'priority_type' => 'bukan-kategori',
+    ])->assertStatus(422);
+});
+
+test('regular ticket with priority false and null type is accepted', function () {
+    $this->postJson('/api/v1/tickets', [
+        'service_id' => $this->service->id,
+        'priority' => false,
+        'priority_type' => null,
+    ])->assertOk()
+        ->assertJsonPath('data.nomor_antrian', 'A-001')
+        ->assertJsonPath('data.is_priority', false)
+        ->assertJsonPath('data.priority_type', null)
+        ->assertJsonPath('data.priority_label', null);
+});
+
+test('fo calls priority ticket before older regular ticket', function () {
+    $fo = makeFoUser($this->roleFo);
+    $regular = Queue::factory()->create(['service_id' => $this->service->id]);
+    $priority = Queue::factory()->priority('ibu_hamil')->create(['service_id' => $this->service->id]);
+
+    Sanctum::actingAs($fo);
+
+    $this->postJson('/api/v1/fo/call')
+        ->assertOk()
+        ->assertJsonPath('data.id', $priority->id)
+        ->assertJsonPath('data.nomor_antrian', $priority->number)
+        ->assertJsonPath('data.is_priority', true)
+        ->assertJsonPath('data.priority_label', 'Ibu Hamil');
+
+    expect($regular->fresh()->status)->toBe(Queue::STATUS_WAITING_FO);
+});
+
+test('gerai calls priority ticket before older regular ticket', function () {
+    $petugas = makeGeraiUser($this->roleGerai, $this->counter);
+
+    $regular = Queue::factory()->create([
+        'service_id' => $this->service->id,
+        'status' => Queue::STATUS_WAITING_GERAI,
+        'counter_id' => null,
+    ]);
+    $priority = Queue::factory()->priority('difabel')->create([
+        'service_id' => $this->service->id,
+        'status' => Queue::STATUS_WAITING_GERAI,
+        'counter_id' => null,
+    ]);
+
+    Sanctum::actingAs($petugas);
+
+    $this->postJson('/api/v1/gerai/call')
+        ->assertOk()
+        ->assertJsonPath('data.id', $priority->id)
+        ->assertJsonPath('data.priority_label', 'Difabel');
+
+    expect($regular->fresh()->status)->toBe(Queue::STATUS_WAITING_GERAI);
+});
+
+test('priority tickets listed first in fo and gerai waiting lists', function () {
+    $fo = makeFoUser($this->roleFo);
+    Queue::factory()->create(['service_id' => $this->service->id]);
+    $priority = Queue::factory()->priority('ibu_balita')->create(['service_id' => $this->service->id]);
+
+    Sanctum::actingAs($fo);
+
+    $this->getJson('/api/v1/fo/waiting')
+        ->assertOk()
+        ->assertJsonPath('data.0.id', $priority->id);
+});

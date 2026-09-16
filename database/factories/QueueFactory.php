@@ -32,6 +32,14 @@ class QueueFactory extends Factory
         return $this->state(['status' => Queue::STATUS_WAITING_FO]);
     }
 
+    public function priority(string $type = 'lansia'): static
+    {
+        return $this->state([
+            'is_priority' => true,
+            'priority_type' => $type,
+        ]);
+    }
+
     public function callingFo(?int $petugasId = null): static
     {
         return $this->state(fn () => [

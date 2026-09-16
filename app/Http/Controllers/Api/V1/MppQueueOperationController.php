@@ -21,7 +21,7 @@ class MppQueueOperationController extends Controller
         $tickets = Queue::query()
             ->with(['service.opd.gerais', 'counter'])
             ->waitingFo()
-            ->oldest('created_at')
+            ->priorityFirst()
             ->get();
 
         return response()->json([
@@ -133,7 +133,7 @@ class MppQueueOperationController extends Controller
         $tickets = Queue::query()
             ->with(['service.opd.gerais', 'counter'])
             ->waitingGerai($gerai->gerai?->opd_id)
-            ->oldest('created_at')
+            ->priorityFirst()
             ->get();
 
         return response()->json([

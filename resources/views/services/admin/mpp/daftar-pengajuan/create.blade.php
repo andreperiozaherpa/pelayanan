@@ -102,6 +102,32 @@
                             @enderror
                         </div>
                     @endforeach
+
+                    <div class="border-t border-black/[0.03] dark:border-white/[0.03] pt-8">
+                        <div class="flex items-center gap-3">
+                            <label class="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 border border-black/[0.03] dark:border-white/[0.03] rounded-xl px-4 py-3 cursor-pointer">
+                                <input type="checkbox" name="priority" value="1" x-model="priority"
+                                    class="w-4 h-4 rounded border-slate-300 text-primary-acorn focus:ring-primary-acorn/30">
+                                <span class="text-[11px] font-bold text-slate-600 dark:text-slate-300">Antrian Prioritas (Lansia / Ibu Hamil / Difabel / Ibu Balita)</span>
+                            </label>
+                        </div>
+                        <div class="space-y-2 mt-4" x-show="priority">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                Kategori Prioritas <span class="text-red-500">*</span>
+                            </label>
+                            <select name="priority_type"
+                                class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-black/[0.03] dark:border-white/[0.03] rounded-xl text-[11px] font-bold outline-none focus:ring-2 focus:ring-primary-acorn/20 focus:border-primary-acorn transition-all appearance-none">
+                                <option value="">Pilih kategori</option>
+                                <option value="lansia" @selected(old('priority_type') === 'lansia')>Lansia</option>
+                                <option value="ibu_hamil" @selected(old('priority_type') === 'ibu_hamil')>Ibu Hamil</option>
+                                <option value="difabel" @selected(old('priority_type') === 'difabel')>Difabel</option>
+                                <option value="ibu_balita" @selected(old('priority_type') === 'ibu_balita')>Ibu Balita</option>
+                            </select>
+                            @error('priority_type')
+                                <p class="text-[9px] font-bold text-red-500 mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -130,6 +156,7 @@
         function mppRequestApp() {
             return {
                 loading: false,
+                priority: false,
                 init() {
                     this.waitForDropzone();
                 },

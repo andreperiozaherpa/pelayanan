@@ -33,6 +33,12 @@
                         <div>
                             <p class="text-[9px] font-black text-primary-acorn uppercase tracking-widest mb-0.5">Nomor Antrian</p>
                             <p class="text-2xl font-black text-primary-acorn tracking-widest">{{ $mppServiceRequest->nomor_antrian }}</p>
+                            @if ($mppServiceRequest->is_priority)
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-red-500/10 text-red-500 border border-red-500/25 rounded-lg text-[9px] font-black tracking-widest mt-2">
+                                    <iconify-icon icon="lucide:star" class="text-xs"></iconify-icon>
+                                    PRIORITAS{{ $mppServiceRequest->priority_label ? ' · ' . $mppServiceRequest->priority_label : '' }}
+                                </span>
+                            @endif
                         </div>
                         <iconify-icon icon="lucide:ticket" class="text-3xl text-primary-acorn/70"></iconify-icon>
                     </div>

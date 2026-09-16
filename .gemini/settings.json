@@ -11,10 +11,7 @@
             "args": [
                 "mcp"
             ],
-            "command": "lerd",
-            "env": {
-                "LERD_SITE_PATH": "/home/lenovo/Dev/Laravel/pelayanan"
-            }
+            "command": "lerd"
         }
     }
 }

@@ -289,3 +289,59 @@ test('nomor antrian pengajuan berbagi urutan antar layanan satu gerai', function
 
     expect($numbers)->toBe(['A-001', 'A-002', 'A-003', 'A-004']);
 });
+
+test('isi form api prioritas menghasilkan nomor AP dan flag prioritas', function () {
+    $this->postJson("/api/v1/services/{$this->service->id}/requests", [
+        'form_data' => [
+            'nik' => '1234567890123456',
+            'nama_lengkap' => 'Budi Santoso',
+            'jenis_kelamin' => 'L',
+        ],
+    ])->assertStatus(201);
+
+    $response = $this->postJson("/api/v1/services/{$this->service->id}/requests", [
+        'priority' => true,
+        'priority_type' => 'ibu_hamil',
+        'form_data' => [
+            'nik' => '1234567890123456',
+            'nama_lengkap' => 'Ani Setiawati',
+            'jenis_kelamin' => 'P',
+        ],
+    ]);
+
+    $response->assertStatus(201)
+        ->assertJsonPath('data.nomor_antrian', 'AP-002');
+
+    $this->assertDatabaseHas('mpp_service_requests', [
+        'nomor_antrian' => 'AP-002',
+        'is_priority' => true,
+        'priority_type' => 'ibu_hamil',
+    ]);
+
+    $this->assertDatabaseHas('mpp_queues', [
+        'number' => 'AP-002',
+        'is_priority' => true,
+        'priority_type' => 'ibu_hamil',
+    ]);
+});
+
+test('isi form api prioritas wajib menyertakan kategori valid', function () {
+    $this->postJson("/api/v1/services/{$this->service->id}/requests", [
+        'priority' => true,
+        'form_data' => [
+            'nik' => '1234567890123456',
+            'nama_lengkap' => 'Budi Santoso',
+            'jenis_kelamin' => 'L',
+        ],
+    ])->assertStatus(422);
+
+    $this->postJson("/api/v1/services/{$this->service->id}/requests", [
+        'priority' => true,
+        'priority_type' => 'invalid',
+        'form_data' => [
+            'nik' => '1234567890123456',
+            'nama_lengkap' => 'Budi Santoso',
+            'jenis_kelamin' => 'L',
+        ],
+    ])->assertStatus(422);
+});

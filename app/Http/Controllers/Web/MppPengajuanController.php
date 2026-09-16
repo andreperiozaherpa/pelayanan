@@ -6,6 +6,7 @@ use App\Facades\Audit;
 use App\Http\Controllers\Controller;
 use App\Models\MppService;
 use App\Models\MppServiceRequest;
+use App\Models\Queue;
 use App\Services\QueueService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -61,6 +62,8 @@ class MppPengajuanController extends Controller
 
         $rules = [
             'notes' => 'nullable|string',
+            'priority' => 'sometimes|boolean',
+            'priority_type' => 'nullable|required_if:priority,true|string|in:'.implode(',', array_keys(Queue::PRIORITY_TYPES)),
         ];
 
         foreach ($mppService->fields as $field) {
@@ -98,6 +101,9 @@ class MppPengajuanController extends Controller
         }
 
         $validated = $request->validate($rules);
+
+        $isPriority = (bool) ($validated['priority'] ?? false);
+        $priorityType = $isPriority ? ($validated['priority_type'] ?? null) : null;
 
         $submittedData = [];
         $formData = $request->input('form_data', []);
@@ -139,16 +145,18 @@ class MppPengajuanController extends Controller
             }
         }
 
-        $mppServiceRequest = DB::transaction(function () use ($request, $mppService, $submittedData) {
+        $mppServiceRequest = DB::transaction(function () use ($request, $mppService, $submittedData, $isPriority, $priorityType) {
             $service = MppService::query()->whereKey($mppService->id)->lockForUpdate()->first();
 
             return MppServiceRequest::create([
                 'mpp_service_id' => $service->id,
-                'nomor_antrian' => app(QueueService::class)->generateNomorAntrian($service),
+                'nomor_antrian' => app(QueueService::class)->generateNomorAntrian($service, $isPriority),
                 'front_office_user_id' => Auth::id(),
                 'notes' => $request->notes,
                 'submitted_form_data' => $submittedData,
                 'status' => MppServiceRequest::STATUS_PENDING,
+                'is_priority' => $isPriority,
+                'priority_type' => $priorityType,
             ]);
         });
 
