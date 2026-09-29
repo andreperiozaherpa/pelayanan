@@ -213,6 +213,11 @@ class MppRequestController extends Controller
         $ticket->loadMissing('service.gerai', 'service.opd.gerais');
         $service = $ticket->service;
         $gerai = $service?->gerai ?? $service?->opd?->gerais?->first();
+        $remainingQueue = Queue::query()
+            ->where('service_id', $ticket->service_id)
+            ->whereKeyNot($ticket->id)
+            ->whereIn('status', [Queue::STATUS_WAITING_FO, Queue::STATUS_CALLING_FO, Queue::STATUS_WAITING_GERAI, Queue::STATUS_CALLING_GERAI])
+            ->count();
 
         return [
             'queue_id' => $ticket->id,
@@ -225,6 +230,7 @@ class MppRequestController extends Controller
             'priority_type' => $ticket->is_priority ? $ticket->priority_type : null,
             'priority_label' => $ticket->priority_label,
             'issued_at' => $ticket->created_at,
+            'remaining_queue' => $remainingQueue,
             'template_version_id' => $ticket->mpp_ticket_template_version_id,
         ];
     }

@@ -110,7 +110,8 @@ test('guest dapat mengisi form pelayanan via api', function () {
         ->assertJsonPath('data.receipt.nomor_antrian', 'A-001')
         ->assertJsonPath('data.receipt.service_name', 'Layanan KTP')
         ->assertJsonPath('data.receipt.instansi_name', 'Dinas Kependudukan dan Pencatatan Sipil')
-        ->assertJsonPath('data.receipt.gerai_name', 'Gerai Dukcapil');
+        ->assertJsonPath('data.receipt.gerai_name', 'Gerai Dukcapil')
+        ->assertJsonPath('data.receipt.remaining_queue', 0);
 
     expect($response->json('data.receipt.queue_id'))->toBe($response->json('data.queue_id'));
 

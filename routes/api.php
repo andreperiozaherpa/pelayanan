@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\CitizenController;
 use App\Http\Controllers\Api\V1\DisplayController;
 use App\Http\Controllers\Api\V1\MppQueueOperationController;
 use App\Http\Controllers\Api\V1\MppRequestController;
+use App\Http\Controllers\Api\V1\MppPublicRegistrationController;
 use App\Http\Controllers\Api\V1\MppServiceController;
 use App\Http\Controllers\Api\V1\MppSkmController;
 use App\Http\Controllers\Api\V1\MppTicketController;
@@ -29,6 +30,7 @@ Route::prefix('v1')->group(function () {
     Route::middleware('mpp.kiosk')->group(function () {
         Route::post('/services/{service}/requests', [MppRequestController::class, 'store'])->whereNumber('service');
         Route::post('/tickets', [MppTicketController::class, 'store']);
+        Route::post('/public-registrations/claim', [MppPublicRegistrationController::class, 'claim']);
         Route::get('/ticket-template', [MppTicketTemplateController::class, 'active']);
         Route::get('/ticket-templates/{version}', [MppTicketTemplateController::class, 'show'])->whereNumber('version');
     });

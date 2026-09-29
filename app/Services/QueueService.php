@@ -35,6 +35,23 @@ class QueueService
         );
     }
 
+    public function claimPublicRegistration(string $code): Queue
+    {
+        return DB::transaction(function () use ($code): Queue {
+            $request = MppServiceRequest::query()->where('public_registration_code', $code)->lockForUpdate()->firstOrFail();
+            if ($request->queue_id) {
+                return Queue::query()->whereKey($request->queue_id)->firstOrFail();
+            }
+            $service = MppService::query()->whereKey($request->mpp_service_id)->lockForUpdate()->firstOrFail();
+            if (! $service->is_active) {
+                throw ValidationException::withMessages(['barcode' => 'Layanan pendaftaran ini sudah tidak aktif.']);
+            }
+            $ticket = $this->createTicket($service, $this->generateNomorAntrian($service), false);
+            $request->update(['queue_id' => $ticket->id, 'nomor_antrian' => $ticket->number, 'claimed_at' => now()]);
+            return $ticket;
+        }, attempts: 3);
+    }
+
     /**
      * @return array{0: Queue, 1: bool}
      */
@@ -184,7 +201,7 @@ class QueueService
 
         $sequence = max(
             Queue::query()->whereIn('service_id', $serviceIds)->whereDate('created_at', today())->count(),
-            MppServiceRequest::query()->whereIn('mpp_service_id', $serviceIds)->whereDate('created_at', today())->count(),
+            MppServiceRequest::query()->whereIn('mpp_service_id', $serviceIds)->whereNotNull('nomor_antrian')->whereDate('created_at', today())->count(),
         ) + 1;
 
         $number = str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);

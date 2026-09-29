@@ -35,6 +35,7 @@ use App\Http\Controllers\Web\MppPengajuanController;
 use App\Http\Controllers\Web\MppTicketTemplateController;
 use App\Http\Controllers\Web\OpdController;
 use App\Http\Controllers\Web\PublicVerificationController;
+use App\Http\Controllers\Web\PublicMppRegistrationController;
 use App\Http\Controllers\Web\ReportController;
 use App\Http\Controllers\Web\RoleController;
 use App\Http\Controllers\Web\ServiceController;
@@ -50,6 +51,12 @@ use Illuminate\Support\Facades\Route;
 
 // Public Routes (tanpa autentikasi)
 Route::get('/cek-surat', [PublicVerificationController::class, 'show'])->name('public.verify');
+Route::prefix('daftar-layanan')->name('public.mpp-registration.')->group(function () {
+    Route::get('/', [PublicMppRegistrationController::class, 'index'])->name('index');
+    Route::get('/{service:slug}', [PublicMppRegistrationController::class, 'create'])->name('create');
+    Route::post('/{service:slug}', [PublicMppRegistrationController::class, 'store'])->name('store');
+    Route::get('/selesai/{code}', [PublicMppRegistrationController::class, 'complete'])->name('complete');
+});
 
 // E-Survei SKM Public Routes
 Route::prefix('survey')->name('survey.')->group(function () {

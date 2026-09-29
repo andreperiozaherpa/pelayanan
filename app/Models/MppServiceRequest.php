@@ -65,6 +65,9 @@ class MppServiceRequest extends Model
         'mpp_service_id',
         'nomor_antrian',
         'queue_id',
+        'public_registration_code',
+        'registered_at',
+        'claimed_at',
         'front_office_user_id',
         'submitted_form_data',
         'status',
@@ -83,6 +86,8 @@ class MppServiceRequest extends Model
         return [
             'submitted_form_data' => 'array',
             'is_priority' => 'boolean',
+            'registered_at' => 'datetime',
+            'claimed_at' => 'datetime',
         ];
     }
 

@@ -73,7 +73,7 @@
 @push('scripts')
 <script>
 function ticketTemplateEditor(layout) {
-    const options = [{ type: 'title', label: 'Judul' }, { type: 'subtitle', label: 'Subjudul' }, { type: 'queue_number', label: 'Nomor antrian' }, { type: 'priority', label: 'Prioritas' }, { type: 'service', label: 'Layanan' }, { type: 'agency', label: 'Instansi' }, { type: 'datetime', label: 'Tanggal & jam' }, { type: 'divider', label: 'Pemisah' }, { type: 'footer', label: 'Footer' }];
+    const options = [{ type: 'logo', label: 'Logo MPP' }, { type: 'title', label: 'Judul' }, { type: 'subtitle', label: 'Subjudul' }, { type: 'queue_number', label: 'Nomor antrian' }, { type: 'priority', label: 'Prioritas' }, { type: 'service', label: 'Layanan' }, { type: 'agency', label: 'Instansi' }, { type: 'remaining_queue', label: 'Sisa antrean' }, { type: 'datetime', label: 'Tanggal & jam' }, { type: 'barcode', label: 'Barcode tiket' }, { type: 'divider', label: 'Pemisah' }, { type: 'footer', label: 'Footer' }];
     let blockId = 0;
     const withId = (block) => ({ ...block, id: `block-${++blockId}` });
     return {
@@ -84,7 +84,7 @@ function ticketTemplateEditor(layout) {
         move(index, direction) { const target = index + direction; if (target >= 0 && target < this.blocks.length) [this.blocks[index], this.blocks[target]] = [this.blocks[target], this.blocks[index]]; },
         needsText(type) { return ['title', 'subtitle', 'footer'].includes(type); },
         blockLabel(type) { return this.blockOptions.find((option) => option.type === type)?.label || type; },
-        previewText(block) { const sample = { queue_number: 'A-001', priority: 'PRIORITAS', service: 'Layanan KTP Elektronik', agency: 'MPP Tulang Bawang Barat', datetime: '29 September 2026, 10.30', divider: '' }; return this.needsText(block.type) ? (block.text || 'Teks belum diisi') : sample[block.type]; },
+        previewText(block) { const sample = { logo: 'LOGO MPP', queue_number: 'A-001', priority: 'PRIORITAS', service: 'Layanan KTP Elektronik', agency: 'MPP Tulang Bawang Barat', remaining_queue: 'SISA ANTRIAN 0', datetime: '29 September 2026, 10.30', barcode: '||| || ||| || |||', divider: '' }; return this.needsText(block.type) ? (block.text || 'Teks belum diisi') : sample[block.type]; },
     };
 }
 </script>
