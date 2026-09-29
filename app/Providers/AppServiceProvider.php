@@ -18,11 +18,17 @@ use App\Models\CmsWhyChooseUs;
 use App\Models\ServiceRequest;
 use App\Models\User;
 use App\Observers\LandingPageCacheObserver;
+use App\Services\ApiSessionService;
 use App\Services\AuditService;
 use Auth;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Sanctum\PersonalAccessToken;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,6 +47,26 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Sanctum::authenticateAccessTokensUsing(function (PersonalAccessToken $token, bool $isValid): bool {
+            return $isValid && ApiSessionService::isAccessToken($token);
+        });
+
+        $throttled = fn (Request $request, array $headers) => response()->json([
+            'success' => false,
+            'error' => 'Terlalu banyak percobaan. Silakan coba lagi nanti.',
+        ], 429, $headers);
+
+        RateLimiter::for('api-login', function (Request $request) use ($throttled): array {
+            $login = $request->input('login', $request->input('username', ''));
+            $identity = is_string($login) ? mb_strtolower(trim($login)) : '';
+
+            return [
+                Limit::perMinute(5)->by('login:'.hash('sha256', $identity).'|'.$request->ip())->response($throttled),
+                Limit::perMinute(60)->by('login-ip:'.$request->ip())->response($throttled),
+            ];
+        });
+        RateLimiter::for('api-refresh', fn (Request $request) => Limit::perMinute(60)->by('refresh-ip:'.$request->ip())->response($throttled));
+
         if ($this->app->environment('production') || config('app.env') === 'production') {
             URL::forceScheme('https');
         }

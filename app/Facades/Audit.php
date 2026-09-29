@@ -6,7 +6,7 @@ use App\Services\AuditService;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @method static void log(string $action, mixed $target = null, ?array $newValue = null, ?array $oldValue = null)
+ * @method static void log(string $action, mixed $target = null, ?array $newValue = null, ?array $oldValue = null, ?\App\Models\User $actor = null)
  *
  * @see AuditService
  */

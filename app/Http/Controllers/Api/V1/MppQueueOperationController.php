@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Facades\Audit;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\QueueTicketResource;
 use App\Models\Counter;
@@ -37,6 +38,7 @@ class MppQueueOperationController extends Controller
         $ticket = Queue::query()
             ->with(['service.opd.gerais', 'counter'])
             ->callingFo()
+            ->where('fo_petugas_id', $request->user()->id)
             ->latest('called_at')
             ->first();
 
@@ -64,6 +66,7 @@ class MppQueueOperationController extends Controller
         $ticket = $this->loadTicket((int) $validated['ticket_id']);
 
         $this->ensureFoForwardable($ticket);
+        $this->authorizeFoTicket($request, $ticket);
 
         $ticket = $this->queueService->foForward(
             $ticket,
@@ -86,6 +89,7 @@ class MppQueueOperationController extends Controller
         $ticket = $this->loadTicket((int) $validated['ticket_id']);
 
         $this->ensureFoForwardable($ticket);
+        $this->authorizeFoTicket($request, $ticket);
 
         $ticket = $this->queueService->foReject($ticket, $request->user(), $validated['alasan']);
 
@@ -103,6 +107,7 @@ class MppQueueOperationController extends Controller
         $ticket = $this->loadTicket((int) $validated['ticket_id']);
 
         $this->ensureCallingFo($ticket);
+        $this->authorizeFoTicket($request, $ticket);
 
         $ticket = $this->queueService->foRecall($ticket);
 
@@ -120,6 +125,7 @@ class MppQueueOperationController extends Controller
         $ticket = $this->loadTicket((int) $validated['ticket_id']);
 
         $this->ensureCallingFo($ticket);
+        $this->authorizeFoTicket($request, $ticket);
 
         $ticket = $this->queueService->foSkip($ticket);
 
@@ -129,6 +135,7 @@ class MppQueueOperationController extends Controller
     public function geraiWaiting(Request $request, Counter $gerai): JsonResponse
     {
         $this->authorizeQueueRole($request, ['gerai', 'superadmin']);
+        $this->authorizeCounter($request, $gerai);
 
         $tickets = Queue::query()
             ->with(['service.opd.gerais', 'counter'])
@@ -145,6 +152,7 @@ class MppQueueOperationController extends Controller
     public function geraiCalling(Request $request, Counter $gerai): JsonResponse
     {
         $this->authorizeQueueRole($request, ['gerai', 'superadmin']);
+        $this->authorizeCounter($request, $gerai);
 
         $ticket = Queue::query()
             ->with(['service.opd.gerais', 'counter'])
@@ -158,6 +166,7 @@ class MppQueueOperationController extends Controller
     public function geraiCall(Request $request): JsonResponse
     {
         $this->authorizeQueueRole($request, ['gerai', 'superadmin']);
+        $this->requireActiveCounter($request);
 
         $ticket = $this->queueService->geraiCall($request->user());
 
@@ -182,14 +191,7 @@ class MppQueueOperationController extends Controller
             ], 422);
         }
 
-        $activeCounter = $request->user()->activeCounter();
-
-        if ($activeCounter && $ticket->counter_id !== $activeCounter->id) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Tiket tidak dilayani pada loket Anda.',
-            ], 422);
-        }
+        $this->authorizeGeraiTicket($request, $ticket);
 
         $ticket = $this->queueService->geraiComplete($ticket, $request->user(), $validated['catatan'] ?? null);
 
@@ -213,14 +215,7 @@ class MppQueueOperationController extends Controller
             ], 422);
         }
 
-        $activeCounter = $request->user()->activeCounter();
-
-        if ($activeCounter && $ticket->counter_id !== $activeCounter->id) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Tiket tidak dilayani pada loket Anda.',
-            ], 422);
-        }
+        $this->authorizeGeraiTicket($request, $ticket);
 
         $ticket = $this->queueService->geraiRecall($ticket);
 
@@ -230,6 +225,70 @@ class MppQueueOperationController extends Controller
     private function loadTicket(int $id): Queue
     {
         return Queue::query()->with(['service.opd.gerais', 'counter'])->findOrFail($id);
+    }
+
+    private function authorizeFoTicket(Request $request, Queue $ticket): void
+    {
+        if ($ticket->fo_petugas_id === $request->user()->id
+            || ($ticket->status === Queue::STATUS_WAITING_FO && $ticket->fo_petugas_id === null)) {
+            return;
+        }
+
+        $this->authorizeSupervisorOverride($request, $ticket);
+    }
+
+    private function requireActiveCounter(Request $request): Counter
+    {
+        $counter = $request->user()->activeCounter();
+
+        if (! $counter) {
+            abort(response()->json(['success' => false, 'error' => 'Petugas belum terdaftar pada loket aktif.'], 403));
+        }
+
+        return $counter;
+    }
+
+    private function authorizeCounter(Request $request, Counter $counter): void
+    {
+        if (! $counter->is_active || ! $counter->gerai?->is_active || ! $counter->gerai?->opd_id) {
+            abort(response()->json(['success' => false, 'error' => 'Loket tidak aktif atau belum terhubung ke instansi.'], 403));
+        }
+
+        if ($request->user()->isSuperAdmin()) {
+            Audit::log('queue_supervisor_read', $counter, ['operation' => $request->path()]);
+
+            return;
+        }
+
+        if ($this->requireActiveCounter($request)->id !== $counter->id) {
+            abort(response()->json(['success' => false, 'error' => 'Akses ditolak untuk loket ini.'], 403));
+        }
+    }
+
+    private function authorizeGeraiTicket(Request $request, Queue $ticket): void
+    {
+        if ($request->user()->isSuperAdmin()) {
+            $this->authorizeSupervisorOverride($request, $ticket);
+
+            return;
+        }
+
+        if ($ticket->counter_id !== $this->requireActiveCounter($request)->id) {
+            abort(response()->json(['success' => false, 'error' => 'Tiket tidak dilayani pada loket Anda.'], 403));
+        }
+    }
+
+    private function authorizeSupervisorOverride(Request $request, Queue $ticket): void
+    {
+        if (! $request->user()->isSuperAdmin()) {
+            abort(response()->json(['success' => false, 'error' => 'Tiket tidak ditugaskan kepada Anda.'], 403));
+        }
+
+        Audit::log('queue_supervisor_override', $ticket, [
+            'operation' => $request->path(),
+            'fo_petugas_id' => $ticket->fo_petugas_id,
+            'counter_id' => $ticket->counter_id,
+        ]);
     }
 
     private function ensureCallingFo(Queue $ticket): void

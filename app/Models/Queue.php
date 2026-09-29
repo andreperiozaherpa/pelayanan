@@ -30,6 +30,7 @@ class Queue extends Model
     protected $fillable = [
         'number',
         'service_id',
+        'mpp_ticket_template_version_id',
         'counter_id',
         'counter_name',
         'fo_petugas_id',
@@ -99,6 +100,11 @@ class Queue extends Model
     public function service(): BelongsTo
     {
         return $this->belongsTo(MppService::class, 'service_id');
+    }
+
+    public function ticketTemplateVersion(): BelongsTo
+    {
+        return $this->belongsTo(MppTicketTemplateVersion::class, 'mpp_ticket_template_version_id');
     }
 
     public function serviceRequest(): HasOne

@@ -29,8 +29,10 @@ use App\Http\Controllers\Web\MppCitizenController;
 use App\Http\Controllers\Web\MppCounterController;
 use App\Http\Controllers\Web\MppCounterUserController;
 use App\Http\Controllers\Web\MppGeraiController;
+use App\Http\Controllers\Web\MppKioskDeviceController;
 use App\Http\Controllers\Web\MppPelayananController;
 use App\Http\Controllers\Web\MppPengajuanController;
+use App\Http\Controllers\Web\MppTicketTemplateController;
 use App\Http\Controllers\Web\OpdController;
 use App\Http\Controllers\Web\PublicVerificationController;
 use App\Http\Controllers\Web\ReportController;
@@ -131,6 +133,17 @@ Route::middleware('auth')->group(function () {
 
     // MPP Routes (semua di bawah /mpp)
     Route::prefix('mpp')->group(function () {
+        Route::middleware('permission:system.manage')->group(function () {
+            Route::get('template-tiket', [MppTicketTemplateController::class, 'edit'])->name('mpp-ticket-template.edit');
+            Route::post('template-tiket/draft', [MppTicketTemplateController::class, 'update'])->name('mpp-ticket-template.update');
+            Route::post('template-tiket/publish', [MppTicketTemplateController::class, 'publish'])->name('mpp-ticket-template.publish');
+            Route::post('template-tiket/versions/{version}/rollback', [MppTicketTemplateController::class, 'rollback'])->name('mpp-ticket-template.rollback');
+            Route::get('kiosk', [MppKioskDeviceController::class, 'index'])->name('mpp-kiosks.index');
+            Route::post('kiosk', [MppKioskDeviceController::class, 'store'])->name('mpp-kiosks.store');
+            Route::post('kiosk/{mppKioskDevice}/rotate', [MppKioskDeviceController::class, 'rotate'])->name('mpp-kiosks.rotate');
+            Route::post('kiosk/{mppKioskDevice}/toggle', [MppKioskDeviceController::class, 'toggle'])->name('mpp-kiosks.toggle');
+        });
+
         Route::name('mpp-requests.')->group(function () {
             Route::get('/pengajuan', [MppPengajuanController::class, 'index'])->name('index')->middleware('permission:mpp.pengajuan.view');
             Route::get('/pengajuan/{mppServiceRequest}', [MppPengajuanController::class, 'show'])->name('show')->middleware('permission:mpp.pengajuan.view');

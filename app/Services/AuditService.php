@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AuditLog;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
 class AuditService
@@ -12,10 +13,10 @@ class AuditService
      *
      * @param  mixed  $target  Can be a Model instance, a table name string, or null
      */
-    public function log(string $action, mixed $target = null, ?array $newValue = null, ?array $oldValue = null): void
+    public function log(string $action, mixed $target = null, ?array $newValue = null, ?array $oldValue = null, ?User $actor = null): void
     {
         AuditLog::create([
-            'user_id' => Auth::id(),
+            'user_id' => $actor?->id ?? Auth::id(),
             'action' => $action,
             'target_table' => is_object($target) && method_exists($target, 'getTable') ? $target->getTable() : (is_string($target) ? $target : null),
             'target_id' => is_object($target) && method_exists($target, 'getKey') ? $target->getKey() : (is_string($target) ? $target : null),

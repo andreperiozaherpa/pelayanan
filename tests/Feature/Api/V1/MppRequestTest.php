@@ -1,8 +1,11 @@
 <?php
 
 use App\Models\Gerai;
+use App\Models\MppKioskDevice;
 use App\Models\MppService;
 use App\Models\MppServiceRequest;
+use App\Models\MppTicketTemplate;
+use App\Models\MppTicketTemplateVersion;
 use App\Models\Opd;
 use App\Models\Queue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -12,6 +15,8 @@ use Illuminate\Support\Facades\Storage;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    MppKioskDevice::create(['name' => 'Test kiosk', 'token_hash' => hash('sha256', 'test-kiosk-token')]);
+    $this->withToken('test-kiosk-token');
     $this->opd = Opd::create([
         'code' => '11',
         'name' => 'Dinas Kependudukan dan Pencatatan Sipil',
@@ -101,7 +106,13 @@ test('guest dapat mengisi form pelayanan via api', function () {
         ])
         ->assertJsonPath('data.status', 'waiting_fo')
         ->assertJsonPath('data.nomor_antrian', 'A-001')
-        ->assertJsonPath('data.mpp_service_id', $this->service->id);
+        ->assertJsonPath('data.mpp_service_id', $this->service->id)
+        ->assertJsonPath('data.receipt.nomor_antrian', 'A-001')
+        ->assertJsonPath('data.receipt.service_name', 'Layanan KTP')
+        ->assertJsonPath('data.receipt.instansi_name', 'Dinas Kependudukan dan Pencatatan Sipil')
+        ->assertJsonPath('data.receipt.gerai_name', 'Gerai Dukcapil');
+
+    expect($response->json('data.receipt.queue_id'))->toBe($response->json('data.queue_id'));
 
     $this->assertDatabaseHas('mpp_service_requests', [
         'mpp_service_id' => $this->service->id,
@@ -122,6 +133,100 @@ test('guest dapat mengisi form pelayanan via api', function () {
     expect($request->submitted_form_data['nama_lengkap']['value'])->toBe('Budi Santoso');
     expect($request->submitted_form_data['jenis_kelamin']['value'])->toBe('L');
     expect($request->submitted_form_data['foto_ktp']['value'])->toBeNull();
+});
+
+test('kiosk menerima template aktif dan tiket mengikat versi template saat diterbitkan', function () {
+    $layout = [
+        'schema' => 1,
+        'paper_width_mm' => 58,
+        'print_width_mm' => 55,
+        'blocks' => [['type' => 'queue_number', 'align' => 'center']],
+    ];
+    $template = MppTicketTemplate::create(['draft_layout' => $layout]);
+    $version = MppTicketTemplateVersion::create([
+        'mpp_ticket_template_id' => $template->id,
+        'version' => 1,
+        'layout' => $layout,
+        'checksum' => hash('sha256', json_encode($layout, JSON_THROW_ON_ERROR)),
+        'published_at' => now(),
+    ]);
+    $template->update(['active_version_id' => $version->id]);
+
+    $this->getJson('/api/v1/ticket-template')
+        ->assertOk()
+        ->assertHeader('ETag', '"'.$version->checksum.'"')
+        ->assertJsonPath('data.id', $version->id)
+        ->assertJsonPath('data.layout.blocks.0.type', 'queue_number');
+
+    $response = $this->postJson("/api/v1/services/{$this->service->id}/requests", [
+        'form_data' => [
+            'nik' => '1234567890123456',
+            'nama_lengkap' => 'Budi Santoso',
+            'jenis_kelamin' => 'L',
+        ],
+    ]);
+
+    $response->assertCreated()
+        ->assertJsonPath('data.receipt.template_version_id', $version->id);
+
+    expect(Queue::query()->sole()->mpp_ticket_template_version_id)->toBe($version->id);
+});
+
+test('retry pengajuan kiosk dengan idempotency key mengembalikan tiket yang sama', function () {
+    $key = 'kiosk-request-'.fake()->uuid();
+    $payload = [
+        'form_data' => [
+            'nik' => '1234567890123456',
+            'nama_lengkap' => 'Budi Santoso',
+            'jenis_kelamin' => 'L',
+        ],
+        'notes' => 'Berkas lengkap',
+    ];
+
+    $first = $this->withHeaders(['Idempotency-Key' => $key])
+        ->postJson("/api/v1/services/{$this->service->id}/requests", $payload);
+
+    $first->assertCreated()
+        ->assertHeader('Idempotency-Replayed', 'false');
+
+    $second = $this->withHeaders(['Idempotency-Key' => $key])
+        ->postJson("/api/v1/services/{$this->service->id}/requests", $payload);
+
+    $second->assertOk()
+        ->assertHeader('Idempotency-Replayed', 'true')
+        ->assertJsonPath('data.id', $first->json('data.id'))
+        ->assertJsonPath('data.queue_id', $first->json('data.queue_id'));
+
+    $this->assertDatabaseCount('mpp_service_requests', 1);
+    $this->assertDatabaseCount('mpp_queues', 1);
+});
+
+test('idempotency key pengajuan kiosk menolak payload yang berbeda', function () {
+    $key = 'kiosk-request-'.fake()->uuid();
+
+    $this->withHeaders(['Idempotency-Key' => $key])
+        ->postJson("/api/v1/services/{$this->service->id}/requests", [
+            'form_data' => [
+                'nik' => '1234567890123456',
+                'nama_lengkap' => 'Budi Santoso',
+                'jenis_kelamin' => 'L',
+            ],
+        ])
+        ->assertCreated();
+
+    $this->withHeaders(['Idempotency-Key' => $key])
+        ->postJson("/api/v1/services/{$this->service->id}/requests", [
+            'form_data' => [
+                'nik' => '1234567890123456',
+                'nama_lengkap' => 'Budi Santoso',
+                'jenis_kelamin' => 'P',
+            ],
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('idempotency_key');
+
+    $this->assertDatabaseCount('mpp_service_requests', 1);
+    $this->assertDatabaseCount('mpp_queues', 1);
 });
 
 test('isi form api memvalidasi field wajib', function () {

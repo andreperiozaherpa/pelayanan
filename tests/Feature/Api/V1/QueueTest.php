@@ -3,6 +3,7 @@
 use App\Models\Counter;
 use App\Models\CounterUser;
 use App\Models\Gerai;
+use App\Models\MppKioskDevice;
 use App\Models\MppService;
 use App\Models\Opd;
 use App\Models\Queue;
@@ -15,6 +16,9 @@ use Laravel\Sanctum\Sanctum;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    config(['services.firebase.credentials' => null, 'services.firebase.database_url' => null]);
+    MppKioskDevice::create(['name' => 'Test kiosk', 'token_hash' => hash('sha256', 'test-kiosk-token')]);
+    $this->withToken('test-kiosk-token');
     $this->seed(RBACSeeder::class);
 
     $this->roleFo = Role::where('slug', 'petugasfrontoffice')->first();
@@ -100,6 +104,14 @@ test('guest can take a queue number with gerai code prefix', function () {
     ]);
 });
 
+test('ticket issuance requires an active kiosk token', function () {
+    MppKioskDevice::query()->update(['is_active' => false]);
+
+    $this->postJson('/api/v1/tickets', ['service_id' => $this->service->id])
+        ->assertUnauthorized()
+        ->assertJsonPath('success', false);
+});
+
 test('queue number increments per service', function () {
     $this->postJson('/api/v1/tickets', ['service_id' => $this->service->id]);
 
@@ -107,6 +119,49 @@ test('queue number increments per service', function () {
 
     $response->assertOk()
         ->assertJsonPath('data.nomor_antrian', 'A-002');
+});
+
+test('ticket request with the same idempotency key returns the original ticket', function () {
+    $key = 'kiosk-queue-'.fake()->uuid();
+
+    $first = $this->withHeaders(['Idempotency-Key' => $key])
+        ->postJson('/api/v1/tickets', ['service_id' => $this->service->id]);
+
+    $first->assertOk()
+        ->assertHeader('Idempotency-Replayed', 'false');
+
+    $second = $this->withHeaders(['Idempotency-Key' => $key])
+        ->postJson('/api/v1/tickets', ['service_id' => $this->service->id]);
+
+    $second->assertOk()
+        ->assertHeader('Idempotency-Replayed', 'true')
+        ->assertJsonPath('data.id', $first->json('data.id'));
+
+    $this->assertDatabaseCount('mpp_queues', 1);
+    $this->assertDatabaseHas('mpp_ticket_idempotency_keys', [
+        'operation' => 'ticket',
+        'key' => $key,
+        'queue_id' => $first->json('data.id'),
+    ]);
+});
+
+test('ticket request rejects an idempotency key reused with a different payload', function () {
+    $key = 'kiosk-queue-'.fake()->uuid();
+
+    $this->withHeaders(['Idempotency-Key' => $key])
+        ->postJson('/api/v1/tickets', ['service_id' => $this->service->id])
+        ->assertOk();
+
+    $this->withHeaders(['Idempotency-Key' => $key])
+        ->postJson('/api/v1/tickets', [
+            'service_id' => $this->service->id,
+            'priority' => true,
+            'priority_type' => 'lansia',
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('idempotency_key');
+
+    $this->assertDatabaseCount('mpp_queues', 1);
 });
 
 test('queue number is unique across services of the same gerai', function () {
@@ -200,6 +255,24 @@ test('fo can call next ticket to calling_fo', function () {
         ->assertJsonPath('data.fo_petugas_id', $fo->id);
 
     expect($ticket->fresh()->status)->toBe('calling_fo');
+});
+
+test('fo cannot call a second ticket while still serving one', function () {
+    $fo = makeFoUser($this->roleFo);
+    $first = Queue::factory()->create(['service_id' => $this->service->id]);
+    $second = Queue::factory()->create(['service_id' => $this->service->id]);
+
+    Sanctum::actingAs($fo);
+
+    $this->postJson('/api/v1/fo/call')
+        ->assertOk()
+        ->assertJsonPath('data.id', $first->id);
+
+    $this->postJson('/api/v1/fo/call')
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('queue');
+
+    expect($second->fresh()->status)->toBe(Queue::STATUS_WAITING_FO);
 });
 
 test('fo waiting and calling lists', function () {
@@ -330,8 +403,7 @@ test('gerai sees waiting tickets of its instansi and calling only for own counte
         ->assertJsonMissingPath('data.2');
 
     $this->getJson("/api/v1/gerai/{$otherCounter->id}/waiting")
-        ->assertOk()
-        ->assertJsonCount(2, 'data');
+        ->assertForbidden();
 
     $this->getJson("/api/v1/gerai/{$this->counter->id}/calling")
         ->assertOk()
@@ -355,6 +427,24 @@ test('gerai can call next waiting ticket of its instansi', function () {
         ->and($ticket->counter_name)->toBe($this->counter->name);
 });
 
+test('gerai cannot call a second ticket while its counter is still serving one', function () {
+    $petugas = makeGeraiUser($this->roleGerai, $this->counter);
+    $first = Queue::factory()->create(['service_id' => $this->service->id, 'status' => Queue::STATUS_WAITING_GERAI]);
+    $second = Queue::factory()->create(['service_id' => $this->service->id, 'status' => Queue::STATUS_WAITING_GERAI]);
+
+    Sanctum::actingAs($petugas);
+
+    $this->postJson('/api/v1/gerai/call')
+        ->assertOk()
+        ->assertJsonPath('data.id', $first->id);
+
+    $this->postJson('/api/v1/gerai/call')
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('queue');
+
+    expect($second->fresh()->status)->toBe(Queue::STATUS_WAITING_GERAI);
+});
+
 test('ticket disappears from other gerai waiting after being called', function () {
     $petugas = makeGeraiUser($this->roleGerai, $this->counter);
     $otherCounter = Counter::create(['gerai_id' => $this->gerai->id, 'code' => 'B', 'name' => 'Loket 2', 'is_active' => true]);
@@ -364,10 +454,12 @@ test('ticket disappears from other gerai waiting after being called', function (
 
     $this->postJson('/api/v1/gerai/call')->assertOk();
 
+    Sanctum::actingAs(makeGeraiUser($this->roleGerai, $otherCounter));
     $this->getJson("/api/v1/gerai/{$otherCounter->id}/waiting")
         ->assertOk()
         ->assertJsonCount(0, 'data');
 
+    Sanctum::actingAs($petugas);
     $this->getJson("/api/v1/gerai/{$this->counter->id}/calling")
         ->assertOk()
         ->assertJsonPath('data.id', $ticket->id);
@@ -417,7 +509,7 @@ test('gerai cannot recall a calling ticket assigned to another counter', functio
 
     $this->postJson('/api/v1/gerai/recall', [
         'ticket_id' => $ticket->id,
-    ])->assertStatus(422)
+    ])->assertForbidden()
         ->assertJsonPath('success', false);
 
     expect($ticket->fresh()->status)->toBe('calling_gerai');
@@ -432,7 +524,7 @@ test('gerai cannot complete a calling ticket assigned to another counter', funct
 
     $this->postJson('/api/v1/gerai/complete', [
         'ticket_id' => $ticket->id,
-    ])->assertStatus(422)
+    ])->assertForbidden()
         ->assertJsonPath('success', false);
 
     expect($ticket->fresh()->status)->toBe('calling_gerai');

@@ -8,21 +8,30 @@ use App\Http\Controllers\Api\V1\MppRequestController;
 use App\Http\Controllers\Api\V1\MppServiceController;
 use App\Http\Controllers\Api\V1\MppSkmController;
 use App\Http\Controllers\Api\V1\MppTicketController;
+use App\Http\Controllers\Api\V1\MppTicketTemplateController;
 use App\Http\Controllers\Api\V1\PovertyController;
+use App\Http\Middleware\EnsureActiveApiUser;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::prefix('auth')->group(function () {
-        Route::post('/login', [AuthController::class, 'login']);
-        Route::post('/refresh', [AuthController::class, 'refresh']);
-        Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+        Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:api-login');
+        Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('throttle:api-refresh');
+        Route::middleware(['auth:sanctum', EnsureActiveApiUser::class])->group(function () {
+            Route::post('/logout', [AuthController::class, 'logout']);
+            Route::post('/logout-all', [AuthController::class, 'logoutAll']);
+        });
     });
 
     // Publik — dipakai kiosk (Gerai) tanpa login
     Route::get('/services', [MppServiceController::class, 'index']);
     Route::get('/services/{service}', [MppServiceController::class, 'show'])->whereNumber('service');
-    Route::post('/services/{service}/requests', [MppRequestController::class, 'store'])->whereNumber('service');
-    Route::post('/tickets', [MppTicketController::class, 'store']);
+    Route::middleware('mpp.kiosk')->group(function () {
+        Route::post('/services/{service}/requests', [MppRequestController::class, 'store'])->whereNumber('service');
+        Route::post('/tickets', [MppTicketController::class, 'store']);
+        Route::get('/ticket-template', [MppTicketTemplateController::class, 'active']);
+        Route::get('/ticket-templates/{version}', [MppTicketTemplateController::class, 'show'])->whereNumber('version');
+    });
 
     // Publik — data layar display (riwayat antrian hari ini)
     Route::get('/display/history', [DisplayController::class, 'history']);
@@ -31,7 +40,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/opd/{opd}/skm', [MppSkmController::class, 'questions'])->whereNumber('opd');
     Route::post('/opd/{opd}/skm', [MppSkmController::class, 'store'])->whereNumber('opd');
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', EnsureActiveApiUser::class])->group(function () {
         Route::get('/gerai', [MppServiceController::class, 'geraiIndex']);
 
         Route::prefix('fo')->group(function () {

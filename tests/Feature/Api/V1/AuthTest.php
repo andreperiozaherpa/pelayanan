@@ -2,6 +2,7 @@
 
 use App\Models\Role;
 use App\Models\User;
+use App\Services\ApiSessionService;
 use Database\Seeders\RBACSeeder;
 use Database\Seeders\VillageSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -104,7 +105,7 @@ test('token refresh rotates the token', function () {
 test('authenticated user can logout and audit log is recorded', function () {
     $role = Role::where('slug', 'superadmin')->first();
     $user = User::factory()->create(['role_id' => $role->id]);
-    $token = $user->createToken('test-token')->plainTextToken;
+    $token = app(ApiSessionService::class)->create($user)['access_token'];
 
     $response = $this->withHeader('Authorization', 'Bearer '.$token)
         ->postJson('/api/v1/auth/logout');

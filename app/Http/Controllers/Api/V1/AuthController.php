@@ -7,14 +7,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\LoginRequest;
 use App\Http\Resources\V1\UserResource;
 use App\Models\User;
+use App\Services\ApiSessionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
+    public function __construct(private readonly ApiSessionService $sessions) {}
+
     public function login(LoginRequest $request): JsonResponse
     {
         $login = $request->input('login', $request->input('username'));
@@ -49,23 +50,17 @@ class AuthController extends Controller
             ], 403);
         }
 
-        Auth::login($user);
-
-        $tokenName = 'auth_token_'.md5($request->ip().$request->userAgent());
-        $accessToken = $user->createToken($tokenName, ['*'], now()->addHours(8))->plainTextToken;
-        $refreshName = 'refresh_'.$tokenName;
-        $refreshToken = $user->createToken($refreshName, ['*'], now()->addDays(30))->plainTextToken;
+        $tokens = $this->sessions->create($user);
 
         Audit::log('login_success', $user, [
             'ip' => $request->ip(),
             'ua' => $request->userAgent(),
-        ]);
+        ], actor: $user);
 
         return response()->json([
             'success' => true,
             'data' => [
-                'access_token' => $accessToken,
-                'refresh_token' => $refreshToken,
+                ...$tokens,
                 'user' => new UserResource($user),
             ],
         ]);
@@ -73,32 +68,11 @@ class AuthController extends Controller
 
     public function refresh(Request $request): JsonResponse
     {
-        $request->validate(['refresh_token' => ['required', 'string']]);
-
-        $tokenId = explode('|', $request->refresh_token)[0] ?? null;
-        $token = $tokenId ? PersonalAccessToken::find($tokenId) : null;
-
-        if (! $token || ! str_starts_with($token->name, 'refresh_') || ($token->expires_at && $token->expires_at->isPast())) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Invalid or expired refresh token',
-            ], 401);
-        }
-
-        $user = $token->tokenable;
-        $token->delete();
-
-        $tokenName = 'auth_token_'.md5($request->ip().$request->userAgent());
-        $accessToken = $user->createToken($tokenName, ['*'], now()->addHours(8))->plainTextToken;
-        $refreshName = 'refresh_'.$tokenName;
-        $refreshToken = $user->createToken($refreshName, ['*'], now()->addDays(30))->plainTextToken;
+        $validated = $request->validate(['refresh_token' => ['required', 'string', 'max:512']]);
 
         return response()->json([
             'success' => true,
-            'data' => [
-                'access_token' => $accessToken,
-                'refresh_token' => $refreshToken,
-            ],
+            'data' => $this->sessions->refresh($validated['refresh_token']),
         ]);
     }
 
@@ -106,13 +80,21 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
+        $this->sessions->revoke($user);
         Audit::log('logout', $user);
-
-        $user->currentAccessToken()->delete();
 
         return response()->json([
             'success' => true,
             'message' => 'Successfully logged out',
         ]);
+    }
+
+    public function logoutAll(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $this->sessions->revoke($user, all: true);
+        Audit::log('logout_all', $user);
+
+        return response()->json(['success' => true, 'message' => 'Successfully logged out from all devices']);
     }
 }

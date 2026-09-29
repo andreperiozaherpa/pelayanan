@@ -73,7 +73,7 @@
 
                         @if (Auth::user()->can('service.report'))
                             <a href="{{ route('mpp-requests.index') }}"
-                                class="flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('mpp-requests.*') || request()->routeIs('mpp-services.*') || request()->routeIs('counter-users.*') || request()->routeIs('counters.*') || request()->routeIs('gerais.*') || request()->routeIs('skm.*') || request()->routeIs('display-settings.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
+                                class="flex flex-col items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 {{ request()->routeIs('mpp-requests.*') || request()->routeIs('mpp-services.*') || request()->routeIs('counter-users.*') || request()->routeIs('counters.*') || request()->routeIs('gerais.*') || request()->routeIs('mpp-kiosks.*') || request()->routeIs('mpp-ticket-template.*') || request()->routeIs('skm.*') || request()->routeIs('display-settings.*') ? 'bg-white shadow-sm dark:bg-slate-800 text-primary-acorn' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200' }}"
                                 title="MPP - Mal Pelayanan Publik">
                                 <iconify-icon icon="lucide:building-2" class="text-xl"></iconify-icon>
                                 <span class="text-[8px] font-semibold mt-0.5 leading-none">MPP</span>
@@ -139,6 +139,8 @@
                                     request()->routeIs('counter-users.*') ||
                                     request()->routeIs('counters.*') ||
                                     request()->routeIs('gerais.*') ||
+                                    request()->routeIs('mpp-kiosks.*') ||
+                                    request()->routeIs('mpp-ticket-template.*') ||
                                     request()->routeIs('skm.*') ||
                                     request()->routeIs('display-settings.*'))
                                 <div class="px-4 py-4">
@@ -174,6 +176,10 @@
                                         icon="lucide:file-text">Pelayanan MPP</x-nav-link>
                                     <x-nav-link href="{{ route('counter-users.index') }}" :active="request()->routeIs('counter-users.*')"
                                         icon="lucide:user-cog">Penugasan Loket</x-nav-link>
+                                    <x-nav-link href="{{ route('mpp-kiosks.index') }}" :active="request()->routeIs('mpp-kiosks.*')"
+                                        icon="lucide:monitor-smartphone">Kiosk & Token</x-nav-link>
+                                    <x-nav-link href="{{ route('mpp-ticket-template.edit') }}" :active="request()->routeIs('mpp-ticket-template.*')"
+                                        icon="lucide:receipt-text">Template Tiket Antrian</x-nav-link>
                                 @endcan
 
                                 @can('mpp.display.settings')

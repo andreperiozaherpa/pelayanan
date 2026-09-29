@@ -157,6 +157,32 @@ test('foSkip menghapus kartu loket fo', function () {
     $this->firebaseMock->shouldHaveReceived('setActiveCounter')->with('fo', null);
 });
 
+test('foForward menghapus kartu loket fo', function () {
+    $fo = makeDisplayFoUser($this->roleFo);
+    $ticket = makeDisplayLinkedTicket($this->service);
+    $service = app(QueueService::class);
+
+    $service->foCall($fo);
+    $service->foForward($ticket->fresh(), $fo);
+
+    expect($ticket->fresh()->status)->toBe(Queue::STATUS_WAITING_GERAI);
+
+    $this->firebaseMock->shouldHaveReceived('setActiveCounter')->with('fo', null);
+});
+
+test('foReject menghapus kartu loket fo', function () {
+    $fo = makeDisplayFoUser($this->roleFo);
+    $ticket = makeDisplayLinkedTicket($this->service);
+    $service = app(QueueService::class);
+
+    $service->foCall($fo);
+    $service->foReject($ticket->fresh(), $fo, 'Berkas tidak lengkap');
+
+    expect($ticket->fresh()->status)->toBe(Queue::STATUS_REJECTED);
+
+    $this->firebaseMock->shouldHaveReceived('setActiveCounter')->with('fo', null);
+});
+
 test('geraiCall mempublikasikan current_call dan kartu loket gerai', function () {
     $fo = makeDisplayFoUser($this->roleFo);
     $petugas = makeDisplayGeraiUser($this->roleGerai, $this->counter);

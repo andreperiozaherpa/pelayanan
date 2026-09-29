@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Contract\Database;
 use Kreait\Firebase\Exception\FirebaseException;
 use Kreait\Firebase\Factory;
@@ -25,7 +26,7 @@ class FirebaseService
         }
 
         if (! str_starts_with($credentialsPath, '/')) {
-        $credentialsPath = base_path($credentialsPath);
+            $credentialsPath = base_path($credentialsPath);
         }
 
         if (! file_exists($credentialsPath)) {
@@ -39,15 +40,16 @@ class FirebaseService
 
             return $factory->createDatabase();
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('Firebase Init Error: ' . $e->getMessage());
+            Log::error('Firebase initialization failed', ['exception' => $e]);
+
             return null;
         }
     }
 
-    public function broadcastQueueEvent(string $event, array $data): void
+    public function broadcastQueueEvent(string $event, array $data): bool
     {
         if (! $this->database) {
-            return;
+            return false;
         }
 
         try {
@@ -56,7 +58,12 @@ class FirebaseService
                 'data' => $data,
                 'timestamp' => now()->toIso8601String(),
             ]);
-        } catch (FirebaseException) {
+
+            return true;
+        } catch (FirebaseException $exception) {
+            Log::warning('Firebase queue event publication failed', ['event' => $event, 'exception' => $exception]);
+
+            return false;
         }
     }
 
@@ -69,7 +76,8 @@ class FirebaseService
         try {
             $ref = $this->database->getReference('queues');
             $ref->set($queues);
-        } catch (FirebaseException) {
+        } catch (FirebaseException $exception) {
+            Log::warning('Firebase queue sync failed', ['exception' => $exception]);
         }
     }
 
@@ -91,7 +99,9 @@ class FirebaseService
             $value = $this->database->getReference($path)->getSnapshot()->getValue();
 
             return is_array($value) ? $value : null;
-        } catch (FirebaseException) {
+        } catch (FirebaseException $exception) {
+            Log::warning('Firebase value read failed', ['path' => $path, 'exception' => $exception]);
+
             return null;
         }
     }
@@ -130,7 +140,8 @@ class FirebaseService
             $history = array_slice($history, 0, $limit);
 
             $ref->set($history);
-        } catch (FirebaseException) {
+        } catch (FirebaseException $exception) {
+            Log::warning('Firebase recent history publication failed', ['exception' => $exception]);
         }
     }
 
@@ -147,7 +158,8 @@ class FirebaseService
         try {
             $ref = $this->database->getReference("active_counters/{$key}");
             $data === null ? $ref->remove() : $ref->set($data);
-        } catch (FirebaseException) {
+        } catch (FirebaseException $exception) {
+            Log::warning('Firebase active counter publication failed', ['key' => $key, 'exception' => $exception]);
         }
     }
 
@@ -159,7 +171,8 @@ class FirebaseService
 
         try {
             $this->database->getReference($path)->set($value);
-        } catch (FirebaseException) {
+        } catch (FirebaseException $exception) {
+            Log::warning('Firebase value publication failed', ['path' => $path, 'exception' => $exception]);
         }
     }
 }

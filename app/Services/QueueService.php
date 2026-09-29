@@ -2,11 +2,15 @@
 
 namespace App\Services;
 
+use App\Models\Counter;
 use App\Models\Gerai;
 use App\Models\MppService;
 use App\Models\MppServiceRequest;
+use App\Models\MppTicketIdempotencyKey;
+use App\Models\MppTicketTemplate;
 use App\Models\Opd;
 use App\Models\Queue;
+use App\Models\QueueRealtimeEvent;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
@@ -25,25 +29,79 @@ class QueueService
      */
     public function takeTicket(int $serviceId, bool $priority = false, ?string $priorityType = null): Queue
     {
-        return DB::transaction(function () use ($serviceId, $priority, $priorityType) {
-            $service = MppService::query()
-                ->with('opd.gerais')
-                ->whereKey($serviceId)
+        return DB::transaction(
+            fn (): Queue => $this->takeTicketLocked($serviceId, $priority, $priorityType),
+            attempts: 3,
+        );
+    }
+
+    /**
+     * @return array{0: Queue, 1: bool}
+     */
+    public function takeTicketIdempotently(int $serviceId, bool $priority, ?string $priorityType, string $key): array
+    {
+        $payloadHash = hash('sha256', json_encode([
+            'service_id' => $serviceId,
+            'priority' => $priority,
+            'priority_type' => $priorityType,
+        ], JSON_THROW_ON_ERROR));
+
+        return DB::transaction(function () use ($serviceId, $priority, $priorityType, $key, $payloadHash): array {
+            $created = DB::table('mpp_ticket_idempotency_keys')->insertOrIgnore([
+                'operation' => 'ticket',
+                'key' => $key,
+                'payload_hash' => $payloadHash,
+                'service_id' => $serviceId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $idempotencyKey = MppTicketIdempotencyKey::query()
+                ->where('operation', 'ticket')
+                ->where('key', $key)
                 ->lockForUpdate()
-                ->first();
+                ->firstOrFail();
 
-            if (! $service) {
-                throw (new ModelNotFoundException)->setModel(MppService::class, [$serviceId]);
+            if (! hash_equals($idempotencyKey->payload_hash, $payloadHash)) {
+                throw ValidationException::withMessages([
+                    'idempotency_key' => 'Kunci idempotensi sudah digunakan untuk permintaan yang berbeda.',
+                ]);
             }
 
-            if (! $service->is_active) {
-                throw ValidationException::withMessages(['service_id' => 'Layanan tidak aktif.']);
+            if (! $created) {
+                return [
+                    Queue::query()->whereKey($idempotencyKey->queue_id)->lockForUpdate()->firstOrFail(),
+                    true,
+                ];
             }
 
-            $number = $this->generateNomorAntrian($service, $priority);
+            $ticket = $this->takeTicketLocked($serviceId, $priority, $priorityType);
 
-            return $this->createTicket($service, $number, $priority, $priorityType);
-        });
+            $idempotencyKey->update(['queue_id' => $ticket->id]);
+
+            return [$ticket, false];
+        }, attempts: 3);
+    }
+
+    private function takeTicketLocked(int $serviceId, bool $priority, ?string $priorityType): Queue
+    {
+        $service = MppService::query()
+            ->with('opd.gerais')
+            ->whereKey($serviceId)
+            ->lockForUpdate()
+            ->first();
+
+        if (! $service) {
+            throw (new ModelNotFoundException)->setModel(MppService::class, [$serviceId]);
+        }
+
+        if (! $service->is_active) {
+            throw ValidationException::withMessages(['service_id' => 'Layanan tidak aktif.']);
+        }
+
+        $number = $this->generateNomorAntrian($service, $priority);
+
+        return $this->createTicket($service, $number, $priority, $priorityType);
     }
 
     /**
@@ -59,6 +117,7 @@ class QueueService
         $ticket = Queue::create([
             'number' => $number,
             'service_id' => $service->id,
+            'mpp_ticket_template_version_id' => MppTicketTemplate::query()->value('active_version_id'),
             'status' => Queue::STATUS_WAITING_FO,
             'is_priority' => $priority,
             'priority_type' => $priority ? $priorityType : null,
@@ -139,19 +198,37 @@ class QueueService
 
     public function foCall(User $petugas): Queue
     {
-        $ticket = Queue::query()->waitingFo()->priorityFirst()->first();
+        $ticket = DB::transaction(function () use ($petugas) {
+            User::query()->whereKey($petugas->id)->lockForUpdate()->firstOrFail();
 
-        if (! $ticket) {
-            throw new \RuntimeException('Tidak ada antrian.');
-        }
+            $activeTicket = Queue::query()
+                ->callingFo()
+                ->where('fo_petugas_id', $petugas->id)
+                ->lockForUpdate()
+                ->first();
 
-        $ticket->update([
-            'status' => Queue::STATUS_CALLING_FO,
-            'fo_petugas_id' => $petugas->id,
-            'called_at' => now(),
-            'fo_called_at' => now(),
-            'fo_finished_at' => null,
-        ]);
+            if ($activeTicket) {
+                throw ValidationException::withMessages([
+                    'queue' => 'Petugas masih melayani antrian lain.',
+                ]);
+            }
+
+            $ticket = Queue::query()->waitingFo()->priorityFirst()->lockForUpdate()->first();
+
+            if (! $ticket) {
+                throw new \RuntimeException('Tidak ada antrian.');
+            }
+
+            $ticket->update([
+                'status' => Queue::STATUS_CALLING_FO,
+                'fo_petugas_id' => $petugas->id,
+                'called_at' => now(),
+                'fo_called_at' => now(),
+                'fo_finished_at' => null,
+            ]);
+
+            return $ticket;
+        }, attempts: 3);
 
         $this->broadcast('fo:call', ['ticket' => $ticket->id, 'number' => $ticket->number]);
         $this->broadcastDisplayCall($ticket, 'Front Office');
@@ -163,17 +240,24 @@ class QueueService
 
     public function foForward(Queue $ticket, User $petugas, ?string $catatan = null): Queue
     {
-        $ticket->loadMissing('service.opd');
+        $ticket = DB::transaction(function () use ($ticket, $petugas, $catatan): Queue {
+            $ticket = $this->lockedTicket($ticket);
+            $this->ensureLockedStatus($ticket, [Queue::STATUS_WAITING_FO, Queue::STATUS_CALLING_FO], 'Tiket tidak dapat dilanjutkan ke gerai.');
 
-        $ticket->update([
-            'status' => Queue::STATUS_WAITING_GERAI,
-            'counter_id' => null,
-            'counter_name' => null,
-            'fo_petugas_id' => $petugas->id,
-            'notes' => $catatan ?: null,
-            'called_at' => null,
-            'fo_finished_at' => now(),
-        ]);
+            $ticket->update([
+                'status' => Queue::STATUS_WAITING_GERAI,
+                'counter_id' => null,
+                'counter_name' => null,
+                'fo_petugas_id' => $petugas->id,
+                'notes' => $catatan ?: null,
+                'called_at' => null,
+                'fo_finished_at' => now(),
+            ]);
+
+            return $ticket;
+        }, attempts: 3);
+
+        $ticket->loadMissing('service.opd');
 
         $this->broadcast('fo:forward', [
             'ticket' => $ticket->id,
@@ -181,20 +265,33 @@ class QueueService
             'instansi' => $ticket->service?->opd?->name,
         ]);
 
+        // FO selesai melayani tiket ini — hapus kartu "fo" agar tidak ada
+        // nomor tersisa di panel loket saat tidak ada layanan berjalan.
+        $this->firebase->setActiveCounter('fo', null);
+
         return $ticket;
     }
 
     public function foReject(Queue $ticket, User $petugas, string $alasan): Queue
     {
-        $ticket->update([
-            'status' => Queue::STATUS_REJECTED,
-            'fo_petugas_id' => $petugas->id,
-            'alasan_reject' => $alasan,
-            'called_at' => null,
-            'fo_finished_at' => now(),
-        ]);
+        $ticket = DB::transaction(function () use ($ticket, $petugas, $alasan): Queue {
+            $ticket = $this->lockedTicket($ticket);
+            $this->ensureLockedStatus($ticket, [Queue::STATUS_WAITING_FO, Queue::STATUS_CALLING_FO], 'Tiket tidak dapat ditolak.');
+
+            $ticket->update([
+                'status' => Queue::STATUS_REJECTED,
+                'fo_petugas_id' => $petugas->id,
+                'alasan_reject' => $alasan,
+                'called_at' => null,
+                'fo_finished_at' => now(),
+            ]);
+
+            return $ticket;
+        }, attempts: 3);
 
         $this->broadcast('fo:reject', ['ticket' => $ticket->id, 'number' => $ticket->number]);
+
+        $this->firebase->setActiveCounter('fo', null);
 
         $this->appendHistory($ticket, 'Tidak Hadir', 'Front Office');
 
@@ -203,7 +300,13 @@ class QueueService
 
     public function foRecall(Queue $ticket): Queue
     {
-        $ticket->update(['called_at' => now()]);
+        $ticket = DB::transaction(function () use ($ticket): Queue {
+            $ticket = $this->lockedTicket($ticket);
+            $this->ensureLockedStatus($ticket, [Queue::STATUS_CALLING_FO], 'Tiket tidak sedang dipanggil di Front Office.');
+            $ticket->update(['called_at' => now()]);
+
+            return $ticket;
+        }, attempts: 3);
 
         $this->broadcastDisplayCall($ticket, 'Front Office');
 
@@ -214,13 +317,20 @@ class QueueService
 
     public function foSkip(Queue $ticket): Queue
     {
-        $ticket->update([
-            'status' => Queue::STATUS_WAITING_FO,
-            'fo_petugas_id' => null,
-            'called_at' => null,
-            'fo_finished_at' => now(),
-            'skipped_at' => now(),
-        ]);
+        $ticket = DB::transaction(function () use ($ticket): Queue {
+            $ticket = $this->lockedTicket($ticket);
+            $this->ensureLockedStatus($ticket, [Queue::STATUS_CALLING_FO], 'Tiket tidak sedang dipanggil di Front Office.');
+
+            $ticket->update([
+                'status' => Queue::STATUS_WAITING_FO,
+                'fo_petugas_id' => null,
+                'called_at' => null,
+                'fo_finished_at' => now(),
+                'skipped_at' => now(),
+            ]);
+
+            return $ticket;
+        }, attempts: 3);
 
         $this->broadcast('fo:skip', ['ticket' => $ticket->id, 'number' => $ticket->number]);
 
@@ -231,29 +341,51 @@ class QueueService
 
     public function geraiCall(User $petugas): Queue
     {
-        $counter = $petugas->activeCounter();
+        [$ticket, $counter] = DB::transaction(function () use ($petugas) {
+            $counterId = $petugas->activeCounter()?->id;
 
-        if (! $counter) {
-            throw new \RuntimeException('Petugas belum terdaftar pada gerai/loket mana pun.');
-        }
+            if (! $counterId) {
+                throw new \RuntimeException('Petugas belum terdaftar pada gerai/loket mana pun.');
+            }
 
-        $ticket = Queue::query()
-            ->waitingGerai($counter->gerai?->opd_id)
-            ->priorityFirst()
-            ->first();
+            $counter = Counter::query()
+                ->with('gerai')
+                ->whereKey($counterId)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        if (! $ticket) {
-            throw new \RuntimeException('Tidak ada antrian.');
-        }
+            $activeTicket = Queue::query()
+                ->callingGerai($counter->id)
+                ->lockForUpdate()
+                ->first();
 
-        $ticket->update([
-            'status' => Queue::STATUS_CALLING_GERAI,
-            'counter_id' => $counter->id,
-            'counter_name' => $counter->name,
-            'gerai_petugas_id' => $petugas->id,
-            'called_at' => now(),
-            'gerai_called_at' => now(),
-        ]);
+            if ($activeTicket) {
+                throw ValidationException::withMessages([
+                    'queue' => 'Loket masih melayani antrian lain.',
+                ]);
+            }
+
+            $ticket = Queue::query()
+                ->waitingGerai($counter->gerai?->opd_id)
+                ->priorityFirst()
+                ->lockForUpdate()
+                ->first();
+
+            if (! $ticket) {
+                throw new \RuntimeException('Tidak ada antrian.');
+            }
+
+            $ticket->update([
+                'status' => Queue::STATUS_CALLING_GERAI,
+                'counter_id' => $counter->id,
+                'counter_name' => $counter->name,
+                'gerai_petugas_id' => $petugas->id,
+                'called_at' => now(),
+                'gerai_called_at' => now(),
+            ]);
+
+            return [$ticket, $counter];
+        }, attempts: 3);
 
         $this->broadcast('gerai:call', ['ticket' => $ticket->id, 'number' => $ticket->number, 'gerai' => $counter->name]);
         $this->broadcastDisplayCall($ticket, $counter->name);
@@ -265,12 +397,19 @@ class QueueService
 
     public function geraiComplete(Queue $ticket, User $petugas, ?string $catatan = null): Queue
     {
-        $ticket->update([
-            'status' => Queue::STATUS_DONE,
-            'gerai_petugas_id' => $petugas->id,
-            'notes' => $catatan ?: null,
-            'done_at' => now(),
-        ]);
+        $ticket = DB::transaction(function () use ($ticket, $petugas, $catatan): Queue {
+            $ticket = $this->lockedTicket($ticket);
+            $this->ensureLockedStatus($ticket, [Queue::STATUS_CALLING_GERAI], 'Tiket tidak sedang dilayani di gerai.');
+
+            $ticket->update([
+                'status' => Queue::STATUS_DONE,
+                'gerai_petugas_id' => $petugas->id,
+                'notes' => $catatan ?: null,
+                'done_at' => now(),
+            ]);
+
+            return $ticket;
+        }, attempts: 3);
 
         $this->broadcast('gerai:complete', ['ticket' => $ticket->id, 'number' => $ticket->number]);
 
@@ -288,10 +427,17 @@ class QueueService
      */
     public function geraiRecall(Queue $ticket): Queue
     {
-        $ticket->update([
-            'called_at' => now(),
-            'gerai_called_at' => now(),
-        ]);
+        $ticket = DB::transaction(function () use ($ticket): Queue {
+            $ticket = $this->lockedTicket($ticket);
+            $this->ensureLockedStatus($ticket, [Queue::STATUS_CALLING_GERAI], 'Tiket tidak sedang dilayani di gerai.');
+
+            $ticket->update([
+                'called_at' => now(),
+                'gerai_called_at' => now(),
+            ]);
+
+            return $ticket;
+        }, attempts: 3);
 
         $this->broadcast('gerai:call', ['ticket' => $ticket->id, 'number' => $ticket->number, 'gerai' => $ticket->counter_name]);
         $this->broadcastDisplayCall($ticket, $ticket->counter_name);
@@ -299,6 +445,21 @@ class QueueService
         $this->publishDisplayCall($ticket, $ticket->counter_name, 'gerai-'.$ticket->counter_id);
 
         return $ticket;
+    }
+
+    private function lockedTicket(Queue $ticket): Queue
+    {
+        return Queue::query()->whereKey($ticket->id)->lockForUpdate()->firstOrFail();
+    }
+
+    /**
+     * @param  array<int, string>  $statuses
+     */
+    private function ensureLockedStatus(Queue $ticket, array $statuses, string $message): void
+    {
+        if (! in_array($ticket->status, $statuses, true)) {
+            throw ValidationException::withMessages(['ticket_id' => $message]);
+        }
     }
 
     private function broadcastDisplayCall(Queue $ticket, string $tujuan): void
@@ -346,6 +507,16 @@ class QueueService
 
     private function broadcast(string $event, array $data): void
     {
-        $this->firebase->broadcastQueueEvent($event, $data);
+        if (! $this->firebase->isReady()) {
+            return;
+        }
+
+        if (! $this->firebase->broadcastQueueEvent($event, $data)) {
+            QueueRealtimeEvent::create([
+                'event' => $event,
+                'payload' => $data,
+                'next_attempt_at' => now()->addMinute(),
+            ]);
+        }
     }
 }

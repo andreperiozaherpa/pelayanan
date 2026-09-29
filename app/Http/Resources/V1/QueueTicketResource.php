@@ -18,6 +18,7 @@ class QueueTicketResource extends JsonResource
             'id' => $this->id,
             'nomor_antrian' => $this->number,
             'service_id' => $this->service_id,
+            'template_version_id' => $this->mpp_ticket_template_version_id,
             'service_name' => $this->service?->name,
             'counter_tujuan_id' => $this->counter_id,
             'counter_tujuan' => $this->counter_name,

@@ -181,6 +181,12 @@ class User extends Authenticatable
 
     public function activeCounter(): ?Counter
     {
-        return $this->activeCounterAssignments()->with('counter.gerai.opd')->first()?->counter;
+        return $this->activeCounterAssignments()
+            ->whereHas('counter', function (Builder $query) {
+                $query->where('is_active', true)
+                    ->whereHas('gerai', fn (Builder $gerai) => $gerai->where('is_active', true)->whereNotNull('opd_id'));
+            })
+            ->with('counter.gerai.opd')
+            ->first()?->counter;
     }
 }
