@@ -81,7 +81,7 @@ class MppTicketTemplateController extends Controller
             throw ValidationException::withMessages(['layout' => 'Layout harus memiliki daftar blok.']);
         }
 
-        $allowed = ['logo', 'title', 'subtitle', 'queue_number', 'priority', 'service', 'agency', 'remaining_queue', 'datetime', 'barcode', 'divider', 'footer'];
+        $allowed = ['logo', 'title', 'subtitle', 'queue_number', 'priority', 'service', 'agency', 'gerai', 'remaining_queue', 'datetime', 'barcode', 'divider', 'footer'];
         $hasQueueNumber = false;
         foreach ($layout['blocks'] as $block) {
             if (! is_array($block) || ! in_array($block['type'] ?? null, $allowed, true)) {
@@ -110,14 +110,17 @@ class MppTicketTemplateController extends Controller
     {
         return ['schema' => 1, 'paper_width_mm' => 58, 'print_width_mm' => 55, 'blocks' => [
             ['type' => 'logo', 'align' => 'center'],
+            ['type' => 'divider'],
             ['type' => 'title', 'text' => 'NOMOR ANTRIAN', 'align' => 'center'],
             ['type' => 'queue_number', 'align' => 'center'],
-            ['type' => 'agency', 'align' => 'center'],
+            ['type' => 'gerai', 'align' => 'center'],
             ['type' => 'remaining_queue', 'align' => 'center'],
             ['type' => 'datetime', 'align' => 'center'],
             ['type' => 'barcode', 'align' => 'center'],
             ['type' => 'divider'],
             ['type' => 'footer', 'text' => 'Mohon menunggu petugas kami akan memanggil nomor antrian Anda. Terima kasih.', 'align' => 'center'],
+            ['type' => 'divider'],
+            ['type' => 'footer', 'text' => 'Catatan:', 'align' => 'left'],
         ]];
     }
 }

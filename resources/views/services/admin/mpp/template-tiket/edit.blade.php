@@ -24,6 +24,7 @@
         <section class="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div><h2 class="font-bold text-slate-800 dark:text-white">Blok tiket</h2><p class="text-xs text-slate-500">Urutkan blok sesuai hasil cetak. Nomor antrian wajib tersedia.</p></div>
+                <button type="button" @click="applyExample" class="rounded-lg border border-primary-acorn px-3 py-2 text-xs font-bold text-primary-acorn">Terapkan contoh tiket</button>
                 <select x-model="newBlockType" class="rounded-lg border-slate-300 text-sm dark:bg-slate-900"><template x-for="option in blockOptions" :key="option.type"><option :value="option.type" x-text="option.label"></option></template></select>
                 <button type="button" @click="addBlock" class="rounded-lg bg-slate-700 px-3 py-2 text-xs font-bold text-white">Tambah blok</button>
             </div>
@@ -73,18 +74,20 @@
 @push('scripts')
 <script>
 function ticketTemplateEditor(layout) {
-    const options = [{ type: 'logo', label: 'Logo MPP' }, { type: 'title', label: 'Judul' }, { type: 'subtitle', label: 'Subjudul' }, { type: 'queue_number', label: 'Nomor antrian' }, { type: 'priority', label: 'Prioritas' }, { type: 'service', label: 'Layanan' }, { type: 'agency', label: 'Instansi' }, { type: 'remaining_queue', label: 'Sisa antrean' }, { type: 'datetime', label: 'Tanggal & jam' }, { type: 'barcode', label: 'Barcode tiket' }, { type: 'divider', label: 'Pemisah' }, { type: 'footer', label: 'Footer' }];
+    const options = [{ type: 'logo', label: 'Logo MPP' }, { type: 'title', label: 'Judul' }, { type: 'subtitle', label: 'Subjudul' }, { type: 'queue_number', label: 'Nomor antrian' }, { type: 'priority', label: 'Prioritas' }, { type: 'service', label: 'Layanan' }, { type: 'agency', label: 'Instansi' }, { type: 'gerai', label: 'Nama gerai' }, { type: 'remaining_queue', label: 'Sisa antrean' }, { type: 'datetime', label: 'Tanggal & jam' }, { type: 'barcode', label: 'Barcode tiket' }, { type: 'divider', label: 'Pemisah' }, { type: 'footer', label: 'Footer' }];
+    const example = [{ type: 'logo', align: 'center' }, { type: 'divider' }, { type: 'title', text: 'NOMOR ANTRIAN', align: 'center' }, { type: 'queue_number', align: 'center' }, { type: 'gerai', align: 'center' }, { type: 'remaining_queue', align: 'center' }, { type: 'datetime', align: 'center' }, { type: 'barcode', align: 'center' }, { type: 'divider' }, { type: 'footer', text: 'Mohon menunggu petugas kami akan memanggil nomor antrian Anda. Terima kasih.', align: 'center' }, { type: 'divider' }, { type: 'footer', text: 'Catatan:', align: 'left' }];
     let blockId = 0;
     const withId = (block) => ({ ...block, id: `block-${++blockId}` });
     return {
         blockOptions: options, newBlockType: 'title', blocks: (layout.blocks || []).map(withId),
         get serializedLayout() { return JSON.stringify({ schema: 1, paper_width_mm: 58, print_width_mm: 55, blocks: this.blocks.map(({ id, ...block }) => block) }); },
         addBlock() { this.blocks.push(withId({ type: this.newBlockType, align: 'center', ...(this.needsText(this.newBlockType) ? { text: '' } : {}) })); },
+        applyExample() { this.blocks = example.map(withId); },
         remove(index) { this.blocks.splice(index, 1); },
         move(index, direction) { const target = index + direction; if (target >= 0 && target < this.blocks.length) [this.blocks[index], this.blocks[target]] = [this.blocks[target], this.blocks[index]]; },
         needsText(type) { return ['title', 'subtitle', 'footer'].includes(type); },
         blockLabel(type) { return this.blockOptions.find((option) => option.type === type)?.label || type; },
-        previewText(block) { const sample = { logo: 'LOGO MPP', queue_number: 'A-001', priority: 'PRIORITAS', service: 'Layanan KTP Elektronik', agency: 'MPP Tulang Bawang Barat', remaining_queue: 'SISA ANTRIAN 0', datetime: '29 September 2026, 10.30', barcode: '||| || ||| || |||', divider: '' }; return this.needsText(block.type) ? (block.text || 'Teks belum diisi') : sample[block.type]; },
+        previewText(block) { const sample = { logo: 'LOGO MPP', queue_number: 'A-001', priority: 'PRIORITAS', service: 'Layanan KTP Elektronik', agency: 'MPP Tulang Bawang Barat', gerai: 'Kantor Pelayanan Publik', remaining_queue: 'SISA ANTRIAN 0', datetime: '29-09-2026 14:40:06', barcode: '||| || ||| || |||', divider: '' }; return this.needsText(block.type) ? (block.text || 'Teks belum diisi') : sample[block.type]; },
     };
 }
 </script>

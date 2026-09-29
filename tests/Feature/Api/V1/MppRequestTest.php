@@ -141,7 +141,12 @@ test('kiosk menerima template aktif dan tiket mengikat versi template saat diter
         'schema' => 1,
         'paper_width_mm' => 58,
         'print_width_mm' => 55,
-        'blocks' => [['type' => 'queue_number', 'align' => 'center']],
+        'blocks' => [
+            ['type' => 'logo', 'align' => 'center'],
+            ['type' => 'queue_number', 'align' => 'center'],
+            ['type' => 'gerai', 'align' => 'center'],
+            ['type' => 'barcode', 'align' => 'center'],
+        ],
     ];
     $template = MppTicketTemplate::create(['draft_layout' => $layout]);
     $version = MppTicketTemplateVersion::create([
@@ -157,7 +162,9 @@ test('kiosk menerima template aktif dan tiket mengikat versi template saat diter
         ->assertOk()
         ->assertHeader('ETag', '"'.$version->checksum.'"')
         ->assertJsonPath('data.id', $version->id)
-        ->assertJsonPath('data.layout.blocks.0.type', 'queue_number');
+        ->assertJsonPath('data.layout.blocks.0.type', 'logo')
+        ->assertJsonPath('data.layout.blocks.2.type', 'gerai')
+        ->assertJsonPath('data.layout.blocks.3.type', 'barcode');
 
     $response = $this->postJson("/api/v1/services/{$this->service->id}/requests", [
         'form_data' => [
