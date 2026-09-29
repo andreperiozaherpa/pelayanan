@@ -33,6 +33,9 @@ class DisplayController extends Controller
         'color_number' => '#f8ab3a',
         'call_number_size' => '180',
         'call_text_size' => '36',
+        'header_title_size' => '30', 'header_subtitle_size' => '16', 'clock_size' => '40',
+        'call_label_size' => '18', 'call_agency_size' => '26', 'call_service_size' => '20',
+        'counter_title_size' => '18', 'counter_text_size' => '16', 'marquee_size' => '20',
     ];
 
     private const COLOR_KEYS = [
@@ -102,6 +105,9 @@ class DisplayController extends Controller
         foreach (self::COLOR_KEYS as $key) {
             $rules[$key] = ['required', 'regex:/^#[0-9a-fA-F]{6}$/'];
         }
+        foreach (['header_title_size' => [18, 56], 'header_subtitle_size' => [10, 32], 'clock_size' => [24, 72], 'call_label_size' => [12, 36], 'call_agency_size' => [14, 44], 'call_service_size' => [12, 32], 'counter_title_size' => [12, 32], 'counter_text_size' => [10, 28], 'marquee_size' => [12, 32]] as $key => [$min, $max]) {
+            $rules[$key] = ['required', 'integer', "min:{$min}", "max:{$max}"];
+        }
 
         $validated = $request->validate($rules);
 
@@ -123,6 +129,9 @@ class DisplayController extends Controller
                 array_map(fn (string $k) => $validated[$k], self::COLOR_KEYS),
             ),
         ];
+        foreach (['header_title_size', 'header_subtitle_size', 'clock_size', 'call_label_size', 'call_agency_size', 'call_service_size', 'counter_title_size', 'counter_text_size', 'marquee_size'] as $key) {
+            $payload['font_sizes'][str_replace('_size', '', $key)] = (int) $validated[$key];
+        }
 
         $flat = [
             'header_title' => $validated['header_title'],
@@ -139,6 +148,9 @@ class DisplayController extends Controller
         ];
         foreach (self::COLOR_KEYS as $key) {
             $flat[$key] = $validated[$key];
+        }
+        foreach (['header_title_size', 'header_subtitle_size', 'clock_size', 'call_label_size', 'call_agency_size', 'call_service_size', 'counter_title_size', 'counter_text_size', 'marquee_size'] as $key) {
+            $flat[$key] = (string) $validated[$key];
         }
 
         foreach ($flat as $key => $value) {

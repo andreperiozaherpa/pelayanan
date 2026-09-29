@@ -34,6 +34,7 @@
         'color_accent' => 'Aksen / Marquee',
         'color_number' => 'Nomor Jumbo',
     ];
+    $fontSizeLabels = ['header_title_size' => 'Judul Header', 'header_subtitle_size' => 'Subjudul Header', 'clock_size' => 'Jam', 'call_label_size' => 'Label Nomor Antrian', 'call_number_size' => 'Nomor Antrian', 'call_text_size' => 'Nama Gerai', 'call_agency_size' => 'Instansi', 'call_service_size' => 'Jenis Layanan', 'counter_title_size' => 'Judul & Nomor Loket', 'counter_text_size' => 'Teks Riwayat/Loket', 'marquee_size' => 'Teks Berjalan'];
 @endphp
 <div class="space-y-6" x-data="displaySettings(@js($settings))">
     <!-- Header -->
@@ -183,10 +184,8 @@
                         <textarea name="running_text" rows="3" x-model="running_text" class="{{ $input }} resize-none">{{ old('running_text', $settings['running_text']) }}</textarea>
                         <p class="text-[9px] text-slate-400 font-bold ml-1">Teks ini berjalan (marquee) di baris paling bawah layar display.</p>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="space-y-2"><label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Ukuran Nomor Antrian (px)</label><input type="number" name="call_number_size" min="100" max="260" value="{{ old('call_number_size', $settings['call_number_size']) }}" class="{{ $input }}" /></div>
-                        <div class="space-y-2"><label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Ukuran Teks Panggilan (px)</label><input type="number" name="call_text_size" min="20" max="56" value="{{ old('call_text_size', $settings['call_text_size']) }}" class="{{ $input }}" /></div>
-                    </div>
+                    <div><h3 class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Ukuran teks caller display (px)</h3><p class="mt-1 text-[9px] text-slate-400">Sesuaikan untuk jarak pandang video tron.</p></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">@foreach($fontSizeLabels as $key => $label)<div class="space-y-2"><label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">{{ $label }}</label><input type="number" name="{{ $key }}" min="10" max="260" value="{{ old($key, $settings[$key]) }}" class="{{ $input }}" /></div>@endforeach</div>
                 </div>
 
                 <!-- ============ TAB: MEDIA ============ -->
