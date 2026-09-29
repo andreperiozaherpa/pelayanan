@@ -190,6 +190,11 @@
                         </a>
                     @endif
                 @endforeach
+                <a href="{{ route('public.mpp-registration.index') }}"
+                    class="font-semibold text-sm text-white/80 hover:text-white transition-colors duration-200 flex items-center gap-1.5">
+                    <iconify-icon icon="lucide:calendar-plus" class="text-base"></iconify-icon>
+                    Daftar Layanan
+                </a>
                 <a href="{{ route('survey.index') }}"
                     class="font-semibold text-sm text-white/80 hover:text-white transition-colors duration-200 flex items-center gap-1.5">
                     <iconify-icon icon="lucide:clipboard-check" class="text-base"></iconify-icon>
@@ -244,6 +249,11 @@
                     </a>
                 @endif
             @endforeach
+            <a href="{{ route('public.mpp-registration.index') }}" @click="open = false"
+                class="flex items-center gap-2 py-2 font-semibold text-rose-100 hover:text-white transition-colors">
+                <iconify-icon icon="lucide:calendar-plus" class="text-lg"></iconify-icon>
+                Daftar Layanan
+            </a>
             <a href="{{ route('survey.index') }}" @click="open = false"
                 class="flex items-center gap-2 py-2 font-semibold text-rose-100 hover:text-white transition-colors">
                 <iconify-icon icon="lucide:clipboard-check" class="text-lg"></iconify-icon>

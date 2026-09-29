@@ -31,6 +31,8 @@ class DisplayController extends Controller
         'color_text_muted' => '#94a3b8',
         'color_accent' => '#f8ab3a',
         'color_number' => '#f8ab3a',
+        'call_number_size' => '180',
+        'call_text_size' => '36',
     ];
 
     private const COLOR_KEYS = [
@@ -94,6 +96,8 @@ class DisplayController extends Controller
             'tts_pitch' => ['required', 'numeric', 'min:0.5', 'max:2'],
             'tts_voice' => ['required', 'in:google,gadis,ardi'],
             'chime_sound' => ['required', 'in:ding-dong-2tone,airport-3tone,tubular-bell,announcement,none'],
+            'call_number_size' => ['required', 'integer', 'min:100', 'max:260'],
+            'call_text_size' => ['required', 'integer', 'min:20', 'max:56'],
         ];
         foreach (self::COLOR_KEYS as $key) {
             $rules[$key] = ['required', 'regex:/^#[0-9a-fA-F]{6}$/'];
@@ -113,6 +117,7 @@ class DisplayController extends Controller
                 'voice' => $validated['tts_voice'],
             ],
             'chime_sound' => $validated['chime_sound'],
+            'font_sizes' => ['call_number' => (int) $validated['call_number_size'], 'call_text' => (int) $validated['call_text_size']],
             'colors' => array_combine(
                 array_map(fn (string $k) => str_replace('color_', '', $k), self::COLOR_KEYS),
                 array_map(fn (string $k) => $validated[$k], self::COLOR_KEYS),
@@ -129,6 +134,8 @@ class DisplayController extends Controller
             'tts_pitch' => (string) $validated['tts_pitch'],
             'tts_voice' => $validated['tts_voice'],
             'chime_sound' => $validated['chime_sound'],
+            'call_number_size' => (string) $validated['call_number_size'],
+            'call_text_size' => (string) $validated['call_text_size'],
         ];
         foreach (self::COLOR_KEYS as $key) {
             $flat[$key] = $validated[$key];

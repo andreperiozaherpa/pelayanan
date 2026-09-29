@@ -183,6 +183,10 @@
                         <textarea name="running_text" rows="3" x-model="running_text" class="{{ $input }} resize-none">{{ old('running_text', $settings['running_text']) }}</textarea>
                         <p class="text-[9px] text-slate-400 font-bold ml-1">Teks ini berjalan (marquee) di baris paling bawah layar display.</p>
                     </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="space-y-2"><label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Ukuran Nomor Antrian (px)</label><input type="number" name="call_number_size" min="100" max="260" value="{{ old('call_number_size', $settings['call_number_size']) }}" class="{{ $input }}" /></div>
+                        <div class="space-y-2"><label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">Ukuran Teks Panggilan (px)</label><input type="number" name="call_text_size" min="20" max="56" value="{{ old('call_text_size', $settings['call_text_size']) }}" class="{{ $input }}" /></div>
+                    </div>
                 </div>
 
                 <!-- ============ TAB: MEDIA ============ -->

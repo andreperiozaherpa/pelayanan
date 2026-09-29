@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\CmsMenu;
+use App\Models\CmsSetting;
 use App\Models\MppService;
 use App\Models\MppServiceRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -15,13 +18,13 @@ class PublicMppRegistrationController extends Controller
 {
     public function index(): View
     {
-        return view('public.mpp-registration.index', ['services' => MppService::query()->where('is_active', true)->orderBy('name')->get()]);
+        return view('public.mpp-registration.index', array_merge($this->layoutData(), ['services' => MppService::query()->where('is_active', true)->orderBy('name')->get()]));
     }
 
     public function create(MppService $service): View
     {
         abort_unless($service->is_active, 404);
-        return view('public.mpp-registration.create', compact('service'));
+        return view('public.mpp-registration.create', array_merge($this->layoutData(), compact('service')));
     }
 
     public function store(Request $request, MppService $service): RedirectResponse
@@ -53,6 +56,14 @@ class PublicMppRegistrationController extends Controller
     public function complete(string $code): View
     {
         $registration = MppServiceRequest::query()->with('mppService')->where('public_registration_code', $code)->firstOrFail();
-        return view('public.mpp-registration.complete', compact('registration'));
+        return view('public.mpp-registration.complete', array_merge($this->layoutData(), compact('registration')));
+    }
+
+    private function layoutData(): array
+    {
+        return [
+            'menus' => Cache::remember('landing.menus', 3600, fn () => CmsMenu::with('children')->whereNull('parent_id')->where('is_active', true)->orderBy('order')->get()),
+            'settings' => Cache::remember('landing.settings', 3600, fn () => CmsSetting::pluck('value', 'key')->toArray()),
+        ];
     }
 }
